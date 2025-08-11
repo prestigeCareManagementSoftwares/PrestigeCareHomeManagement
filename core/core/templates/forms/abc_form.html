@@ -1,0 +1,285 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container abc-form-container">
+    <h2 class="text-center mb-4">ABC Behaviour Monitoring Form</h2>
+
+    <form method="post" class="abc-form">
+        {% csrf_token %}
+
+        {% if form.errors %}
+        <div class="alert alert-danger">
+            <strong>Please correct the errors below:</strong>
+            <ul>
+                {% for field in form %}
+                    {% for error in field.errors %}
+                        <li>{{ field.label }}: {{ error }}</li>
+                    {% endfor %}
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+        <!-- Target Behaviours Section -->
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <strong>Target behaviours:</strong> Please complete if client shows any TARGET behaviours
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% for value, label in form.target_behaviours.field.choices %}
+                    <div class="col-md-6">
+                        <div class="form-check">
+                            <input type="checkbox"
+                                   class="form-check-input"
+                                   name="{{ form.target_behaviours.name }}"
+                                   id="target_behaviour_{{ forloop.counter }}"
+                                   value="{{ value }}"
+                                   {% if value in form.target_behaviours.value %}checked{% endif %}>
+                            <label class="form-check-label" for="target_behaviour_{{ forloop.counter }}">
+                                {{ label }}
+                            </label>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Header Information -->
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <strong>Basic Information</strong>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>{{ form.service_user.label }}</label>
+                            {{ form.service_user }}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>{{ form.date_of_birth.label }}</label>
+                            {{ form.date_of_birth }}
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>{{ form.staff.label }}</label>
+                            <input type="text"
+                                   class="form-control"
+                                   name="{{ form.staff.name }}"
+                                   id="{{ form.staff.id_for_label }}"
+                                   value="{{ form.staff.value|default_if_none:'' }}"
+                                   required>
+                            <small class="text-muted">Enter staff member's full name</small>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>{{ form.date_time.label }}</label>
+                            {{ form.date_time }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SETTING Section -->
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <strong>SETTING</strong>
+            </div>
+            <div class="card-body">
+                <div class="form-group">
+                    <label>Where did the behavior occur?</label>
+                    <input type="text" class="form-control" name="setting_location" value="{{ form.setting_location.value|default_if_none:'' }}" required>
+                </div>
+                <div class="form-group">
+                    <label>Who was present?</label>
+                    <input type="text" class="form-control" name="setting_present" value="{{ form.setting_present.value|default_if_none:'' }}" required>
+                </div>
+                <div class="form-group">
+                    <label>What was happening?</label>
+                    <textarea class="form-control" name="setting_activity" required>{{ form.setting_activity.value|default_if_none:'' }}</textarea>
+                </div>
+                <div class="form-group">
+                    <label>Describe the environment (noise, temperature, etc.)</label>
+                    <textarea class="form-control" name="setting_environment">{{ form.setting_environment.value|default_if_none:'' }}</textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- ANTECEDENT Section -->
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <strong>ANTECEDENT</strong>
+            </div>
+            <div class="card-body">
+                <div class="form-group">
+                    <label>What happened just before the behaviour started?</label>
+                    <textarea class="form-control" name="antecedent_description" required>{{ form.antecedent_description.value|default_if_none:'' }}</textarea>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Was there a change in routine?</label>
+                            <select class="form-control" name="antecedent_change">
+                                <option value="yes" {% if form.antecedent_change.value == 'yes' %}selected{% endif %}>Yes</option>
+                                <option value="no" {% if not form.antecedent_change.value or form.antecedent_change.value == 'no' %}selected{% endif %}>No</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Was there unexpected noise?</label>
+                            <select class="form-control" name="antecedent_noise">
+                                <option value="yes" {% if form.antecedent_noise.value == 'yes' %}selected{% endif %}>Yes</option>
+                                <option value="no" {% if not form.antecedent_noise.value or form.antecedent_noise.value == 'no' %}selected{% endif %}>No</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Was the client waiting for something?</label>
+                    <input type="text" class="form-control" name="antecedent_waiting" value="{{ form.antecedent_waiting.value|default_if_none:'' }}">
+                </div>
+            </div>
+        </div>
+
+        <!-- BEHAVIOUR Section -->
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <strong>BEHAVIOUR</strong>
+            </div>
+            <div class="card-body">
+                <div class="form-group">
+                    <label>Describe exactly what the client did</label>
+                    <textarea class="form-control" name="behaviour_description" required>{{ form.behaviour_description.value|default_if_none:'' }}</textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- CONSEQUENCES Section -->
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <strong>CONSEQUENCES</strong>
+            </div>
+            <div class="card-body">
+                <div class="form-group">
+                    <label>What happened after the behaviour took place? What did you do?</label>
+                    <textarea class="form-control" name="consequence_immediate" required>{{ form.consequence_immediate.value|default_if_none:'' }}</textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- REFLECTION Section -->
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <strong>REFLECTION</strong>
+            </div>
+            <div class="card-body">
+                <div class="form-group">
+                    <label>What can we learn from this situation & take forward whilst supporting the client?
+Any other relevant information?
+</label>
+                    <textarea class="form-control" name="reflection_learnings" required>{{ form.reflection_learnings.value|default_if_none:'' }}</textarea>
+                </div>
+            </div>
+        </div>
+
+        <div class="text-center mt-4 mb-5">
+            <button type="submit" class="btn btn-primary btn-lg px-5">
+                <i class="fas fa-save"></i> Save Form
+            </button>
+            <a href="{% url 'abc_form_list' %}" class="btn btn-secondary btn-lg px-5 ml-3">
+                <i class="fas fa-times"></i> Cancel
+            </a>
+        </div>
+    </form>
+</div>
+
+<!-- Select2 CSS -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<style>
+    .abc-form-container {
+        max-width: 1000px;
+        margin: 0 auto;
+    }
+
+    .abc-form .form-control {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+        margin-bottom: 15px;
+        font-size: 15px;
+    }
+
+    .abc-form textarea.form-control {
+        min-height: 100px;
+    }
+
+    .abc-form .card {
+        margin-bottom: 25px;
+        border: none;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .abc-form .card-header {
+        font-weight: bold;
+        padding: 12px 20px;
+        font-size: 16px;
+    }
+
+    .abc-form label {
+        font-weight: 600;
+        margin-bottom: 8px;
+        display: block;
+        color: #495057;
+    }
+
+    .abc-form input[type="date"],
+    .abc-form input[type="datetime-local"],
+    .abc-form select {
+        height: 45px;
+    }
+
+    .btn-lg {
+        padding: 10px 25px;
+        font-size: 16px;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .checkbox-list {
+        list-style-type: none;
+        padding-left: 0;
+    }
+    .checkbox-list li {
+        margin-bottom: 8px;
+    }
+    .select2 {
+        width: 100% !important;
+    }
+</style>
+
+<!-- jQuery and Select2 JS -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>
+    $(document).ready(function() {
+        $('.select2').select2({
+            placeholder: "Select a service user",
+            allowClear: true
+        });
+    });
+</script>
+{% endblock %}

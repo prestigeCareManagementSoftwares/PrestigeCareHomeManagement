@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 11px;
+            padding: 20px 40px;
+            line-height: 1.4;
+        }
+        h2 {
+            text-align: center;
+            margin: 0;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            table-layout: fixed;
+        }
+        td, th {
+            border: 1px solid #000;
+            padding: 8px;
+            vertical-align: top;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+        .label {
+            font-weight: bold;
+            width: 25%;
+        }
+        .content-cell {
+            width: 75%;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+        .contact-table {
+            width: 100%;
+            margin-top: 20px;
+        }
+        .contact-table th, .contact-table td {
+            border: 1px solid #000;
+            padding: 5px;
+            word-wrap: break-word;
+        }
+        .checkbox {
+            width: 5%;
+            text-align: center;
+        }
+        .datetime-cell {
+            width: 15%;
+        }
+        .comment-cell {
+            width: 30%;
+            white-space: pre-wrap;
+        }
+        .page-break {
+            page-break-after: always;
+        }
+        .image-table {
+            width: 100%;
+            margin-top: 20px;
+            page-break-inside: avoid;
+        }
+        .image-cell {
+            width: 33%;
+            text-align: center;
+            padding: 10px;
+            vertical-align: top;
+        }
+        .image-preview {
+            max-width: 100%;
+            max-height: 200px;
+            border: 1px solid #ddd;
+        }
+        .image-caption {
+            font-size: 10px;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+
+<h2>PRESTIGE SUPPORTED LIVING SERVICES LTD</h2>
+<h2>Incident Report Form</h2>
+
+<table>
+    <tr>
+        <td class="label">Date and Time of incident:</td>
+        <td>{{ data.incident_datetime }}</td>
+        <td class="label">Location:</td>
+        <td>{{ data.location }}</td>
+    </tr>
+    <tr>
+        <td class="label">Service user/s involved:</td>
+        <td>{{ data.service_user }}</td>
+        <td class="label">D.O.B</td>
+        <td>{{ data.dob }}</td>
+    </tr>
+    <tr>
+        <td class="label">Staff Involved in the incident:</td>
+        <td colspan="3">{{ data.staff_involved }}</td>
+    </tr>
+    <tr>
+        <td class="label">Write in detail what the Service User was doing prior to the incident: </td>
+        <td colspan="3" class="content-cell">{{ data.prior_description }}</td>
+    </tr>
+    <tr>
+        <td class="label">Write in detail the description of the incident (including the behaviour of the Service
+user):</td>
+        <td colspan="3" class="content-cell">{{ data.incident_description }}</td>
+    </tr>
+    <tr>
+        <td class="label">Write in details the response of the Service User:</td>
+        <td colspan="3" class="content-cell">{{ data.user_response }}</td>
+    </tr>
+</table>
+
+<div class="page-break"></div>
+
+<h2>PRESTIGE SUPPORTED LIVING SERVICES LTD</h2>
+
+<table>
+    <tr>
+        <td class="label">Injuries:</td>
+        <td colspan="3" class="content-cell">{{ data.injuries_detail|default:"N/A" }}</td>
+    </tr>
+    <tr>
+        <td class="label">Property damage:</td>
+        <td colspan="3" class="content-cell">{{ data.property_damage|default:"N/A" }}</td>
+    </tr>
+    <tr>
+        <td class="label">PRN Medication:</td>
+        <td>{% if data.prn_administered %}✓{% else %}□{% endif %}</td>
+        <td class="label">By whom:</td>
+        <td>{{ data.prn_by_whom|default:"N/A" }}</td>
+    </tr>
+    <tr>
+        <th>Person</th>
+        <th class="checkbox">Contacted</th>
+        <th class="datetime-cell">Date/Time</th>
+        <th class="comment-cell">Comments</th>
+    </tr>
+    <tr>
+        <td>Manager</td>
+        <td class="checkbox">{% if data.contacted_manager %}✓{% else %}□{% endif %}</td>
+        <td>{% if data.contacted_manager %}{{ data.manager_contact_date }}{% endif %}</td>
+        <td>{% if data.contacted_manager %}{{ data.manager_contact_comment }}{% endif %}</td>
+    </tr>
+    <tr>
+        <td>Police</td>
+        <td class="checkbox">{% if data.contacted_police %}✓{% else %}□{% endif %}</td>
+        <td>{% if data.contacted_police %}{{ data.police_contact_date }}{% endif %}</td>
+        <td>{% if data.contacted_police %}{{ data.police_contact_comment }}{% endif %}</td>
+    </tr>
+    <tr>
+        <td>Paramedics</td>
+        <td class="checkbox">{% if data.contacted_paramedics %}✓{% else %}□{% endif %}</td>
+        <td>{% if data.contacted_paramedics %}{{ data.paramedics_contact_date }}{% endif %}</td>
+        <td>{% if data.contacted_paramedics %}{{ data.paramedics_contact_comment }}{% endif %}</td>
+    </tr>
+    <tr>
+        <td>Other: {% if data.contacted_other %}{{ data.other_contact_name }}{% endif %}</td>
+        <td class="checkbox">{% if data.contacted_other %}✓{% else %}□{% endif %}</td>
+        <td>{% if data.contacted_other %}{{ data.other_contact_date }}{% endif %}</td>
+        <td>{% if data.contacted_other %}{{ data.other_contact_comment }}{% endif %}</td>
+    </tr>
+</table>
+
+{% if data.get_images %}
+<div style="page-break-before: always;">
+    <h3>Attached Images</h3>
+    <table class="image-table">
+        <tr>
+            {% for image in data.get_images %}
+            <td class="image-cell">
+                <img src="{{ image.url }}" class="image-preview">
+                <div class="image-caption">Image {{ forloop.counter }}</div>
+            </td>
+            {% if forloop.counter|divisibleby:3 and not forloop.last %}
+        </tr>
+        <tr>
+            {% endif %}
+            {% endfor %}
+        </tr>
+    </table>
+</div>
+{% endif %}
+
+</body>
+</html>

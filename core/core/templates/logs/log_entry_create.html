@@ -1,0 +1,66 @@
+<!-- templates/logs/log_entry_create.html -->
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Messages should be at the very top of the content block -->
+    {% if messages %}
+    <div class="messages">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+            {{ message }}
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="card">
+        <div class="card-header">
+            <h4>Create New Daily Log</h4>
+        </div>
+        <div class="card-body">
+            <form method="POST" action="{% url 'create-log' %}">
+                {% csrf_token %}
+
+                <div class="mb-3">
+                    <label class="form-label">Carehome</label>
+                    <select name="carehome" class="form-select" required>
+                        <option value="">-- Select Carehome --</option>
+                        {% for c in carehomes %}
+                        <option value="{{ c.id }}">{{ c.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Service User</label>
+                    <select name="service_user" class="form-select" required>
+                        <option value="">-- Select Service User --</option>
+                        {% for su in service_users %}
+                        <option value="{{ su.id }}">{{ su.first_name }} {{ su.last_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Shift</label>
+                    <select name="shift" class="form-select" required>
+                        <option value="">-- Select Shift --</option>
+                        {% for shift in shifts %}
+                        <option value="{{ shift|lower }}">{{ shift }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i> Start Log
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

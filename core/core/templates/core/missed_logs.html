@@ -1,0 +1,53 @@
+ {% extends "core/base.html" %}
+
+{% block content %}
+<div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h4 mb-0 text-gray-800">
+        Missed Shift Entries
+        <small class="text-muted">({{ date_range }})</small>
+    </h1>
+    <div class="badge badge-danger">{{ total_missed }} missed shifts</div>
+</div>
+
+{% if missing_entries %}
+<div class="card shadow">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover mb-0">
+                <thead class="thead-light">
+                    <tr>
+                        <th>Date</th>
+                        <th>Carehome</th>
+                        <th>Service User</th>
+                        <th>Shift</th>
+                        <th>Shift Time</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for entry in missing_entries %}
+                    <tr>
+                        <td>{{ entry.date|date:"M d, Y" }}</td>
+                        <td>{{ entry.carehome.name }}</td>
+                        <td>{{ entry.service_user.get_formatted_name }}</td>
+                        <td>{{ entry.get_shift_display }}</td>
+                        <td>
+                            {% if entry.shift == 'morning' %}
+                                {{ entry.carehome.morning_shift_time }}
+                            {% else %}
+                                {{ entry.carehome.night_shift_time }}
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="alert alert-success">
+    <i class="fas fa-check-circle"></i>
+    No missed shift entries found in the last 6 months!
+</div>
+{% endif %}
+{% endblock %}

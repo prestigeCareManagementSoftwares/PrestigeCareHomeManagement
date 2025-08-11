@@ -1,0 +1,94 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0 text-gray-800">Staff Dashboard</h1>
+    {% if request.user.is_superuser or request.user.role == 'team_lead' %}
+    <a href="{% url 'create-staff' %}" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm">
+        <i class="fas fa-plus fa-sm text-white-50"></i> Add New Staff
+    </a>
+    {% endif %}
+</div>
+
+<div class="card shadow mb-4">
+    <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+        <h6 class="m-0 font-weight-bold text-primary">
+            {% if request.user.role == 'team_lead' %}
+            Staff in {{ request.user.carehome.name }}
+            {% else %}
+            All Staff Members
+            {% endif %}
+        </h6>
+        <div class="dropdown no-arrow">
+            <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink"
+               data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
+            </a>
+            <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in"
+                 aria-labelledby="dropdownMenuLink">
+                <a class="dropdown-item" href="#">Export Data</a>
+            </div>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered" width="100%" cellspacing="0">
+                <thead>
+                <tr>
+                    <th>Image</th>
+                    <th>Name</th>
+                    <th>Role</th>
+                    <th>Carehome</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for staff in staff_list %}
+                <tr>
+                    <td class="text-center">
+                        <div class="rounded-circle overflow-hidden d-inline-block {% if staff.availability_status == 'Available' %}border-success{% else %}border-secondary{% endif %}"
+                             style="width: 50px; height: 50px; border: 2px solid {% if staff.availability_status == 'Available' %}#28a745{% else %}#6c757d{% endif %};">
+
+                            <img src="{% if staff.image %}{{ staff.image.url }}{% else %}{% static 'img/default-profile.png' %}{% endif %}"
+                                 style="width: 100%; height: 100%; object-fit: cover;"
+                                 alt="{{ staff.get_full_name }}">
+                        </div>
+                    </td>
+
+                    <td>{{ staff.get_full_name }}</td>
+                    <td>{{ staff.get_role_display }}</td>
+                    <td>
+                        {% if staff.carehome %}
+                        {{ staff.carehome.name }}
+                        {% else %}
+                        -
+                        {% endif %}
+                    </td>
+                    <td>
+                            <span class="badge badge-{% if staff.availability_status == 'Available' %}success{% elif staff.availability_status == 'Offline' %}secondary{% else %}danger{% endif %}">
+                                {{ staff.availability_status }}
+                            </span>
+                    </td>
+                    <td class="text-center">
+                        <a href="{% url 'edit-staff' staff.pk %}" class="btn btn-sm btn-primary">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        <a href="{% url 'toggle-staff-status' staff.pk %}"
+                           class="btn btn-sm btn-{% if staff.is_active %}danger{% else %}success{% endif %}">
+                            <i class="fas fa-{% if staff.is_active %}times{% else %}check{% endif %}"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center">No staff members found</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

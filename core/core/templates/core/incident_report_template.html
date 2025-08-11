@@ -1,0 +1,280 @@
+{% extends "core/base.html" %}
+{% block content %}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Incident Report #{{ data.id }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 11px;
+            line-height: 1.4;
+            margin: 0; /* Remove default body margin */
+            padding: 0; /* Remove default body padding */
+        }
+        .print-content {
+            padding: 20px 40px; /* Content padding only */
+            margin: 0 auto; /* Center content */
+            max-width: 900px;
+        }
+        h2 {
+            text-align: center;
+            margin: 0;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            table-layout: fixed;
+        }
+        td, th {
+            border: 1px solid #000;
+            padding: 8px;
+            vertical-align: top;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+        .label {
+            font-weight: bold;
+            width: 25%;
+        }
+        .content-cell {
+            width: 75%;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+        .contact-table {
+            width: 100%;
+            margin-top: 20px;
+        }
+        .contact-table th, .contact-table td {
+            border: 1px solid #000;
+            padding: 5px;
+            word-wrap: break-word;
+        }
+        .checkbox {
+            width: 5%;
+            text-align: center;
+        }
+        .datetime-cell {
+            width: 15%;
+        }
+        .comment-cell {
+            width: 30%;
+            white-space: pre-wrap;
+        }
+        .page-break {
+            page-break-after: always;
+        }
+        /* Print-specific styles */
+        @media print {
+            body {
+                padding: 0 !important;
+                background: white !important;
+            }
+            .no-print {
+                display: none !important;
+            }
+            .print-content {
+                padding: 20px 40px !important;
+            }
+        }
+        /* Screen-specific styles */
+        @media screen {
+            body {
+                background-color: #f5f5f5;
+                padding-top: 20px;
+            }
+            .print-content {
+                background-color: white;
+                box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            }
+            .print-actions {
+                text-align: center;
+                margin: 0 auto 20px;
+                max-width: 900px;
+            }
+        }
+        /* Copy protection styles */
+        .protected-content {
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            position: relative;
+        }
+        .protected-content::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" opacity="0.05"><text x="50" y="50" font-family="Arial" font-size="20" transform="rotate(-30)">CONFIDENTIAL</text></svg>');
+            pointer-events: none;
+            z-index: 1;
+        }
+    </style>
+</head>
+<body>
+<div class="print-actions no-print">
+    <a href="{% url 'download_incident_pdf' form_id=data.id %}" class="btn btn-primary">
+        <i class="fas fa-file-pdf"></i> Download PDF
+    </a>
+    <button onclick="window.print()" class="btn btn-secondary">
+        <i class="fas fa-print"></i> Print Report
+    </button>
+    {% if can_edit %}
+    <a href="{% url 'edit_incident_form' pk=data.id %}" class="btn btn-warning">
+        <i class="fas fa-edit"></i> Edit Report
+    </a>
+    {% endif %}
+</div>
+
+<div class="print-content protected-content">
+    <h2>PRESTIGE SUPPORTED LIVING SERVICES LTD</h2>
+    <h2>Incident Report Form</h2>
+
+    <table>
+        <tr>
+            <td class="label">Date and Time of incident:</td>
+            <td>{{ data.incident_datetime }}</td>
+            <td class="label">Location:</td>
+            <td>{{ data.location }}</td>
+        </tr>
+        <tr>
+            <td class="label">Service user/s involved:</td>
+            <td>{{ data.service_user }}</td>
+            <td class="label">D.O.B</td>
+            <td>{{ data.dob }}</td>
+        </tr>
+        <tr>
+            <td class="label">Staff Involved in the incident:</td>
+            <td colspan="3">{{ data.staff_involved }}</td>
+        </tr>
+        <tr>
+            <td class="label">Prior to incident:</td>
+            <td colspan="3" class="content-cell">{{ data.prior_description|default:"N/A" }}</td>
+        </tr>
+        <tr>
+            <td class="label">Incident description:</td>
+            <td colspan="3" class="content-cell">{{ data.incident_description|default:"N/A" }}</td>
+        </tr>
+        <tr>
+            <td class="label">Service User response:</td>
+            <td colspan="3" class="content-cell">{{ data.user_response|default:"N/A" }}</td>
+        </tr>
+        <tr>
+            <td class="label">Injuries:</td>
+            <td colspan="3" class="content-cell">{{ data.injuries_detail|default:"N/A" }}</td>
+        </tr>
+        <tr>
+            <td class="label">Property damage:</td>
+            <td colspan="3" class="content-cell">{{ data.property_damage|default:"N/A" }}</td>
+        </tr>
+        <tr>
+            <td class="label">PRN Medication:</td>
+            <td>{% if data.prn_administered %}✓{% else %}□{% endif %}</td>
+            <td class="label">By whom:</td>
+            <td>{{ data.prn_by_whom|default:"N/A" }}</td>
+        </tr>
+        <tr>
+            <th>Person</th>
+            <th class="checkbox">Contacted</th>
+            <th class="datetime-cell">Date/Time</th>
+            <th class="comment-cell">Comments</th>
+        </tr>
+        <tr>
+            <td>Manager</td>
+            <td class="checkbox">{% if data.contacted_manager %}✓{% else %}□{% endif %}</td>
+            <td>{% if data.contacted_manager %}{{ data.manager_contact_date|default:"N/A" }}{% endif %}</td>
+            <td>{% if data.contacted_manager %}{{ data.manager_contact_comment|default:"N/A" }}{% endif %}</td>
+        </tr>
+        <tr>
+            <td>Police</td>
+            <td class="checkbox">{% if data.contacted_police %}✓{% else %}□{% endif %}</td>
+            <td>{% if data.contacted_police %}{{ data.police_contact_date|default:"N/A" }}{% endif %}</td>
+            <td>{% if data.contacted_police %}{{ data.police_contact_comment|default:"N/A" }}{% endif %}</td>
+        </tr>
+        <tr>
+            <td>Paramedics</td>
+            <td class="checkbox">{% if data.contacted_paramedics %}✓{% else %}□{% endif %}</td>
+            <td>{% if data.contacted_paramedics %}{{ data.paramedics_contact_date|default:"N/A" }}{% endif %}</td>
+            <td>{% if data.contacted_paramedics %}{{ data.paramedics_contact_comment|default:"N/A" }}{% endif %}</td>
+        </tr>
+        <tr>
+            <td>Other: {% if data.contacted_other %}{{ data.other_contact_name|default:"N/A" }}{% endif %}</td>
+            <td class="checkbox">{% if data.contacted_other %}✓{% else %}□{% endif %}</td>
+            <td>{% if data.contacted_other %}{{ data.other_contact_date|default:"N/A" }}{% endif %}</td>
+            <td>{% if data.contacted_other %}{{ data.other_contact_comment|default:"N/A" }}{% endif %}</td>
+        </tr>
+    </table>
+    <!-- Add this to your template -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <h5 class="section-title"><i class="fas fa-images"></i> Attached Images</h5>
+            <hr>
+            <div class="row">
+                {% for image in data.get_images %}
+                <div class="col-md-4 mb-3">
+                    <div class="image-container">
+                        <img src="{{ image.url }}" alt="Incident Image {{ forloop.counter }}"
+                             class="img-fluid img-thumbnail incident-image">
+                        <div class="image-caption">Image {{ forloop.counter }}</div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="col-12">
+                    <p>No images attached to this report.</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .incident-image {
+            max-width: 100%;
+            height: 200px;
+            object-fit: contain;
+            border: 1px solid #ddd;
+            margin-bottom: 5px;
+        }
+        .image-container {
+            text-align: center;
+        }
+        .image-caption {
+            font-size: 0.8rem;
+            color: #666;
+        }
+    </style>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Copy protection
+        document.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+            alert('Copying content is not permitted');
+        });
+
+        document.addEventListener('selectstart', function(e) {
+            e.preventDefault();
+        });
+
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && (e.key === 'c' || e.key === 'C' ||
+                              e.key === 'x' || e.key === 'X' ||
+                              e.key === 'a' || e.key === 'A')) {
+                e.preventDefault();
+                alert('Copying content is not permitted');
+            }
+        });
+    });
+</script>
+</body>
+</html>
+{% endblock %}

@@ -1,0 +1,175 @@
+{% extends "core/base.html" %}
+
+{% block content %}
+<div class="container-fluid protected-content">
+    <!-- Page Heading with status indicator -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4 no-print">
+        <h1 class="h3 mb-0 text-gray-800">
+            Log Details
+            <span class="badge badge-{% if latest_log.status == 'locked' %}danger{% else %}warning{% endif %}">
+                {{ latest_log.status|title }}
+            </span>
+        </h1>
+
+        <div>
+            {% if can_edit and user_role in 'manager,team_lead' %}
+            <a href="#" onclick="window.print()" class="btn btn-sm btn-primary shadow-sm">
+                <i class="fas fa-print fa-sm text-white-50"></i> Print
+            </a>
+            {% endif %}
+
+            {% if latest_log.log_pdf and user_role in 'manager,team_lead' %}
+            <a href="{{ latest_log.log_pdf.url }}" class="btn btn-sm btn-success shadow-sm">
+                <i class="fas fa-file-pdf fa-sm text-white-50"></i> Download PDF
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Log Content -->
+    <div class="card shadow mb-4 no-print">
+        <div class="card-body p-0">
+            <div class="log-container" style="font-family: Arial, sans-serif; font-size: 12px;">
+                <div style="margin: 0; padding: 0; width: 100%;">
+                    <!-- First Table - Header Information -->
+                    <table style="width: 100%; border-collapse: collapse; margin: 0; padding: 0; table-layout: fixed; border: 1px solid #000;">
+                        <tr>
+                            <td colspan="4"
+                                style="text-align: center; font-weight: bold; background-color: #f2f2f2; border: 1px solid #000; padding: 5px;">
+                                Service User's Daily Recording Sheet
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="4" style="border: 1px solid #000; padding: 5px;">
+                                <strong>Care Home:</strong> {{ latest_log.carehome }}<br>
+                                <strong>Service User:</strong> {{ latest_log.service_user }}<br>
+                                <strong>Staff:</strong> {{ latest_log.staff_name }}
+                            </td>
+                        </tr>
+                        <tr style="text-align: center; font-weight: bold; background-color: #f2f2f2;">
+                            <td style="border: 1px solid #000; padding: 5px;">Date</td>
+                            <td style="border: 1px solid #000; padding: 5px;">Day</td>
+                            <td style="border: 1px solid #000; padding: 5px;">Staff Initial</td>
+                            <td style="border: 1px solid #000; padding: 5px;">Shift</td>
+                        </tr>
+                        <tr>
+                            <td style="border: 1px solid #000; padding: 5px;">{{ latest_log.date }}</td>
+                            <td style="border: 1px solid #000; padding: 5px;">{{ latest_log.date|date:"l" }}</td>
+                            <td style="border: 1px solid #000; padding: 5px;">
+                                {{ latest_log.staff_initials }}
+                            </td>
+                            <td style="border: 1px solid #000; padding: 5px;">{{ latest_log.shift }}</td>
+                        </tr>
+                    </table>
+
+                    <!-- Second Table - Time Entries -->
+                    <table style="width: 100%; border-collapse: collapse; margin: 0; padding: 0; table-layout: fixed; border: 1px solid #000; border-top: none;">
+                        <thead>
+                        <tr style="background-color: #f2f2f2; text-align: center; font-weight: bold;">
+                            <th style="border: 1px solid #000; padding: 5px; width: 10%;">Time</th>
+                            <th style="border: 1px solid #000; padding: 5px; width: 90%;">Details</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for entry in log_entries %}
+                        <tr>
+                            <td style="border: 1px solid #000; padding: 5px; font-weight: bold; vertical-align: top; word-wrap: break-word;">
+                                {{ entry.time_slot|time:"H:i" }}
+                            </td>
+                            <td style="border: 1px solid #000; padding: 5px; vertical-align: top;">
+                                {{ entry.content|linebreaksbr }}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="2" style="border: 1px solid #000; padding: 5px; text-align: center;">
+                                No log entries found for this shift.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    @media print {
+        body {
+            margin: 0;
+            padding: 0;
+            font-size: 12px;
+        }
+        .no-print {
+            display: none !important;
+        }
+        .log-container {
+            width: 100%;
+            margin: 0;
+            padding: 0;
+        }
+        table {
+            page-break-inside: auto;
+            border-spacing: 0;
+        }
+        tr {
+            page-break-inside: avoid;
+            page-break-after: auto;
+        }
+        .card, .card-body {
+            border: none;
+            box-shadow: none;
+            margin: 0;
+            padding: 0;
+        }
+    }
+
+    /* Prevent text selection */
+    .protected-content {
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+    }
+
+    @media print {
+        /* Allow text selection for printing */
+        .protected-content {
+            -webkit-user-select: text !important;
+            -moz-user-select: text !important;
+            -ms-user-select: text !important;
+            user-select: text !important;
+        }
+    }
+
+    /* Remove gaps between tables */
+    table {
+        border-spacing: 0;
+        border-collapse: collapse;
+    }
+    .card-body {
+        padding: 0;
+    }
+</style>
+
+<script>
+    // Prevent right-click context menu
+    document.addEventListener('contextmenu', function(e) {
+        e.preventDefault();
+    });
+
+    // Prevent keyboard shortcuts (Ctrl+C, Ctrl+A, etc.)
+    document.addEventListener('keydown', function(e) {
+        // Disable Ctrl+A, Ctrl+C, Ctrl+X, Ctrl+V
+        if (e.ctrlKey && (e.keyCode === 65 || e.keyCode === 67 || e.keyCode === 86 || e.keyCode === 88 || e.keyCode === 85)) {
+            e.preventDefault();
+        }
+        // Disable F12 (Developer Tools)
+        if (e.keyCode === 123) {
+            e.preventDefault();
+        }
+    });
+</script>
+{% endblock %}

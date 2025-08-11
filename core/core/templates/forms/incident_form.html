@@ -1,0 +1,263 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0 text-gray-800">Create Incident Report</h1>
+</div>
+
+<div class="row">
+    <div class="col-lg-10">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Incident Details</h6>
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+
+                    {% if form.errors %}
+                    <div class="alert alert-danger">
+                        <strong>Please correct the errors below:</strong>
+                        <ul>
+                            {% for field in form %}
+                            {% for error in field.errors %}
+                            <li>{{ field.label }}: {{ error }}</li>
+                            {% endfor %}
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+
+                    <!-- Incident Date/Time -->
+                    <div class="form-group">
+                        {{ form.incident_datetime.label_tag }}
+                        {{ form.incident_datetime }}
+                    </div>
+
+                    <!-- Location -->
+                    <div class="form-group">
+                        {{ form.location.label_tag }}
+                        {{ form.location }}
+                    </div>
+
+                    <!-- Service User -->
+                    <div class="form-group">
+                        {{ form.service_user.label_tag }}
+                        {{ form.service_user }}
+                    </div>
+
+                    <!-- DOB -->
+                    <div class="form-group">
+                        {{ form.dob.label_tag }}
+                        {{ form.dob }}
+                    </div>
+
+                    <!-- Staff Involved -->
+                    <div class="form-group">
+                        {{ form.staff_involved.label_tag }}
+                        {{ form.staff_involved }}
+                    </div>
+
+                    <!-- Prior Description -->
+                    <div class="form-group">
+                        {{ form.prior_description.label_tag }}
+                        <textarea name="{{ form.prior_description.name }}" class="form-control log-text" rows="3">{{ form.prior_description.value|default_if_none:'' }}</textarea>
+                    </div>
+
+                    <!-- Incident Description -->
+                    <div class="form-group">
+                        {{ form.incident_description.label_tag }}
+                        <textarea name="{{ form.incident_description.name }}" class="form-control log-text" rows="3">{{ form.incident_description.value|default_if_none:'' }}</textarea>
+                    </div>
+
+                    <!-- Service User Response -->
+                    <div class="form-group">
+                        {{ form.user_response.label_tag }}
+                        <textarea name="{{ form.user_response.name }}" class="form-control log-text" rows="3">{{ form.user_response.value|default_if_none:'' }}</textarea>
+                    </div>
+
+                    <!-- Contacted Parties -->
+                    <!-- Contacted Parties -->
+                    <div class="form-group">
+                        <label>Contacted Parties:</label>
+
+                        <!-- Manager -->
+                        <div class="form-check">
+                            {{ form.contacted_manager }}
+                            <label class="form-check-label"
+                                   for="{{ form.contacted_manager.id_for_label }}">Manager</label>
+                        </div>
+                        <div id="managerContactFields" style="display: none;" class="ml-4 mb-3">
+                            <div class="form-group">
+                                <label>Date/Time Contacted:</label>
+                                {{ form.manager_contact_date }}
+                            </div>
+                            <div class="form-group">
+                                <label>Comments:</label>
+                                <textarea name="{{ form.manager_contact_comment.name }}" class="form-control log-text"
+                                          rows="2">{{ form.manager_contact_comment.value|default_if_none:'' }}</textarea>
+                            </div>
+                        </div>
+
+                        <!-- Police -->
+                        <div class="form-check">
+                            {{ form.contacted_police }}
+                            <label class="form-check-label"
+                                   for="{{ form.contacted_police.id_for_label }}">Police</label>
+                        </div>
+                        <div id="policeContactFields" style="display: none;" class="ml-4 mb-3">
+                            <div class="form-group">
+                                <label>Date/Time Contacted:</label>
+                                {{ form.police_contact_date }}
+                            </div>
+                            <div class="form-group">
+                                <label>Comments:</label>
+                                <textarea name="{{ form.police_contact_comment.name }}" class="form-control log-text"
+                                          rows="2">{{ form.police_contact_comment.value|default_if_none:'' }}</textarea>
+                            </div>
+                        </div>
+
+                        <!-- Paramedics -->
+                        <div class="form-check">
+                            {{ form.contacted_paramedics }}
+                            <label class="form-check-label" for="{{ form.contacted_paramedics.id_for_label }}">Paramedics</label>
+                        </div>
+                        <div id="paramedicsContactFields" style="display: none;" class="ml-4 mb-3">
+                            <div class="form-group">
+                                <label>Date/Time Contacted:</label>
+                                {{ form.paramedics_contact_date }}
+                            </div>
+                            <div class="form-group">
+                                <label>Comments:</label>
+                                <textarea name="{{ form.paramedics_contact_comment.name }}"
+                                          class="form-control log-text" rows="2">{{ form.paramedics_contact_comment.value|default_if_none:'' }}</textarea>
+                            </div>
+                        </div>
+
+                        <!-- Other -->
+                        <div class="form-check">
+                            {{ form.contacted_other }}
+                            <label class="form-check-label" for="{{ form.contacted_other.id_for_label }}">Other</label>
+                        </div>
+                        <div id="otherContactFields" style="display: none;" class="ml-4 mb-3">
+                            <div class="form-group">
+                                <label>Name:</label>
+                                {{ form.other_contact_name }}
+                            </div>
+                            <div class="form-group">
+                                <label>Date/Time Contacted:</label>
+                                {{ form.other_contact_date }}
+                            </div>
+                            <div class="form-group">
+                                <label>Comments:</label>
+                                <textarea name="{{ form.other_contact_comment.name }}" class="form-control log-text"
+                                          rows="2">{{ form.other_contact_comment.value|default_if_none:'' }}</textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Injuries -->
+                    <div class="form-group">
+                        {{ form.injuries_detail.label_tag }}
+                        <textarea name="{{ form.injuries_detail.name }}" class="form-control log-text" rows="3">{{ form.injuries_detail.value|default_if_none:'' }}</textarea>
+                    </div>
+
+                    <!-- Property Damage -->
+                    <div class="form-group">
+                        {{ form.property_damage.label_tag }}
+                        <textarea name="{{ form.property_damage.name }}" class="form-control log-text" rows="3">{{ form.property_damage.value|default_if_none:'' }}</textarea>
+                    </div>
+
+                    <!-- PRN Administered -->
+                    <div class="form-group">
+                        {{ form.prn_administered.label_tag }}
+                        {{ form.prn_administered }}
+                    </div>
+
+                    <!-- PRN By Whom -->
+                    <div class="form-group">
+                        {{ form.prn_by_whom.label_tag }}
+                        {{ form.prn_by_whom }}
+                    </div>
+                    <!-- Add this to your form -->
+                    <div class="form-group">
+                        <label>Attach Images (Max 3)</label>
+                        <div class="row">
+                            <div class="col-md-4">
+                                {{ form.image1.label_tag }}
+                                {{ form.image1 }}
+                            </div>
+                            <div class="col-md-4">
+                                {{ form.image2.label_tag }}
+                                {{ form.image2 }}
+                            </div>
+                            <div class="col-md-4">
+                                {{ form.image3.label_tag }}
+                                {{ form.image3 }}
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Submit -->
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Submit Report
+                    </button>
+                    <a href="{% url 'staff-dashboard' %}" class="btn btn-secondary ml-2">
+                        <i class="fas fa-times"></i> Cancel
+                    </a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add this JavaScript at the end of your content block -->
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Function to toggle contact fields
+        function toggleContactFields(checkboxId, fieldsId) {
+            const checkbox = document.getElementById(checkboxId);
+            const fields = document.getElementById(fieldsId);
+
+            // Initial state
+            fields.style.display = checkbox.checked ? 'block' : 'none';
+
+            // Add event listener
+            checkbox.addEventListener('change', function() {
+                fields.style.display = this.checked ? 'block' : 'none';
+            });
+        }
+
+        // Set up toggles for all contact types
+        toggleContactFields('{{ form.contacted_manager.id_for_label }}', 'managerContactFields');
+        toggleContactFields('{{ form.contacted_police.id_for_label }}', 'policeContactFields');
+        toggleContactFields('{{ form.contacted_paramedics.id_for_label }}', 'paramedicsContactFields');
+        toggleContactFields('{{ form.contacted_other.id_for_label }}', 'otherContactFields');
+    });
+</script>
+{% endblock %}
+<style>
+    /* Textarea styling - matches the log form exactly */
+    .log-text {
+        min-height: 100px;
+        max-height: 300px;
+        resize: vertical;
+        overflow-y: auto;
+        line-height: 1.5;
+        background-color: white;
+        border: 1px solid #d1d3e2;
+        border-radius: 4px;
+        padding: 10px;
+        font-size: 14px;
+        width: 100%;
+    }
+
+    /* Focus state */
+    .log-text:focus {
+        border-color: #4e73df;
+        box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
+        outline: 0;
+    }
+</style>
+
+{% endblock %}

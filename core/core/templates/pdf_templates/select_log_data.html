@@ -1,0 +1,80 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block content %}
+<!-- Page Heading -->
+<div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0 text-gray-800">Create Logs</h1>
+</div>
+
+<!-- Alert Section -->
+{% if messages %}
+    {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    {% endfor %}
+{% endif %}
+
+<!-- Selection Form -->
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Select Log Criteria</h6>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+
+                    <!-- Carehome Dropdown -->
+                    <div class="form-group">
+                        <label for="carehome">Care Home *</label>
+                        <select class="form-control" name="carehome" id="carehome" required onchange="this.form.submit()">
+                            <option value="">-- Select Care Home --</option>
+                            {% for ch in carehomes %}
+                                <option value="{{ ch.id }}" {% if selected_carehome_id == ch.id|stringformat:"s" %}selected{% endif %}>{{ ch.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Shift Dropdown -->
+                    <div class="form-group">
+                        <label for="shift">Shift *</label>
+                        <select class="form-control" name="shift" id="shift" required {% if not shifts %}disabled{% endif %}>
+                            <option value="">-- Select Shift --</option>
+                            {% for s in shifts %}
+                                <option value="{{ s }}" {% if request.POST.shift == s %}selected{% endif %}>{{ s }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Service User Dropdown -->
+                    <div class="form-group">
+                        <label for="service_user">Service User *</label>
+                        <select class="form-control" name="service_user" id="service_user" required {% if not service_users %}disabled{% endif %}>
+                            <option value="">-- Select Service User --</option>
+                            {% for user in service_users %}
+                                <option value="{{ user.id }}" {% if request.POST.service_user == user.id|stringformat:"s" %}selected{% endif %}>
+                                    {{ user.first_name }} {{ user.last_name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Buttons -->
+                    <button type="submit" name="start_log" class="btn btn-primary">
+                        <i class="fas fa-arrow-right"></i> Continue
+                    </button>
+                    <a href="{% url 'staff-dashboard' %}" class="btn btn-secondary ml-2">
+                        <i class="fas fa-times"></i> Cancel
+                    </a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,69 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h4 text-gray-800">User Daily Log</h1>
+</div>
+
+{% if logs %}
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered table-striped">
+                <thead class="thead-light">
+                <tr>
+                    <th>Log Date</th>
+                    <th>Staff User</th>
+                    <th>Service User</th>
+                    <th>Care Home</th>
+                    <th>Shift</th>
+                    <th>Status</th>
+                    <th>Details (Print)</th>
+                    {% if request.user.role == 'team_lead' or request.user.role == 'manager' %}
+                        <th>Action</th>
+                    {% endif %}
+                </tr>
+                </thead>
+                <tbody>
+                {% for log in logs %}
+                <tr>
+                    <td>{{ log.date }}</td>
+                    <td>
+                        {{ request.user.first_name }} {{ request.user.last_name }}
+                        ({{ request.user.first_name|first|upper }}{{ request.user.last_name|first|upper }})
+                    </td>
+                    <td>{{ log.service_user }}</td>
+                    <td>{{ log.carehome }}</td>
+                    <td>{{ log.shift }}</td>
+                    <td>
+                        {{ log.submitted }}
+                        {% if log.status == 'locked' %}
+                            <span class="badge badge-success">Locked</span>
+                        {% else %}
+                            <span class="badge badge-warning">Incomplete</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if request.user.role == 'staff' %}
+                           <a href="{% url 'log_detail_view' log.id %}" class="btn btn-primary btn-sm">View</a>
+                        {% elif request.user.role == 'team_lead' or request.user.role == 'manager' %}
+                            <a href="{% url 'log_detail_view' log.id %}" class="btn btn-warning btn-sm">Details (Print)</a>
+                        {% endif %}
+                    </td>
+                    {% if request.user.role == 'team_lead' or request.user.role == 'manager' %}
+                    <td>
+                        <a href="{% url 'log-entry-form' latest_log_id=log.id %}" class="btn btn-primary btn-sm">Edit/View</a>
+                       </td>
+                    {% endif %}
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="alert alert-info">No logs found. Start logging from the dashboard.</div>
+{% endif %}
+{% endblock %}

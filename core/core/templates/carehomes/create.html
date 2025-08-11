@@ -1,0 +1,305 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block content %}
+<!-- Page Heading -->
+<div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0 text-gray-800">
+        {% if edit_mode %}Edit{% else %}Create New{% endif %} Carehome
+    </h1>
+    {% if messages %}
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+    {% endfor %}
+    {% endif %}
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <!-- Basic Card Example -->
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Carehome Details</h6>
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data" id="carehome-form">
+                    {% csrf_token %}
+
+                    {% if form.errors %}
+                    <div class="alert alert-danger">
+                        <strong>Error!</strong> Please correct the following:
+                        <ul>
+                            {% for field, errors in form.errors.items %}
+                            {% for error in errors %}
+                            <li>{{ error }}</li>
+                            {% endfor %}
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+
+                    <!-- Carehome Picture -->
+                    <div class="form-group">
+                        <label for="id_picture">Carehome Picture</label>
+                        <div class="custom-file">
+                            <input type="file" class="custom-file-input" id="id_picture" name="picture"
+                                   accept="image/*">
+                            <label class="custom-file-label" for="id_picture">
+                                {% if form.instance.picture %}Current: {{ form.instance.picture.name }}{% else %}Choose file{% endif %}
+                            </label>
+                        </div>
+                        {% if form.instance.picture %}
+                        <small class="form-text text-muted">
+                            Current: <a href="{{ form.instance.picture.url }}" target="_blank">{{ form.instance.picture.name }}</a>
+                        </small>
+                        {% endif %}
+                    </div>
+
+                    <!-- Name -->
+                    <div class="form-group">
+                        <label for="id_name">Name *</label>
+                        <input type="text" class="form-control" id="id_name" name="name"
+                               value="{{ form.instance.name|default:'' }}" required>
+                        <small class="form-text text-muted">Enter the official name of the carehome</small>
+                    </div>
+
+                    <!-- Postcode -->
+                    <div class="form-group">
+                        <label for="id_postcode">Postcode *</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="id_postcode" name="postcode"
+                                   value="{{ form.instance.postcode|default:'' }}" required>
+                            <div class="input-group-append">
+                                <button class="btn btn-outline-primary" type="button" id="validate-btn">
+                                    <i class="fas fa-map-marker-alt"></i> Validate
+                                </button>
+                            </div>
+                        </div>
+                        <small id="postcode-error" class="text-danger d-none">Invalid postcode format</small>
+                        <small id="postcode-success" class="text-success d-none">
+                            <i class="fas fa-check-circle"></i> Valid postcode
+                        </small>
+                    </div>
+
+                    <!-- Details -->
+                    <div class="form-group">
+                        <label for="id_details">Additional Details</label>
+                        <textarea class="form-control" id="id_details" name="details" rows="3">{{ form.instance.details|default:'' }}</textarea>
+                    </div>
+
+                    <!-- Shift Times Section -->
+                    <div class="form-group">
+                        <label for="id_morning_shift_start">Morning Shift Start Time *</label>
+                        <input type="time" class="form-control" id="id_morning_shift_start"
+                               name="morning_shift_start"
+                               value="{{ form.instance.morning_shift_start|default:''|time:'H:i' }}" required>
+                        <small class="form-text text-muted">Morning shift start time (12-hour shifts will be calculated automatically)</small>
+                    </div>
+
+                    <!-- Display calculated times -->
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <h6 class="m-0 font-weight-bold text-primary">Calculated Shift Times</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>Morning Shift</label>
+                                        <input type="text" class="form-control" id="morning_shift_display" readonly>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>Night Shift</label>
+                                        <input type="text" class="form-control" id="night_shift_display" readonly>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Hidden fields for calculated times -->
+                    <input type="hidden" id="id_morning_shift_end" name="morning_shift_end"
+                           value="{{ form.instance.morning_shift_end|default:''|time:'H:i' }}">
+                    <input type="hidden" id="id_night_shift_start" name="night_shift_start"
+                           value="{{ form.instance.night_shift_start|default:''|time:'H:i' }}">
+                    <input type="hidden" id="id_night_shift_end" name="night_shift_end"
+                           value="{{ form.instance.night_shift_end|default:''|time:'H:i' }}">
+
+                    <!-- Buttons -->
+                    <button type="submit" class="btn btn-primary" id="submit-btn" {% if not edit_mode %}disabled{% endif %}>
+                        <i class="fas fa-save"></i> {% if edit_mode %}Update{% else %}Create{% endif %} Carehome
+                    </button>
+                    <a href="{% url 'carehomes-dashboard' %}" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Cancel
+                    </a>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Preview Column -->
+    <div class="col-lg-4">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Image Preview</h6>
+            </div>
+            <div class="card-body text-center">
+                <div class="d-flex justify-content-center mb-3">
+                    <div class="rounded-circle overflow-hidden"
+                         style="width: 150px; height: 150px; border: 3px solid #eee;">
+                        <img id="image-preview"
+                             src="{% if form.instance.picture %}{{ form.instance.picture.url }}{% else %}{% static 'img/default-carehome.png' %}{% endif %}"
+                             style="width: 100%; height: 100%; object-fit: cover;"
+                             alt="Carehome preview">
+                    </div>
+                </div>
+                <small class="text-muted">Image will be displayed as a circle</small>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    $(document).ready(function () {
+        {% if edit_mode %}
+        $('#id_postcode').addClass('is-valid');
+        $('#postcode-success').removeClass('d-none');
+        $('#submit-btn').prop('disabled', false);
+        {% endif %}
+
+        // Image preview handler
+        $('#id_picture').change(function () {
+            const file = this.files[0];
+            if (file) {
+                $(this).next('.custom-file-label').text(file.name);
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    $('#image-preview').attr('src', e.target.result);
+                };
+                reader.readAsDataURL(file);
+            } else {
+                $('#image-preview').attr('src', "{% if form.instance.picture %}{{ form.instance.picture.url }}{% else %}{% static 'img/default-carehome.png' %}{% endif %}");
+            }
+        });
+
+        // Postcode validation
+        $('#validate-btn').click(function () {
+            const postcode = $('#id_postcode').val().trim().toUpperCase();
+            const regex = /^[A-Z]{1,2}[0-9][A-Z0-9]? ?[0-9][A-Z]{2}$/;
+            const isValid = regex.test(postcode);
+
+            if (isValid) {
+                $('#id_postcode').removeClass('is-invalid').addClass('is-valid');
+                $('#postcode-error').addClass('d-none');
+                $('#postcode-success').removeClass('d-none');
+            } else {
+                $('#id_postcode').removeClass('is-valid').addClass('is-invalid');
+                $('#postcode-error').removeClass('d-none').text('Invalid UK postcode format');
+                $('#postcode-success').addClass('d-none');
+            }
+            checkSubmitButton();
+        });
+
+        // Name validation
+        $('#id_name').on('input', function () {
+            checkSubmitButton();
+        });
+
+        // Shift time calculations
+        function calculateShiftTimes(startTime) {
+            if (!startTime) return null;
+
+            const [hours, minutes] = startTime.split(':').map(Number);
+
+            // Calculate morning shift end (12 hours later)
+            let morningEndHours = hours + 12;
+            if (morningEndHours >= 24) morningEndHours -= 24;
+            const morningEnd = `${morningEndHours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+
+            // Night shift starts when morning ends
+            const nightStart = morningEnd;
+
+            // Night shift ends 12 hours after it starts
+            let nightEndHours = morningEndHours + 12;
+            if (nightEndHours >= 24) nightEndHours -= 24;
+            const nightEnd = `${nightEndHours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+
+            return {
+                morningEnd,
+                nightStart,
+                nightEnd
+            };
+        }
+
+        function updateShiftTimes() {
+            const startTime = $('#id_morning_shift_start').val();
+            const times = calculateShiftTimes(startTime);
+
+            if (times) {
+                // Update hidden form fields
+                $('#id_morning_shift_end').val(times.morningEnd);
+                $('#id_night_shift_start').val(times.nightStart);
+                $('#id_night_shift_end').val(times.nightEnd);
+
+                // Update display fields
+                $('#morning_shift_display').val(`${startTime} - ${times.morningEnd}`);
+                $('#night_shift_display').val(`${times.nightStart} - ${times.nightEnd}`);
+
+                // Enable submit button if in create mode
+                if (!{% if edit_mode %}true{% else %}false{% endif %}) {
+                    checkSubmitButton();
+                }
+            }
+        }
+
+        // Morning shift time change handler
+        $('#id_morning_shift_start').on('change input', updateShiftTimes);
+
+        // Form validation
+        function checkSubmitButton() {
+            const nameValid = $('#id_name').val().trim().length > 0;
+            const postcodeValid = $('#id_postcode').hasClass('is-valid');
+            const shiftTimeValid = $('#id_morning_shift_start').val() !== '';
+            $('#submit-btn').prop('disabled', !(nameValid && postcodeValid && shiftTimeValid));
+        }
+
+        // Initialize shift times if editing
+        {% if edit_mode and form.instance.morning_shift_start %}
+            updateShiftTimes();
+        {% endif %}
+    });
+</script>
+
+<style>
+    .img-circle-container {
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        overflow: hidden;
+        margin: 0 auto;
+        border: 3px solid #eee;
+    }
+
+    input[type="time"] {
+        padding: 0.375rem 0.75rem;
+    }
+
+    input[readonly] {
+        background-color: #f8f9fa;
+        cursor: not-allowed;
+    }
+
+    .card-header h6 {
+        margin-bottom: 0;
+    }
+</style>
+{% endblock %}

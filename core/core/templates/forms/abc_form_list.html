@@ -1,0 +1,52 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container">
+    <h1 class="h3 mb-4">ABC Behaviour Forms</h1>
+
+    <table class="table table-bordered table-striped">
+        <thead class="thead-dark">
+        <tr>
+            <th>Date/Time</th>
+            <th>Service User</th>
+            <th>Staff Member</th>
+            <th>Submitted</th>
+            <th>Actions</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for form in forms %}
+        <tr>
+            <td>{{ form.date_time|date:"d M Y H:i" }}</td>
+            <td>{{ form.service_user }}</td>
+            <td>{{ form.staff }}</td>
+            <td>{{ form.created_at|date:"d M Y" }} by {{ form.created_by.get_full_name }}</td>
+            <td>
+                <div class="btn-group btn-group-sm">
+                    <a href="{% url 'view_abc_form' form.id %}" class="btn btn-info">
+                        <i class="fas fa-eye"></i> View
+                    </a>
+
+                    {% if request.user.role in 'manager team_lead' or request.user.is_superuser %}
+                    <a href="{% url 'download_abc_pdf' form.id %}" class="btn btn-success">
+                        <i class="fas fa-file-pdf"></i> PDF
+                    </a>
+                    {% endif %}
+                    {% if request.user.role in 'manager team_lead' or request.user.is_superuser %}
+                    <a href="{% url 'edit_abc_form' form.id %}" class="btn btn-warning">
+                        <i class="fas fa-edit"></i> Edit
+                    </a>
+                    {% endif %}
+                </div>
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="5" class="text-center">No ABC forms found</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

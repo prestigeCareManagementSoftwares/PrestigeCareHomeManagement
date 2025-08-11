@@ -1,0 +1,179 @@
+<!-- Sidebar -->
+<ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
+
+    <!-- Sidebar - Brand -->
+    {% if request.user.is_authenticated %}
+    {% if request.user.role == 'manager' or request.user.role == 'team_lead' or request.user.role == 'staff' %}
+    <a class="sidebar-brand d-flex align-items-center justify-content-center" href="{% url 'admin-dashboard' %}">
+        <div class="sidebar-brand-icon">
+            <i class="fas fa-home"></i>
+        </div>
+        <div class="sidebar-brand-text mx-3">CARE SYSTEM</div>
+    </a>
+    {% else %}
+    <div class="sidebar-brand d-flex align-items-center justify-content-center">
+        <div class="sidebar-brand-icon">
+            <i class="fas fa-home"></i>
+        </div>
+        <div class="sidebar-brand-text mx-3">CARE SYSTEM</div>
+    </div>
+    {% endif %}
+    {% else %}
+    <div class="sidebar-brand d-flex align-items-center justify-content-center">
+        <div class="sidebar-brand-icon">
+            <i class="fas fa-home"></i>
+        </div>
+        <div class="sidebar-brand-text mx-3">CARE SYSTEM</div>
+    </div>
+    {% endif %}
+
+
+    <hr class="sidebar-divider my-0">
+
+    <!-- Nav Item - Dashboard -->
+    {% if request.user.is_authenticated and request.user.role == 'manager' %}
+    <!-- Nav Item - Dashboard -->
+    <li class="nav-item {% if request.resolver_match.url_name == 'admin-dashboard' %}active{% endif %}">
+        <a class="nav-link" href="{% url 'admin-dashboard' %}">
+            <i class="fas fa-fw fa-tachometer-alt"></i>
+            <span>Dashboard</span>
+        </a>
+    </li>
+    {% elif request.user.is_authenticated and request.user.role == 'team_lead' %}
+    <!-- Nav Item - Dashboard -->
+    <li class="nav-item {% if request.resolver_match.url_name == 'admin-dashboard' %}active{% endif %}">
+        <a class="nav-link" href="{% url 'admin-dashboard' %}">
+            <i class="fas fa-fw fa-tachometer-alt"></i>
+            <span>Dashboard</span>
+        </a>
+    </li>
+    {% endif %}
+
+
+    <hr class="sidebar-divider">
+
+    <div class="sidebar-heading">MANAGEMENT</div>
+
+    <!-- Show to Staff ONLY -->
+    {% if request.user.is_authenticated and request.user.role == 'staff' or request.user.role == 'team_lead'%}
+    <li class="nav-item">
+        <a class="nav-link" href="{% url 'fill_abc_form' %}">
+            <i class="fas fa-file-alt fa-sm mr-2"></i>
+            <span>Create ABC Behaviour Monitoring</span>
+        </a>
+    </li>
+
+    <li class="nav-item">
+        <a class="nav-link" href="{% url 'fill_incident_form' %}">
+            <i class="fas fa-exclamation-triangle fa-sm mr-2"></i>
+            <span>Create Incident Logs</span>
+        </a>
+    </li>
+
+    <li class="nav-item">
+        <a class="nav-link" href="{% url 'create-log' %}">
+            <i class="fas fa-plus fa-sm mr-2"></i>
+            <span>Create Logs</span>
+        </a>
+    </li>
+
+    <hr class="sidebar-divider">
+    {% endif %}
+
+    <!-- Staff Section: For Manager or Team Lead -->
+    {% if request.user.is_authenticated %}
+    {% if request.user.role == 'manager'  %}
+    <!-- Your protected content here -->
+
+    <li class="nav-item">
+        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#staffCollapse"
+           aria-expanded="true" aria-controls="staffCollapse">
+            <i class="fas fa-fw fa-users"></i>
+            <span>Staff</span>
+        </a>
+        <div id="staffCollapse" class="collapse" aria-labelledby="headingStaff" data-parent="#accordionSidebar">
+            <div class="bg-white py-2 collapse-inner rounded">
+                <a class="collapse-item" href="{% url 'staff-dashboard' %}">
+                    <i class="fas fa-tachometer-alt fa-sm mr-2"></i>Dashboard
+                </a>
+                <a class="collapse-item" href="{% url 'create-staff' %}">
+                    <i class="fas fa-user-plus fa-sm mr-2"></i>Create Staff
+                </a>
+            </div>
+        </div>
+    </li>
+    {% endif %}
+    {% endif %}
+    <!-- Carehomes Section (Only Manager) -->
+    {% if request.user.is_authenticated and request.user.role == 'manager'  %}
+    <li class="nav-item">
+        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#carehomesCollapse"
+           aria-expanded="true" aria-controls="carehomesCollapse">
+            <i class="fas fa-fw fa-home"></i>
+            <span>Carehomes</span>
+        </a>
+        <div id="carehomesCollapse" class="collapse" aria-labelledby="headingCarehomes" data-parent="#accordionSidebar">
+            <div class="bg-white py-2 collapse-inner rounded">
+                <a class="collapse-item" href="{% url 'carehomes-dashboard' %}">
+                    <i class="fas fa-tachometer-alt fa-sm mr-2"></i>Dashboard
+                </a>
+                <a class="collapse-item" href="{% url 'create-carehome' %}">
+                    <i class="fas fa-plus-circle fa-sm mr-2"></i>Create Carehome
+                </a>
+            </div>
+        </div>
+    </li>
+    {% endif %}
+
+    <!-- Service Users Section (Only Manager) -->
+    {% if request.user.is_authenticated and request.user.role == 'manager' %}
+    <li class="nav-item">
+        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#serviceUsersCollapse"
+           aria-expanded="true" aria-controls="serviceUsersCollapse">
+            <i class="fas fa-fw fa-user-friends"></i>
+            <span>Service Users</span>
+        </a>
+        <div id="serviceUsersCollapse" class="collapse" aria-labelledby="headingServiceUsers"
+             data-parent="#accordionSidebar">
+            <div class="bg-white py-2 collapse-inner rounded">
+                <a class="collapse-item" href="{% url 'service-users-dashboard' %}">
+                    <i class="fas fa-tachometer-alt fa-sm mr-2"></i>Dashboard
+                </a>
+                <a class="collapse-item" href="{% url 'create-service-user' %}">
+                    <i class="fas fa-user-plus fa-sm mr-2"></i>Create Service User
+                </a>
+            </div>
+        </div>
+    </li>
+    {% endif %}
+
+    <!--Mapping Section (Only Manager) -->
+    {% if request.user.is_authenticated and request.user.role == 'manager'%}
+    <li class="nav-item">
+        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#mappingCollapse"
+           aria-expanded="true" aria-controls="mappingCollapse">
+            <i class="fas fa-project-diagram"></i>
+            <span>Mapping</span>
+        </a>
+        <div id="mappingCollapse" class="collapse" aria-labelledby="headingMapping" data-parent="#accordionSidebar">
+            <div class="bg-white py-2 collapse-inner rounded">
+                <a class="collapse-item" href="{% url 'staff-mapping' %}">
+                    <i class="fas fa-tachometer-alt fa-sm mr-2"></i>Dashboard
+                </a>
+                <a class="collapse-item" href="{% url 'staff-mapping' %}">
+                    <i class="fas fa-link fa-sm mr-2"></i>Create Mapping
+                </a>
+            </div>
+        </div>
+    </li>
+    {% endif %}
+
+    <hr class="sidebar-divider d-none d-md-block">
+
+    <!-- Sidebar Toggler -->
+    <div class="text-center d-none d-md-inline">
+        <button class="rounded-circle border-0" id="sidebarToggle"></button>
+    </div>
+
+</ul>
+<!-- End of Sidebar -->

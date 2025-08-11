@@ -1,0 +1,168 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h4 mb-0 text-gray-800">Log Form ({{ shift }})</h1>
+</div>
+
+<div class="row align-items-center mb-4">
+    <div class="col-md-1 text-center">
+        {% if request.user.image %}
+        <img src="{{ request.user.image.url }}" class="rounded-circle" height="70" alt="Staff">
+        {% else %}
+        <img src="{% static 'img/undraw_profile.svg' %}" class="rounded-circle" height="70" alt="Staff">
+        {% endif %}
+    </div>
+    <div class="col-md-5">
+        <div><strong>Date:</strong> {{ today }}</div>
+        <div><strong>Staff:</strong> {{ request.user.get_full_name }}</div>
+    </div>
+    <div class="col-md-3">
+        <div><strong>Service User:</strong> {{ service_user.first_name }} {{ service_user.last_name }}</div>
+        <div><strong>Carehome:</strong> {{ carehome.name }} {{shift}} </div>
+    </div>
+    <div class="col-md-1 text-center">
+        {% if service_user.image %}
+        <img src="{{ service_user.image.url }}" class="rounded-circle" height="70" alt="Service User">
+        {% else %}
+        <img src="{% static 'img/default-user.png' %}" class="rounded-circle" height="70" alt="Service User">
+        {% endif %}
+    </div>
+</div>
+
+<hr>
+
+{% if log_entries %}
+<div id="log-entries-container">
+    {% for entry in log_entries %}
+    <div id="entry-{{ entry.id }}" class="mb-4 log-entry" data-entry-id="{{ entry.id }}" {% if not forloop.first %}data-locked="true"{% endif %}>
+        <div><strong>{{ entry.time_slot|time:"H:i" }}</strong></div>
+        <form method="post" class="log-form">
+            {% csrf_token %}
+            <textarea name="content" class="form-control log-text" rows="2"
+                {% if entry.is_locked %}disabled{% endif %}
+                {% if not forloop.first and not entry.content %}disabled{% endif %}>{{ entry.content }}</textarea>
+            <div class="mt-2">
+                {% if entry.content %}
+                <button type="button" class="btn btn-primary update-btn" {% if not forloop.first and not entry.content %}disabled{% endif %}>Update</button>
+                {% else %}
+                <button type="button" class="btn btn-success save-btn" {% if not forloop.first and not entry.content %}disabled{% endif %}>Save</button>
+                {% endif %}
+            </div>
+        </form>
+        <hr>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="alert alert-warning">No log entries found.</div>
+{% endif %}
+
+{% if not latest_log.is_locked %}
+<form method="post" action="{% url 'lock-log' latest_log.id %}">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-danger"
+            onclick="return confirm('Once locked, entries cannot be edited. Proceed?')">
+        Submit & Lock
+    </button>
+</form>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const entries = document.querySelectorAll('.log-entry');
+    const lockButton = document.querySelector('button[type="submit"]');
+
+    // Enable first empty entry or first entry if all have content
+    let firstEmptyEntry = null;
+    entries.forEach(entry => {
+        const textarea = entry.querySelector('.log-text');
+        if (!textarea.value.trim() && !firstEmptyEntry) {
+            firstEmptyEntry = entry;
+        }
+    });
+
+    const initialEntry = firstEmptyEntry || entries[0];
+    if (initialEntry) {
+        enableEntry(initialEntry);
+    }
+
+    // Handle save/update button clicks
+    entries.forEach(entry => {
+        const button = entry.querySelector('.save-btn') || entry.querySelector('.update-btn');
+        const textarea = entry.querySelector('.log-text');
+
+        if (button) {
+            button.addEventListener('click', function() {
+                saveEntry(entry, textarea, button);
+            });
+        }
+    });
+
+    function enableEntry(entry) {
+        const textarea = entry.querySelector('.log-text');
+        const button = entry.querySelector('.save-btn') || entry.querySelector('.update-btn');
+
+        if (textarea && button) {
+            textarea.disabled = false;
+            button.disabled = false;
+            entry.dataset.locked = "false";
+        }
+    }
+
+    function saveEntry(entry, textarea, button) {
+        const form = entry.querySelector('form');
+        const formData = new FormData(form);
+        const entryId = entry.dataset.entryId;
+        const csrfToken = formData.get("csrfmiddlewaretoken");
+
+        // Add content to form data
+        formData.append('content', textarea.value);
+
+        fetch(`/save-log/${entryId}/`, {
+            method: "POST",
+            headers: { "X-CSRFToken": csrfToken },
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Change save button to update button if it was a save
+                if (button.classList.contains('save-btn')) {
+                    button.classList.remove('save-btn', 'btn-success');
+                    button.classList.add('update-btn', 'btn-primary');
+                    button.textContent = 'Update';
+                }
+
+                // Find and enable the next entry
+                const nextEntry = entry.nextElementSibling;
+                if (nextEntry && nextEntry.classList.contains('log-entry')) {
+                    enableEntry(nextEntry);
+                }
+
+                // Enable the lock button if all entries have content
+                if (lockButton && allEntriesHaveContent()) {
+                    lockButton.disabled = false;
+                }
+            } else {
+                alert("Error saving log entry: " + (data.error || 'Unknown error'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert("An error occurred while saving the log entry.");
+        });
+    }
+
+    function allEntriesHaveContent() {
+        return Array.from(entries).every(entry => {
+            const textarea = entry.querySelector('.log-text');
+            return textarea && textarea.value.trim() !== '';
+        });
+    }
+});
+</script>
+{% endblock %}
