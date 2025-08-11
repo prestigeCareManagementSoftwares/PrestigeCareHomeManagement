@@ -12,6 +12,7 @@ ALLOWED_HOSTS = [
     'prestigecarehomemanagement.onrender.com',  # Render URL
     'localhost',
     '127.0.0.1',
+    'prestigecarehomemanagement-k5rs.onrender.com'
     'prestigesupportedliving.com', 'www.prestigesupportedliving.com'
 ]
 
