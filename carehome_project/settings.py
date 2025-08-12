@@ -89,10 +89,10 @@ TEMPLATES = [
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.environ.get('prestigecare_db_7zk3'),       # From Render dashboard
-        'USER': os.environ.get('prestigecare_db_7zk3_user'),       # From Render dashboard
-        'PASSWORD': os.environ.get('SmaEQOIJzD3A3wHVWmAUrGsGXfwQbXze'), # From Render dashboard
-        'HOST': os.environ.get('dpg-d2d64f3e5dus73fkhb5g-a'),       # From Render dashboard
+        'NAME': os.environ.get('DB_NAME'),
+        'USER': os.environ.get('DB_USER'),
+        'PASSWORD': os.environ.get('DB_PASSWORD'),
+        'HOST': os.environ.get('DB_HOST'),
         'PORT': os.environ.get('DB_PORT', '5432'),
     }
 }
