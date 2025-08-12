@@ -1,6 +1,7 @@
 # core/urls.py
 from django.conf.urls.static import static
-from django.urls import path
+from django.http import HttpResponseForbidden
+from django.urls import path, re_path
 
 from carehome_project import settings
 from . import views
@@ -58,6 +59,7 @@ urlpatterns = ([
                         name='get-service-users-by-carehome'),
                    path('staff-mapping/', staff_mapping_view, name='staff-mapping'),
                    path('delete-mapping/<int:pk>/', delete_mapping, name='delete-mapping'),
-
+                   re_path(r'^\.(git|svn|env)/', lambda r: HttpResponseForbidden()),
+                   re_path(r'@fs/', lambda r: HttpResponseForbidden()),
                ]
                + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT))
