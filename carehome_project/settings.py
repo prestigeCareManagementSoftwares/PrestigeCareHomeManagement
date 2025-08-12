@@ -8,8 +8,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get("SECRET_KEY", "django-insecure-1oafo=nwgt9wp2d_6i@xyy6$i4mw7@_28&miy)hq#*yovo^=q0")
 DEBUG = os.environ.get("DEBUG", "False") == "True"
 
-ALLOWED_HOSTS = [
-    'prestigecarehomemanagement.onrender.com',  # Render URL
+ALLOWED_HOSTS = [ # Render URL
     'localhost',
     '127.0.0.1',
     'prestigecarehomemanagement-k5rs.onrender.com',
@@ -17,7 +16,7 @@ ALLOWED_HOSTS = [
 ]
 
 CSRF_TRUSTED_ORIGINS = [
-    'https://prestigecarehomemanagement.onrender.com',
+    'https://prestigecarehomemanagement-k5rs.onrender.com',
     'https://www.prestigesupportedliving.com',  # Bluehost frontend
     'https://prestigesupportedliving.com',
 ]
