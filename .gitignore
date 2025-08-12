@@ -1,0 +1,23 @@
+# Database
+db.sqlite3
+*.sqlite3-*
+
+# Virtual environment
+.venv/
+venv/
+ENV/
+
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Environment variables
+.env
+.env.local
+
+# Static files (if collected)
+staticfiles/
+
+# macOS/IDE files
+.DS_Store
+.idea/
