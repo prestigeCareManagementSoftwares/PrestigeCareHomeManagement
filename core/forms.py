@@ -345,3 +345,65 @@ class ABCFormForm(forms.ModelForm):
             self.save_m2m()
 
         return instance
+
+
+class StaffEditForm(forms.ModelForm):
+    role = forms.ChoiceField(
+        choices=CustomUser.ROLE_CHOICES,
+        widget=forms.RadioSelect
+    )
+    carehome = forms.ModelChoiceField(
+        queryset=CareHome.objects.all(),
+        required=False,
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
+    password1 = forms.CharField(
+        required=False,
+        widget=forms.PasswordInput(attrs={'class': 'form-control'}),
+        label='New Password'
+    )
+    password2 = forms.CharField(
+        required=False,
+        widget=forms.PasswordInput(attrs={'class': 'form-control'}),
+        label='Confirm New Password'
+    )
+
+    class Meta:
+        model = CustomUser
+        fields = (
+            'image', 'first_name', 'last_name', 'email', 'phone',
+            'address', 'postcode', 'role', 'carehome', 'next_of_kin_first_name',
+            'next_of_kin_last_name', 'next_of_kin_phone', 'next_of_kin_email'
+        )
+        widgets = {
+            'image': forms.FileInput(attrs={'class': 'form-control-file'}),
+            'address': forms.Textarea(attrs={'rows': 3, 'class': 'form-control'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control'}),
+            'first_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'last_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'phone': forms.TextInput(attrs={'class': 'form-control'}),
+            'postcode': forms.TextInput(attrs={'class': 'form-control'}),
+            'next_of_kin_first_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'next_of_kin_last_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'next_of_kin_phone': forms.TextInput(attrs={'class': 'form-control'}),
+            'next_of_kin_email': forms.EmailInput(attrs={'class': 'form-control'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['role'].widget.attrs.update({'class': 'form-check-input'})
+
+    def clean(self):
+        cleaned_data = super().clean()
+        role = cleaned_data.get('role')
+        carehome = cleaned_data.get('carehome')
+        password1 = cleaned_data.get('password1')
+        password2 = cleaned_data.get('password2')
+
+        if role == CustomUser.TEAM_LEAD and not carehome:
+            self.add_error('carehome', "Care Home is required for Team Leads.")
+
+        if password1 and password2 and password1 != password2:
+            self.add_error('password2', "Passwords do not match.")
+
+        return cleaned_data

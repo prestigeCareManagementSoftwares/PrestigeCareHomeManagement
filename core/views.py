@@ -496,43 +496,54 @@ def edit_staff(request, pk):
     staff = get_object_or_404(CustomUser, pk=pk)
     carehomes = CareHome.objects.all()
 
-    # Store the original image path for potential deletion
-    original_image_path = staff.image.path if staff.image and os.path.exists(staff.image.path) else None
+    image_exists = False
+    if staff.image:
+        try:
+            image_exists = os.path.exists(staff.image.path)
+        except:
+            image_exists = False
 
     if request.method == 'POST':
-        form = StaffCreationForm(request.POST, request.FILES, instance=staff)
+        # For edit mode, use a different form that doesn't require passwords
+        form = StaffEditForm(request.POST, request.FILES, instance=staff)
 
         if form.is_valid():
             staff = form.save(commit=False)
 
-            # Debug info
-            print(f"New image uploaded: {bool(request.FILES.get('image'))}")
-            print(f"Original image path: {original_image_path}")
+            # Handle password change only if provided
+            password1 = request.POST.get('password1')
+            password2 = request.POST.get('password2')
 
-            # Handle role-based staff status
+            if password1 and password2:
+                if password1 == password2:
+                    staff.set_password(password1)
+                else:
+                    messages.error(request, 'Passwords do not match.')
+                    return render(request, 'staff/create.html', {
+                        'form': form,
+                        'carehomes': carehomes,
+                        'edit_mode': True,
+                        'image_exists': image_exists
+                    })
+
             if staff.role == CustomUser.TEAM_LEAD:
                 staff.is_staff = True
             else:
                 staff.is_staff = False
 
-            # Save the staff member (this will trigger the pre_save signal)
             staff.save()
-
             messages.success(request, 'Staff member updated successfully!')
             return redirect('staff-dashboard')
         else:
             print(f"Form errors: {form.errors}")
-            for field, errors in form.errors.items():
-                for error in errors:
-                    messages.error(request, f"{field}: {error}")
     else:
-        form = StaffCreationForm(instance=staff)
+        form = StaffEditForm(instance=staff)
 
     return render(request, 'staff/create.html', {
         'form': form,
         'carehomes': carehomes,
         'edit_mode': True,
-        'image_exists': staff.image and os.path.exists(staff.image.path)
+        'image_exists': image_exists
     })
 
 
