@@ -2,6 +2,7 @@ import json
 import logging
 import os
 import tempfile
+from email.quoprimime import unquote
 from http.cookiejar import logger
 
 import imgkit
@@ -12,7 +13,7 @@ from django.core.files.base import ContentFile
 from django.db import transaction
 from django.db.models import Q
 from django.forms import model_to_dict
-from django.http import HttpResponseForbidden
+from django.http import HttpResponseForbidden, FileResponse, Http404
 from django.views.decorators.csrf import csrf_exempt
 import requests
 from django.views.decorators.http import require_POST, require_GET
@@ -38,6 +39,12 @@ from .forms import LogEntryForm
 from django.http import JsonResponse
 from datetime import time
 
+def serve_media(request, path):
+    path = unquote(path)
+    file_path = os.path.join(settings.MEDIA_ROOT, path)
+    if os.path.exists(file_path):
+        return FileResponse(open(file_path, 'rb'))
+    raise Http404("File not found")
 
 def get_shifts_from_carehome(carehome):
     from datetime import datetime, timedelta, date
