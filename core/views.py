@@ -447,40 +447,38 @@ def logout_view(request):
     return redirect('login')
 
 
+# In your create_staff view, add better error handling:
 @login_required
 def create_staff(request):
     carehomes = CareHome.objects.all()
 
     if request.method == 'POST':
-        form = StaffCreationForm(request.POST, request.FILES)  # FILES is included
+        form = StaffCreationForm(request.POST, request.FILES)
+        print(f"Form data: {request.POST}")  # Debug
+        print(f"Form files: {request.FILES}")  # Debug
+
         if form.is_valid():
             try:
-                # Let the form handle everything including the image
                 staff = form.save(commit=False)
 
-                # Debug: Check if image is being processed
-                print(f"Image in form: {form.cleaned_data.get('image')}")
-                print(f"Image in staff object: {staff.image}")
-
+                # Handle role-based staff status
                 if staff.role == CustomUser.TEAM_LEAD:
                     staff.is_staff = True
                 else:
                     staff.is_staff = False
 
-                staff.save()  # This will save the image too
+                staff.save()
                 messages.success(request, 'Staff member created successfully!')
                 return redirect('staff-dashboard')
 
             except Exception as e:
+                print(f"Error during save: {e}")  # Debug
                 messages.error(request, f'Error saving staff: {str(e)}')
-                logger.error(f"Staff creation error: {str(e)}")
         else:
-            # Print form errors for debugging
-            print(f"Form errors: {form.errors}")
+            print(f"Form errors: {form.errors}")  # Debug
             for field, errors in form.errors.items():
                 for error in errors:
                     messages.error(request, f"{field}: {error}")
-
     else:
         form = StaffCreationForm()
 
@@ -489,7 +487,6 @@ def create_staff(request):
         'carehomes': carehomes,
         'edit_mode': False
     })
-
 
 @login_required
 def edit_staff(request, pk):
