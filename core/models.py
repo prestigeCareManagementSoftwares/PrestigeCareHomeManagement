@@ -1,6 +1,8 @@
 import os
 
 from django.core.exceptions import ValidationError
+from django.db.models.signals import pre_save, post_delete
+from django.dispatch import receiver
 from django.template.loader import render_to_string
 from django.utils import timezone
 from datetime import timedelta
@@ -323,6 +325,10 @@ class CustomUserManager(BaseUserManager):
         return self.create_user(email, password, **extra_fields)
 
 
+class CustomUser:
+    pass
+
+
 class CustomUser(AbstractBaseUser, PermissionsMixin):
     # Staff-related fields
     STAFF = 'staff'
@@ -381,6 +387,25 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         elif self.role == 'manager':
             return CareHome.objects.all()
         return CareHome.objects.none()
+
+    @receiver(pre_save, sender=CustomUser)
+    def delete_old_image(sender, instance, **kwargs):
+        if instance.pk:
+            try:
+                old_instance = CustomUser.objects.get(pk=instance.pk)
+                if old_instance.image and old_instance.image != instance.image:
+                    # Delete the old file if it exists
+                    if os.path.isfile(old_instance.image.path):
+                        os.remove(old_instance.image.path)
+            except CustomUser.DoesNotExist:
+                pass
+
+    # Signal to delete image file when user is deleted
+    @receiver(post_delete, sender=CustomUser)
+    def delete_user_image(sender, instance, **kwargs):
+        if instance.image:
+            if os.path.isfile(instance.image.path):
+                os.remove(instance.image.path)
 
     class Meta:
         verbose_name = 'User'

@@ -496,33 +496,18 @@ def edit_staff(request, pk):
     staff = get_object_or_404(CustomUser, pk=pk)
     carehomes = CareHome.objects.all()
 
-    # Store original image info
-    original_image = staff.image
-    original_image_path = original_image.path if original_image and os.path.exists(original_image.path) else None
+    # Store the original image path for potential deletion
+    original_image_path = staff.image.path if staff.image and os.path.exists(staff.image.path) else None
 
     if request.method == 'POST':
         form = StaffCreationForm(request.POST, request.FILES, instance=staff)
 
         if form.is_valid():
             staff = form.save(commit=False)
-            if 'image' in request.FILES and original_image:
-                delete_image_file(original_image)
-            # Check if a new image was uploaded
-            new_image_uploaded = 'image' in request.FILES
 
-            if new_image_uploaded:
-                print(f"New image uploaded: {request.FILES['image'].name}")
-                # Delete the old image file if it exists
-                if original_image_path and os.path.exists(original_image_path):
-                    try:
-                        os.remove(original_image_path)
-                        print(f"Deleted old image: {original_image_path}")
-                    except Exception as e:
-                        print(f"Error deleting old image: {e}")
-            else:
-                # Keep the existing image
-                staff.image = original_image
-                print("No new image uploaded, keeping existing image")
+            # Debug info
+            print(f"New image uploaded: {bool(request.FILES.get('image'))}")
+            print(f"Original image path: {original_image_path}")
 
             # Handle role-based staff status
             if staff.role == CustomUser.TEAM_LEAD:
@@ -530,9 +515,16 @@ def edit_staff(request, pk):
             else:
                 staff.is_staff = False
 
+            # Save the staff member (this will trigger the pre_save signal)
             staff.save()
+
             messages.success(request, 'Staff member updated successfully!')
             return redirect('staff-dashboard')
+        else:
+            print(f"Form errors: {form.errors}")
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f"{field}: {error}")
     else:
         form = StaffCreationForm(instance=staff)
 
