@@ -21,7 +21,7 @@ from weasyprint import HTML
 from weasyprint.text.fonts import FontConfiguration
 
 from carehome_project import settings
-from core.utils import get_or_create_latest_log, get_filtered_queryset, generate_shift_times
+from core.utils import get_or_create_latest_log, get_filtered_queryset, generate_shift_times, delete_image_file
 from .models import CustomUser, LatestLogEntry, Mapping, MissedLog
 from .forms import ServiceUserForm, StaffCreationForm, CareHomeForm, MappingForm
 from io import BytesIO
@@ -496,27 +496,43 @@ def edit_staff(request, pk):
     staff = get_object_or_404(CustomUser, pk=pk)
     carehomes = CareHome.objects.all()
 
-    # Check if image exists
-    image_exists = False
-    if staff.image:
-        try:
-            image_exists = os.path.exists(staff.image.path)
-        except:
-            image_exists = False
+    # Store original image info
+    original_image = staff.image
+    original_image_path = original_image.path if original_image and os.path.exists(original_image.path) else None
 
     if request.method == 'POST':
         form = StaffCreationForm(request.POST, request.FILES, instance=staff)
+
         if form.is_valid():
             staff = form.save(commit=False)
+            if 'image' in request.FILES and original_image:
+                delete_image_file(original_image)
+            # Check if a new image was uploaded
+            new_image_uploaded = 'image' in request.FILES
+
+            if new_image_uploaded:
+                print(f"New image uploaded: {request.FILES['image'].name}")
+                # Delete the old image file if it exists
+                if original_image_path and os.path.exists(original_image_path):
+                    try:
+                        os.remove(original_image_path)
+                        print(f"Deleted old image: {original_image_path}")
+                    except Exception as e:
+                        print(f"Error deleting old image: {e}")
+            else:
+                # Keep the existing image
+                staff.image = original_image
+                print("No new image uploaded, keeping existing image")
+
+            # Handle role-based staff status
             if staff.role == CustomUser.TEAM_LEAD:
                 staff.is_staff = True
             else:
                 staff.is_staff = False
+
             staff.save()
             messages.success(request, 'Staff member updated successfully!')
             return redirect('staff-dashboard')
-        else:
-            print(f"Form errors: {form.errors}")  # Debug
     else:
         form = StaffCreationForm(instance=staff)
 
@@ -524,7 +540,7 @@ def edit_staff(request, pk):
         'form': form,
         'carehomes': carehomes,
         'edit_mode': True,
-        'image_exists': image_exists
+        'image_exists': staff.image and os.path.exists(staff.image.path)
     })
 
 

@@ -1,5 +1,6 @@
 from datetime import time, datetime, timedelta
 
+from django.core.files.storage import default_storage
 from django.utils.timezone import now
 from django.core.files import File
 from .models import LatestLogEntry
@@ -91,3 +92,13 @@ def generate_shift_times(base_time: time, total_slots: int = 12) -> list[time]:
         times.append(current.time())
         current += timedelta(minutes=60)  # 1-hour intervals
     return times
+
+def delete_image_file(image_field):
+    """Safely delete an image file from storage"""
+    if image_field:
+        try:
+            if default_storage.exists(image_field.name):
+                default_storage.delete(image_field.name)
+                print(f"Deleted image: {image_field.name}")
+        except Exception as e:
+            print(f"Error deleting image {image_field.name}: {e}")
