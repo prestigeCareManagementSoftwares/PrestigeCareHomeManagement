@@ -124,7 +124,6 @@ STATIC_URL = '/static/'
 STATICFILES_DIRS = [
     BASE_DIR / "core/core/static",
     BASE_DIR / "core/static",
-    BASE_DIR / "/opt/render/project/src"
 ]
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')  # For collectstatic on Render
 
