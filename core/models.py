@@ -345,6 +345,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     phone = models.CharField(max_length=20, blank=True, null=True)
     address = models.TextField(blank=True, null=True)
     additional_info = models.TextField(blank=True, null=True)
+    postcode = models.CharField(max_length=10, blank=True, null=True)
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default=STAFF)
     carehome = models.ForeignKey('CareHome', on_delete=models.SET_NULL, null=True, blank=True)
     last_active = models.DateTimeField(null=True, blank=True)
