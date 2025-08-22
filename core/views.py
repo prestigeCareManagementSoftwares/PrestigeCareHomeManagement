@@ -452,19 +452,22 @@ def create_staff(request):
     carehomes = CareHome.objects.all()
 
     if request.method == 'POST':
-        form = StaffCreationForm(request.POST, request.FILES)
+        form = StaffCreationForm(request.POST, request.FILES)  # FILES is included
         if form.is_valid():
             try:
+                # Let the form handle everything including the image
                 staff = form.save(commit=False)
 
-                if 'image' in request.FILES:
-                    print(f"\nUploading file: {request.FILES['image'].name}")
-                    staff.image = request.FILES['image']
+                # Debug: Check if image is being processed
+                print(f"Image in form: {form.cleaned_data.get('image')}")
+                print(f"Image in staff object: {staff.image}")
 
                 if staff.role == CustomUser.TEAM_LEAD:
                     staff.is_staff = True
+                else:
+                    staff.is_staff = False
 
-                staff.save()
+                staff.save()  # This will save the image too
                 messages.success(request, 'Staff member created successfully!')
                 return redirect('staff-dashboard')
 
@@ -472,11 +475,15 @@ def create_staff(request):
                 messages.error(request, f'Error saving staff: {str(e)}')
                 logger.error(f"Staff creation error: {str(e)}")
         else:
+            # Print form errors for debugging
+            print(f"Form errors: {form.errors}")
             for field, errors in form.errors.items():
                 for error in errors:
                     messages.error(request, f"{field}: {error}")
 
-    form = form if request.method == 'POST' else StaffCreationForm()
+    else:
+        form = StaffCreationForm()
+
     return render(request, 'staff/create.html', {
         'form': form,
         'carehomes': carehomes,
@@ -489,6 +496,14 @@ def edit_staff(request, pk):
     staff = get_object_or_404(CustomUser, pk=pk)
     carehomes = CareHome.objects.all()
 
+    # Check if image exists
+    image_exists = False
+    if staff.image:
+        try:
+            image_exists = os.path.exists(staff.image.path)
+        except:
+            image_exists = False
+
     if request.method == 'POST':
         form = StaffCreationForm(request.POST, request.FILES, instance=staff)
         if form.is_valid():
@@ -498,14 +513,18 @@ def edit_staff(request, pk):
             else:
                 staff.is_staff = False
             staff.save()
+            messages.success(request, 'Staff member updated successfully!')
             return redirect('staff-dashboard')
+        else:
+            print(f"Form errors: {form.errors}")  # Debug
     else:
         form = StaffCreationForm(instance=staff)
 
     return render(request, 'staff/create.html', {
         'form': form,
         'carehomes': carehomes,
-        'edit_mode': True
+        'edit_mode': True,
+        'image_exists': image_exists
     })
 
 
