@@ -57,14 +57,13 @@ class ServiceUserForm(forms.ModelForm):
             'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
         }
 
-
 class StaffCreationForm(UserCreationForm):
     role = forms.ChoiceField(
         choices=CustomUser.ROLE_CHOICES,
         widget=forms.RadioSelect
     )
     carehome = forms.ModelChoiceField(
-        queryset=CareHome.objects.none(),  # Start with empty queryset
+        queryset=CareHome.objects.none(),
         required=False,
         widget=forms.Select(attrs={'class': 'form-control'})
     )
@@ -72,27 +71,28 @@ class StaffCreationForm(UserCreationForm):
     class Meta:
         model = CustomUser
         fields = (
-            'image', 'first_name', 'last_name', 'email',
-            'phone', 'address', 'role', 'carehome', 'additional_info',
+            'image', 'first_name', 'last_name', 'email', 'phone',
+            'address', 'postcode', 'role', 'carehome', 'next_of_kin_first_name',
+            'next_of_kin_last_name', 'next_of_kin_phone', 'next_of_kin_email',
             'password1', 'password2'
         )
         widgets = {
             'image': forms.FileInput(attrs={'class': 'form-control-file'}),
             'address': forms.Textarea(attrs={'rows': 3, 'class': 'form-control'}),
-            'additional_info': forms.Textarea(attrs={'rows': 3, 'class': 'form-control'}),
             'email': forms.EmailInput(attrs={'class': 'form-control'}),
             'first_name': forms.TextInput(attrs={'class': 'form-control'}),
             'last_name': forms.TextInput(attrs={'class': 'form-control'}),
-            'phone': forms.TextInput(attrs={'class': 'custom-file-input'}),
+            'phone': forms.TextInput(attrs={'class': 'form-control'}),
+            'postcode': forms.TextInput(attrs={'class': 'form-control'}),
+            'next_of_kin_first_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'next_of_kin_last_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'next_of_kin_phone': forms.TextInput(attrs={'class': 'form-control'}),
+            'next_of_kin_email': forms.EmailInput(attrs={'class': 'form-control'}),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-        # Populate carehome dropdown safely at runtime
         self.fields['carehome'].queryset = CareHome.objects.all()
-
-        # Optional: add Bootstrap classes to role choices for consistency
         self.fields['role'].widget.attrs.update({'class': 'form-check-input'})
 
     def clean(self):
