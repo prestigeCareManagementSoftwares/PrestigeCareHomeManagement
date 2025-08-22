@@ -39,13 +39,6 @@ from .forms import LogEntryForm
 from django.http import JsonResponse
 from datetime import time
 
-def serve_media(request, path):
-    path = unquote(path)
-    file_path = os.path.join(settings.MEDIA_ROOT, path)
-    if os.path.exists(file_path):
-        return FileResponse(open(file_path, 'rb'))
-    raise Http404("File not found")
-
 def get_shifts_from_carehome(carehome):
     from datetime import datetime, timedelta, date
 
@@ -1397,3 +1390,13 @@ def get_accessible_carehomes(user):
     elif user.role == 'team_lead':
         return user.managed_carehomes.all()
     return CareHome.objects.none()
+
+def serve_media(request, path):
+    from urllib.parse import unquote
+    path = unquote(path)
+    file_path = os.path.join(settings.MEDIA_ROOT, path)
+    logger.info(f"Trying to serve media file: {file_path}")
+    if os.path.exists(file_path):
+        return FileResponse(open(file_path, 'rb'))
+    logger.error(f"File not found: {file_path}")
+    raise Http404("File not found")
