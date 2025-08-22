@@ -48,17 +48,18 @@
                         </div>
                     </div>
 
-                    <!-- Contact Info -->
-                    <div class="form-group">
-                        <label>Email *</label>
-                        <input type="email" class="form-control" name="email"
-                               value="{{ form.instance.email }}" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Phone Number *</label>
-                        <input type="text" class="form-control" name="phone"
-                               value="{{ form.instance.phone }}" required>
+                    <!-- Contact Info in same row -->
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label>Email *</label>
+                            <input type="email" class="form-control" name="email"
+                                   value="{{ form.instance.email }}" required>
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label>Phone Number *</label>
+                            <input type="text" class="form-control" name="phone"
+                                   value="{{ form.instance.phone }}" required>
+                        </div>
                     </div>
 
                     <div class="form-group">
@@ -100,25 +101,31 @@
                         </select>
                     </div>
 
-                    <!-- Additional Info -->
-                    <div class="form-group">
-                        <label>Additional Information</label>
-                        <textarea class="form-control" name="additional_info" rows="3">{{ form.instance.additional_info }}</textarea>
-                    </div>
-
-                    <!-- Password Fields (only for new staff) -->
-                    {% if not edit_mode %}
+                    <!-- Password Fields (always show for both create and edit, but optional for edit) -->
                     <div class="form-row">
                         <div class="form-group col-md-6">
-                            <label>Password *</label>
-                            <input type="password" class="form-control" name="password1" required>
+                            <label>Password {% if not edit_mode %}*{% else %}(leave blank to keep current){% endif %}</label>
+                            <div class="input-group">
+                                <input type="password" class="form-control" name="password1" id="password1" {% if not edit_mode %}required{% endif %}>
+                                <div class="input-group-append">
+                                    <button class="btn btn-outline-secondary toggle-password" type="button" data-target="password1">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                         <div class="form-group col-md-6">
-                            <label>Password Confirmation *</label>
-                            <input type="password" class="form-control" name="password2" required>
+                            <label>Password Confirmation {% if not edit_mode %}*{% endif %}</label>
+                            <div class="input-group">
+                                <input type="password" class="form-control" name="password2" id="password2" {% if not edit_mode %}required{% endif %}>
+                                <div class="input-group-append">
+                                    <button class="btn btn-outline-secondary toggle-password" type="button" data-target="password2">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    {% endif %}
 
                     <!-- Status Toggle (for edit mode) -->
                     {% if edit_mode %}
@@ -164,6 +171,22 @@
                         New Staff Member
                     {% endif %}
                 </h5>
+
+                <!-- Display Initials instead of name -->
+                <div class="initials-preview mx-auto mb-3" style="width: 60px; height: 60px; line-height: 60px; border-radius: 50%; background-color: #4e73df; color: white; font-weight: bold; font-size: 20px;">
+                    <span id="initials-text">
+                        {% if form.instance.first_name and form.instance.last_name %}
+                            {{ form.instance.first_name|first|upper }}{{ form.instance.last_name|first|upper }}
+                        {% elif form.instance.first_name %}
+                            {{ form.instance.first_name|first|upper }}
+                        {% elif form.instance.last_name %}
+                            {{ form.instance.last_name|first|upper }}
+                        {% else %}
+                            U
+                        {% endif %}
+                    </span>
+                </div>
+
                 <p class="text-muted" id="role-preview">
                     {% if form.instance.role %}
                         {{ form.instance.get_role_display }}
@@ -216,12 +239,55 @@ $(document).ready(function() {
         $('#carehome-preview').text($(this).find('option:selected').text() || 'No carehome assigned');
     });
 
-    // Name update handler
+    // Name update handler - update both name and initials
     $('input[name="first_name"], input[name="last_name"]').on('input', function() {
         const firstName = $('input[name="first_name"]').val();
         const lastName = $('input[name="last_name"]').val();
-        $('#name-preview').text((firstName + ' ' + lastName).trim() || 'New Staff Member');
+        const fullName = (firstName + ' ' + lastName).trim() || 'New Staff Member';
+
+        $('#name-preview').text(fullName);
+
+        // Update initials
+        const initials = (firstName ? firstName[0].toUpperCase() : '') +
+                         (lastName ? lastName[0].toUpperCase() : '') || 'U';
+        $('#initials-text').text(initials);
     });
+
+    // Password toggle functionality
+    $('.toggle-password').click(function() {
+        const target = $(this).data('target');
+        const input = $('#' + target);
+        const icon = $(this).find('i');
+
+        if (input.attr('type') === 'password') {
+            input.attr('type', 'text');
+            icon.removeClass('fa-eye').addClass('fa-eye-slash');
+        } else {
+            input.attr('type', 'password');
+            icon.removeClass('fa-eye-slash').addClass('fa-eye');
+        }
+    });
+
+    // Generate initials on page load
+    function updateInitials() {
+        const firstName = $('input[name="first_name"]').val();
+        const lastName = $('input[name="last_name"]').val();
+        const initials = (firstName ? firstName[0].toUpperCase() : '') +
+                         (lastName ? lastName[0].toUpperCase() : '') || 'U';
+        $('#initials-text').text(initials);
+    }
+
+    // Update initials when page loads
+    updateInitials();
 });
 </script>
+
+<style>
+.initials-preview {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+</style>
 {% endblock %}
