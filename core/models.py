@@ -354,6 +354,13 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     first_name = models.CharField(max_length=30, blank=True)
     last_name = models.CharField(max_length=150, blank=True)
 
+    # Add new fields for Next of Kin and Postcode
+    postcode = models.CharField(max_length=10, blank=True, null=True)
+    next_of_kin_first_name = models.CharField(max_length=30, blank=True, null=True)
+    next_of_kin_last_name = models.CharField(max_length=30, blank=True, null=True)
+    next_of_kin_phone = models.CharField(max_length=20, blank=True, null=True)
+    next_of_kin_email = models.EmailField(blank=True, null=True)
+
     is_staff = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     date_joined = models.DateTimeField(default=timezone.now)
