@@ -8,7 +8,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get("SECRET_KEY", "django-insecure-1oafo=nwgt9wp2d_6i@xyy6$i4mw7@_28&miy)hq#*yovo^=q0")
 DEBUG = os.environ.get("DEBUG", "False") == "True"
 
-ALLOWED_HOSTS = [ # Render URL
+ALLOWED_HOSTS = [  # Render URL
     'localhost',
     '127.0.0.1',
     'prestigecarehomemanagement-k5rs.onrender.com',
@@ -124,6 +124,7 @@ STATIC_URL = '/static/'
 STATICFILES_DIRS = [
     BASE_DIR / "core/core/static",
     BASE_DIR / "core/static",
+    BASE_DIR / "/opt/render/project/src"
 ]
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')  # For collectstatic on Render
 
