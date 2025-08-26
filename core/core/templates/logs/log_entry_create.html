@@ -26,9 +26,10 @@
             <form method="POST" action="{% url 'create-log' %}">
                 {% csrf_token %}
 
+                <!-- Carehome Select -->
                 <div class="mb-3">
                     <label class="form-label">Carehome</label>
-                    <select name="carehome" class="form-select" required>
+                    <select name="carehome" class="form-select" id="carehome-select" required>
                         <option value="">-- Select Carehome --</option>
                         {% for c in carehomes %}
                         <option value="{{ c.id }}">{{ c.name }}</option>
@@ -36,9 +37,10 @@
                     </select>
                 </div>
 
+                <!-- Service User Select -->
                 <div class="mb-3">
                     <label class="form-label">Service User</label>
-                    <select name="service_user" class="form-select" required>
+                    <select name="service_user" class="form-select" id="service-user-select" required>
                         <option value="">-- Select Service User --</option>
                         {% for su in service_users %}
                         <option value="{{ su.id }}">{{ su.first_name }} {{ su.last_name }}</option>
@@ -46,6 +48,7 @@
                     </select>
                 </div>
 
+                <!-- Shift Select -->
                 <div class="mb-3">
                     <label class="form-label">Shift</label>
                     <select name="shift" class="form-select" required>
@@ -63,4 +66,34 @@
         </div>
     </div>
 </div>
+
+<!-- Vanilla JS for dynamic Service User dropdown -->
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const carehomeSelect = document.getElementById('carehome-select');
+    const serviceUserSelect = document.getElementById('service-user-select');
+
+    carehomeSelect.addEventListener('change', function () {
+        const carehomeId = this.value;
+
+        // Clear current service user options
+        serviceUserSelect.innerHTML = '<option value="">-- Select Service User --</option>';
+
+        if (!carehomeId) return;
+
+        // Fetch service users for selected carehome
+        fetch(`{% url 'ajax-service-users' %}?carehome_id=${carehomeId}`)
+            .then(response => response.json())
+            .then(data => {
+                data.forEach(su => {
+                    const option = document.createElement('option');
+                    option.value = su.id;
+                    option.textContent = su.name;
+                    serviceUserSelect.appendChild(option);
+                });
+            })
+            .catch(error => console.error('Error fetching service users:', error));
+    });
+});
+</script>
 {% endblock %}
