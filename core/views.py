@@ -1446,3 +1446,9 @@ def serve_media(request, path):
         return FileResponse(open(file_path, 'rb'))
     logger.error(f"File not found: {file_path}")
     raise Http404("File not found")
+
+def get_service_users(request):
+    carehome_id = request.GET.get('carehome_id')
+    service_users = ServiceUser.objects.filter(carehome_id=carehome_id)
+    data = [{"id": su.id, "name": f"{su.first_name} {su.last_name}"} for su in service_users]
+    return JsonResponse(data, safe=False)

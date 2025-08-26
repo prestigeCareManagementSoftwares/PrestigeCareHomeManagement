@@ -61,5 +61,6 @@ urlpatterns = ([
                    path('delete-mapping/<int:pk>/', delete_mapping, name='delete-mapping'),
                    re_path(r'^\.(git|svn|env)/', lambda r: HttpResponseForbidden()),
                    re_path(r'@fs/', lambda r: HttpResponseForbidden()),
+                   path('ajax/service-users/', views.get_service_users, name='ajax-service-users'),
                ]
                + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT))
