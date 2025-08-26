@@ -59,9 +59,9 @@ class CareHomeAdmin(admin.ModelAdmin):
 
 @admin.register(ServiceUser)
 class ServiceUserAdmin(admin.ModelAdmin):
-    list_display = ('first_name', 'last_name', 'carehome', 'phone')
+    list_display = ('first_name', 'last_name', 'carehome', 'phone', 'dob')
     list_filter = ('carehome',)
-    search_fields = ('first_name', 'last_name', 'phone')
+    search_fields = ('first_name', 'last_name', 'phone', 'next_of_kin_first_name', 'next_of_kin_last_name')
 
 
 @admin.register(LogEntry)

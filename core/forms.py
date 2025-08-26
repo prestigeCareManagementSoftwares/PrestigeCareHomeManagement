@@ -38,7 +38,6 @@ class LoginForm(AuthenticationForm):
     username = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control'}))
     password = forms.CharField(widget=forms.PasswordInput(attrs={'class': 'form-control'}))
 
-
 class ServiceUserForm(forms.ModelForm):
     class Meta:
         model = ServiceUser
@@ -47,6 +46,7 @@ class ServiceUserForm(forms.ModelForm):
             'carehome': forms.Select(attrs={'class': 'form-control'}),
             'first_name': forms.TextInput(attrs={'class': 'form-control'}),
             'last_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'dob': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
             'phone': forms.TextInput(attrs={
                 'class': 'form-control',
                 'placeholder': '+44 7123 456789 or 07123 456789'
@@ -55,6 +55,10 @@ class ServiceUserForm(forms.ModelForm):
             'emergency_contact': forms.TextInput(attrs={'class': 'form-control'}),
             'address': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
             'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'next_of_kin_first_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'next_of_kin_last_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'next_of_kin_phone': forms.TextInput(attrs={'class': 'form-control'}),
+            'next_of_kin_email': forms.EmailInput(attrs={'class': 'form-control'}),
         }
 
 class StaffCreationForm(UserCreationForm):

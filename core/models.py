@@ -153,12 +153,12 @@ class CareHome(models.Model):
     def __str__(self):
         return self.name
 
-
 class ServiceUser(models.Model):
-    carehome = models.ForeignKey(CareHome, on_delete=models.CASCADE,related_name='service_users')
+    carehome = models.ForeignKey('CareHome', on_delete=models.CASCADE, related_name='service_users')
     image = models.ImageField(upload_to='service_users/', blank=True, null=True)
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
+    dob = models.DateField()  # new DOB field
     phone = models.CharField(
         max_length=20,
         validators=[
@@ -172,11 +172,17 @@ class ServiceUser(models.Model):
     emergency_contact = models.CharField(max_length=20)
     address = models.TextField()
     notes = models.TextField(blank=True, null=True)
+
+    # Next of kin details
+    next_of_kin_first_name = models.CharField(max_length=100, blank=True, null=True)
+    next_of_kin_last_name = models.CharField(max_length=100, blank=True, null=True)
+    next_of_kin_phone = models.CharField(max_length=20, blank=True, null=True)
+    next_of_kin_email = models.EmailField(blank=True, null=True)
+
     created_at = models.DateTimeField(auto_now_add=True)
 
-    def get_formatted_name(self):
-        initials = f"{self.first_name[0]}{self.last_name[0]}".upper()
-        return f"{self.first_name} {self.last_name} ({initials})"
+    def get_initials(self):
+        return (self.first_name[0] if self.first_name else '') + (self.last_name[0] if self.last_name else '')
 
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
