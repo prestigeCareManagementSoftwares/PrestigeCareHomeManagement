@@ -158,7 +158,7 @@ class ServiceUser(models.Model):
     image = models.ImageField(upload_to='service_users/', blank=True, null=True)
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
-    dob = models.DateField()  # new DOB field
+    dob = models.DateField(null=True, blank=True)  # new DOB field
     phone = models.CharField(
         max_length=20,
         validators=[
