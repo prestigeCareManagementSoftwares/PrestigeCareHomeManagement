@@ -1,125 +1,202 @@
 {% extends "core/base.html" %}
-{% load crispy_forms_tags %}
+{% load static %}
 
 {% block content %}
-<div class="container-fluid">
-    <form method="post" enctype="multipart/form-data" id="residentForm">
-        {% csrf_token %}
-        <div class="row">
-            <!-- Main Form Column -->
-            <div class="col-lg-8">
-                <div class="card shadow-sm mb-4">
-                    <div class="card-header">
-                        <h4 class="mb-0">Resident Form</h4>
-                    </div>
-                    <div class="card-body">
-                        <!-- First / Last Name -->
-                        <div class="form-row">
-                            <div class="form-group col-md-6">
-                                {{ form.first_name|as_crispy_field }}
-                            </div>
-                            <div class="form-group col-md-6">
-                                {{ form.last_name|as_crispy_field }}
-                            </div>
-                        </div>
+<div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0 text-gray-800">
+        {% if edit_mode %}Edit{% else %}Create New{% endif %} Staff Member
+    </h1>
+</div>
 
-                        <!-- Gender / Date of Birth -->
-                        <div class="form-row">
-                            <div class="form-group col-md-6">
-                                {{ form.gender|as_crispy_field }}
-                            </div>
-                            <div class="form-group col-md-6">
-                                {{ form.date_of_birth|as_crispy_field }}
-                            </div>
-                        </div>
-
-                        <!-- Email / Phone -->
-                        <div class="form-row">
-                            <div class="form-group col-md-6">
-                                {{ form.email|as_crispy_field }}
-                            </div>
-                            <div class="form-group col-md-6">
-                                {{ form.phone_number|as_crispy_field }}
-                            </div>
-                        </div>
-
-                        <!-- Address / City -->
-                        <div class="form-row">
-                            <div class="form-group col-md-6">
-                                {{ form.address|as_crispy_field }}
-                            </div>
-                            <div class="form-group col-md-6">
-                                {{ form.city|as_crispy_field }}
-                            </div>
-                        </div>
-
-                        <!-- Postcode / Carehome -->
-                        <div class="form-row">
-                            <div class="form-group col-md-6">
-                                {{ form.postcode|as_crispy_field }}
-                            </div>
-                            <div class="form-group col-md-6">
-                                {{ form.carehome|as_crispy_field }}
-                            </div>
-                        </div>
-
-                        <!-- Next of Kin Section -->
-                        <h5 class="mt-4">Next of Kin Details</h5>
-                        <div class="form-row">
-                            <div class="form-group col-md-6">
-                                {{ form.next_of_kin_name|as_crispy_field }}
-                            </div>
-                            <div class="form-group col-md-6">
-                                {{ form.next_of_kin_phone|as_crispy_field }}
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group col-md-6">
-                                {{ form.next_of_kin_relation|as_crispy_field }}
-                            </div>
-                            <div class="form-group col-md-6">
-                                {{ form.next_of_kin_email|as_crispy_field }}
-                            </div>
-                        </div>
-
-                        <!-- Password Field (only in edit_mode) -->
-                        {% if edit_mode %}
-                        <h5 class="mt-4">Account Security</h5>
-                        <div class="form-row">
-                            <div class="form-group col-md-6">
-                                {{ form.password|as_crispy_field }}
-                            </div>
-                        </div>
-                        {% endif %}
-                    </div>
-                </div>
-
-                <!-- Form Actions -->
-                <div class="form-group text-right mb-4">
-                    <button type="submit" class="btn btn-primary">Save</button>
-                    <a href="{% url 'residents_list' %}" class="btn btn-secondary">Cancel</a>
-                </div>
+<div class="row">
+    <!-- Left Column: Form -->
+    <div class="col-lg-8">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Staff Details</h6>
             </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
 
-            <!-- Preview Column -->
-            <div class="col-lg-4">
-                <div class="card shadow-sm">
-                    <div class="card-header">
-                        <h5 class="mb-0">Preview</h5>
-                    </div>
-                    <div class="card-body text-center">
-                        {% if form.instance.photo %}
-                            <img src="{{ form.instance.photo.url }}" class="img-fluid rounded-circle mb-3" alt="Resident Photo">
-                        {% else %}
-                            <img src="{% static 'images/default-avatar.png' %}" class="img-fluid rounded-circle mb-3" alt="Default Avatar">
+                    <!-- Profile Picture -->
+                    <div class="form-group">
+                        <label>Profile Picture</label>
+                        <input type="file" class="form-control-file" name="image" id="image">
+                        {% if form.instance.image %}
+                        <small class="form-text text-muted">
+                            Current: <a href="{{ form.instance.image.url }}" target="_blank">{{ form.instance.image.name }}</a>
+                        </small>
                         {% endif %}
-                        {{ form.photo|as_crispy_field }}
-                        <p class="mt-3 mb-0"><strong>{{ form.instance.first_name }} {{ form.instance.last_name }}</strong></p>
-                        <p class="text-muted">{{ form.instance.carehome }}</p>
                     </div>
-                </div>
+
+                    <!-- Name -->
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label>First Name *</label>
+                            <input type="text" class="form-control" name="first_name" value="{{ form.instance.first_name }}">
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label>Last Name *</label>
+                            <input type="text" class="form-control" name="last_name" value="{{ form.instance.last_name }}">
+                        </div>
+                    </div>
+
+                    <!-- Contact -->
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label>Email *</label>
+                            <input type="email" class="form-control" name="email" value="{{ form.instance.email }}">
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label>Phone Number *</label>
+                            <input type="text" class="form-control" name="phone" value="{{ form.instance.phone }}">
+                        </div>
+                    </div>
+
+                    <!-- Address -->
+                    <div class="form-group">
+                        <label>Address *</label>
+                        <textarea class="form-control" name="address" rows="3">{{ form.instance.address }}</textarea>
+                    </div>
+
+                    <!-- Role -->
+                    <div class="form-group">
+                        <label>Role *</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="role" id="role_staff" value="staff" {% if form.instance.role == 'staff' %}checked{% endif %}>
+                            <label class="form-check-label" for="role_staff">Staff Member</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="role" id="role_team_lead" value="team_lead" {% if form.instance.role == 'team_lead' %}checked{% endif %}>
+                            <label class="form-check-label" for="role_team_lead">Team Lead</label>
+                        </div>
+                    </div>
+
+                    <!-- Carehome -->
+                    <div class="form-group" id="carehome-group" {% if form.instance.role != 'team_lead' %}style="display:none"{% endif %}>
+                        <label>Carehome *</label>
+                        <select class="form-control" name="carehome" {% if form.instance.role == 'team_lead' %}required{% endif %}>
+                            <option value="">Select a carehome</option>
+                            {% for carehome in carehomes %}
+                                <option value="{{ carehome.id }}" {% if form.instance.carehome_id == carehome.id %}selected{% endif %}>
+                                    {{ carehome.name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Postcode -->
+                    <div class="form-group">
+                        <label>Postcode *</label>
+                        <input type="text" class="form-control" id="id_postcode" name="postcode" value="{{ form.instance.postcode|default:'' }}">
+                        <small id="postcode-error" class="text-danger d-none">Invalid postcode format</small>
+                        <small id="postcode-success" class="text-success d-none">Valid postcode</small>
+                    </div>
+
+                    <!-- Next of Kin -->
+                    <div class="card mt-4">
+                        <div class="card-header">
+                            <h6 class="m-0 font-weight-bold text-primary">Next of Kin Details</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-row">
+                                <div class="form-group col-md-6">
+                                    <label>First Name</label>
+                                    <input type="text" class="form-control" name="next_of_kin_first_name" value="{{ form.instance.next_of_kin_first_name|default:'' }}">
+                                </div>
+                                <div class="form-group col-md-6">
+                                    <label>Last Name</label>
+                                    <input type="text" class="form-control" name="next_of_kin_last_name" value="{{ form.instance.next_of_kin_last_name|default:'' }}">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group col-md-6">
+                                    <label>Contact Number</label>
+                                    <input type="text" class="form-control" name="next_of_kin_phone" value="{{ form.instance.next_of_kin_phone|default:'' }}">
+                                </div>
+                                <div class="form-group col-md-6">
+                                    <label>Email Address</label>
+                                    <input type="email" class="form-control" name="next_of_kin_email" value="{{ form.instance.next_of_kin_email|default:'' }}">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Passwords -->
+                    <div class="form-row mt-3">
+                        <div class="form-group col-md-6">
+                            <label>Password {% if not edit_mode %}*{% else %}(leave blank to keep current){% endif %}</label>
+                            <input type="password" class="form-control" name="password1" {% if not edit_mode %}required{% endif %}>
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label>Password Confirmation {% if not edit_mode %}*{% endif %}</label>
+                            <input type="password" class="form-control" name="password2" {% if not edit_mode %}required{% endif %}>
+                        </div>
+                    </div>
+
+                    <!-- Status -->
+                    {% if edit_mode %}
+                    <div class="form-group">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="is_active" {% if form.instance.is_active %}checked{% endif %}>
+                            <label class="form-check-label">Active (can login)</label>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Submit -->
+                    <button type="submit" class="btn btn-primary">{% if edit_mode %}Update{% else %}Create{% endif %}</button>
+                    <a href="{% url 'staff-dashboard' %}" class="btn btn-secondary">Cancel</a>
+
+                </form>
             </div>
         </div>
-    </form>
+    </div>
+
+    <!-- Right Column: Preview -->
+    <div class="col-lg-4">
+        <div class="card shadow mb-4">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-primary">Profile Preview</h6>
+            </div>
+            <div class="card-body text-center">
+                <img id="image-preview" src="{% if form.instance.image %}{{ form.instance.image.url }}{% else %}{% static 'img/undraw_profile.svg' %}{% endif %}" style="width:150px; height:150px; object-fit:cover; border-radius:50%; border:2px solid #eee;">
+                <h5 id="name-preview" class="mt-3">{{ form.instance.first_name }} {{ form.instance.last_name|default:"New Staff Member" }}</h5>
+                <p class="text-muted" id="role-preview">{{ form.instance.get_role_display|default:"Role not selected" }}</p>
+                <p class="text-muted" id="carehome-preview">{{ form.instance.carehome.name|default:"No carehome assigned" }}</p>
+            </div>
+        </div>
+    </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+$(document).ready(function() {
+    // Role toggle for carehome
+    $('input[name="role"]').change(function() {
+        const isTeamLead = $(this).val() === 'team_lead';
+        $('#carehome-group').toggle(isTeamLead);
+        $('#carehome-group select').prop('required', isTeamLead);
+    });
+
+    // Image preview
+    $('#image').change(function() {
+        const file = this.files[0];
+        if(file){
+            const reader = new FileReader();
+            reader.onload = e => $('#image-preview').attr('src', e.target.result);
+            reader.readAsDataURL(file);
+        }
+    });
+
+    // Name preview update
+    $('input[name="first_name"], input[name="last_name"]').on('input', function(){
+        const first = $('input[name="first_name"]').val() || "";
+        const last = $('input[name="last_name"]').val() || "";
+        $('#name-preview').text((first + ' ' + last).trim() || "New Staff Member");
+    });
+});
+</script>
 {% endblock %}
