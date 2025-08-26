@@ -98,7 +98,7 @@
                         <option value="">Select a carehome</option>
                         {% for carehome in carehomes %}
                         <option value="{{ carehome.id }}"
-                                {% if form.instance.carehome_id== carehome.id %}selected{% endif %}>
+                                {% if form.instance.carehome_id == carehome.id %}selected{% endif %}>
                             {{ carehome.name }}
                         </option>
                         {% endfor %}
