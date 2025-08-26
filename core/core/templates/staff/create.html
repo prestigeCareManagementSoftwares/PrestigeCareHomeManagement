@@ -19,10 +19,15 @@
                 <form method="post" enctype="multipart/form-data">
                     {% csrf_token %}
 
-                    <!-- Profile Picture -->
+                    <!-- Image -->
                     <div class="form-group">
                         <label>Profile Picture</label>
-                        <input type="file" class="form-control-file" name="image" id="image">
+                        <div class="custom-file">
+                            <input type="file" class="custom-file-input" id="image" name="image" accept="image/*">
+                            <label class="custom-file-label" for="image">
+                                {% if form.instance.image %}Current: {{ form.instance.image.name }}{% else %}Choose file{% endif %}
+                            </label>
+                        </div>
                         {% if form.instance.image %}
                         <small class="form-text text-muted">
                             Current: <a href="{{ form.instance.image.url }}" target="_blank">{{ form.instance.image.name }}</a>
@@ -34,64 +39,80 @@
                     <div class="form-row">
                         <div class="form-group col-md-6">
                             <label>First Name *</label>
-                            <input type="text" class="form-control" name="first_name" value="{{ form.instance.first_name }}">
+                            <input type="text" class="form-control" name="first_name" id="first_name"
+                                   value="{{ form.instance.first_name|default_if_none:'' }}" required>
                         </div>
                         <div class="form-group col-md-6">
                             <label>Last Name *</label>
-                            <input type="text" class="form-control" name="last_name" value="{{ form.instance.last_name }}">
+                            <input type="text" class="form-control" name="last_name" id="last_name"
+                                   value="{{ form.instance.last_name|default_if_none:'' }}" required>
                         </div>
                     </div>
 
-                    <!-- Contact -->
+                    <!-- Contact Info -->
                     <div class="form-row">
                         <div class="form-group col-md-6">
                             <label>Email *</label>
-                            <input type="email" class="form-control" name="email" value="{{ form.instance.email }}">
+                            <input type="email" class="form-control" name="email"
+                                   value="{{ form.instance.email|default_if_none:'' }}" required>
                         </div>
                         <div class="form-group col-md-6">
                             <label>Phone Number *</label>
-                            <input type="text" class="form-control" name="phone" value="{{ form.instance.phone }}">
+                            <input type="text" class="form-control" id="phone" name="phone"
+                                   value="{{ form.instance.phone|default_if_none:'' }}" required>
+                            <small id="phone-error" class="text-danger d-none">Invalid UK phone number</small>
                         </div>
                     </div>
 
-                    <!-- Address -->
                     <div class="form-group">
                         <label>Address *</label>
-                        <textarea class="form-control" name="address" rows="3">{{ form.instance.address }}</textarea>
+                        <textarea class="form-control" name="address" rows="3" required>{{ form.instance.address|default_if_none:'' }}</textarea>
                     </div>
 
                     <!-- Role -->
                     <div class="form-group">
                         <label>Role *</label>
                         <div class="form-check">
-                            <input class="form-check-input" type="radio" name="role" id="role_staff" value="staff" {% if form.instance.role == 'staff' %}checked{% endif %}>
+                            <input class="form-check-input" type="radio" name="role" id="role_staff"
+                                   value="staff" {% if form.instance.role == 'staff' %}checked{% endif %}>
                             <label class="form-check-label" for="role_staff">Staff Member</label>
                         </div>
                         <div class="form-check">
-                            <input class="form-check-input" type="radio" name="role" id="role_team_lead" value="team_lead" {% if form.instance.role == 'team_lead' %}checked{% endif %}>
+                            <input class="form-check-input" type="radio" name="role" id="role_team_lead"
+                                   value="team_lead" {% if form.instance.role == 'team_lead' %}checked{% endif %}>
                             <label class="form-check-label" for="role_team_lead">Team Lead</label>
                         </div>
                     </div>
 
                     <!-- Carehome -->
-                    <div class="form-group" id="carehome-group" {% if form.instance.role != 'team_lead' %}style="display:none"{% endif %}>
+                    <div class="form-group" id="carehome-group"
+                         style="display: {% if form.instance.role == 'team_lead' %}block{% else %}none{% endif %}">
                         <label>Carehome *</label>
                         <select class="form-control" name="carehome" {% if form.instance.role == 'team_lead' %}required{% endif %}>
                             <option value="">Select a carehome</option>
                             {% for carehome in carehomes %}
-                                <option value="{{ carehome.id }}" {% if form.instance.carehome_id == carehome.id %}selected{% endif %}>
-                                    {{ carehome.name }}
-                                </option>
+                            <option value="{{ carehome.id }}"
+                                    {% if form.instance.carehome_id == carehome.id %}selected{% endif %}>
+                                {{ carehome.name }}
+                            </option>
                             {% endfor %}
                         </select>
                     </div>
 
                     <!-- Postcode -->
                     <div class="form-group">
-                        <label>Postcode *</label>
-                        <input type="text" class="form-control" id="id_postcode" name="postcode" value="{{ form.instance.postcode|default:'' }}">
+                        <label for="id_postcode">Postcode *</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="id_postcode" name="postcode"
+                                   value="{{ form.instance.postcode|default_if_none:'' }}" required>
+                            <div class="input-group-append">
+                                <button class="btn btn-outline-primary" type="button" id="validate-btn">
+                                    <i class="fas fa-map-marker-alt"></i> Validate
+                                </button>
+                            </div>
+                        </div>
                         <small id="postcode-error" class="text-danger d-none">Invalid postcode format</small>
-                        <small id="postcode-success" class="text-success d-none">Valid postcode</small>
+                        <small id="postcode-success" class="text-success d-none"><i class="fas fa-check-circle"></i> Valid postcode</small>
                     </div>
 
                     <!-- Next of Kin -->
@@ -103,52 +124,73 @@
                             <div class="form-row">
                                 <div class="form-group col-md-6">
                                     <label>First Name</label>
-                                    <input type="text" class="form-control" name="next_of_kin_first_name" value="{{ form.instance.next_of_kin_first_name|default:'' }}">
+                                    <input type="text" class="form-control" name="next_of_kin_first_name"
+                                           value="{{ form.instance.next_of_kin_first_name|default_if_none:'' }}">
                                 </div>
                                 <div class="form-group col-md-6">
                                     <label>Last Name</label>
-                                    <input type="text" class="form-control" name="next_of_kin_last_name" value="{{ form.instance.next_of_kin_last_name|default:'' }}">
+                                    <input type="text" class="form-control" name="next_of_kin_last_name"
+                                           value="{{ form.instance.next_of_kin_last_name|default_if_none:'' }}">
                                 </div>
                             </div>
+
                             <div class="form-row">
                                 <div class="form-group col-md-6">
                                     <label>Contact Number</label>
-                                    <input type="text" class="form-control" name="next_of_kin_phone" value="{{ form.instance.next_of_kin_phone|default:'' }}">
+                                    <input type="text" class="form-control" name="next_of_kin_phone"
+                                           value="{{ form.instance.next_of_kin_phone|default_if_none:'' }}">
                                 </div>
                                 <div class="form-group col-md-6">
                                     <label>Email Address</label>
-                                    <input type="email" class="form-control" name="next_of_kin_email" value="{{ form.instance.next_of_kin_email|default:'' }}">
+                                    <input type="email" class="form-control" name="next_of_kin_email"
+                                           value="{{ form.instance.next_of_kin_email|default_if_none:'' }}">
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Passwords -->
-                    <div class="form-row mt-3">
+                    <!-- Password -->
+                    <div class="form-row">
                         <div class="form-group col-md-6">
                             <label>Password {% if not edit_mode %}*{% else %}(leave blank to keep current){% endif %}</label>
-                            <input type="password" class="form-control" name="password1" {% if not edit_mode %}required{% endif %}>
+                            <div class="input-group">
+                                <input type="password" class="form-control" name="password1" id="password1" {% if not edit_mode %}required{% endif %}>
+                                <div class="input-group-append">
+                                    <button class="btn btn-outline-secondary toggle-password" type="button" data-target="password1">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                         <div class="form-group col-md-6">
                             <label>Password Confirmation {% if not edit_mode %}*{% endif %}</label>
-                            <input type="password" class="form-control" name="password2" {% if not edit_mode %}required{% endif %}>
+                            <div class="input-group">
+                                <input type="password" class="form-control" name="password2" id="password2" {% if not edit_mode %}required{% endif %}>
+                                <div class="input-group-append">
+                                    <button class="btn btn-outline-secondary toggle-password" type="button" data-target="password2">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
-                    <!-- Status -->
+                    <!-- Status Toggle -->
                     {% if edit_mode %}
                     <div class="form-group">
                         <div class="form-check">
-                            <input class="form-check-input" type="checkbox" name="is_active" {% if form.instance.is_active %}checked{% endif %}>
-                            <label class="form-check-label">Active (can login)</label>
+                            <input class="form-check-input" type="checkbox" name="is_active" id="is_active" {% if form.instance.is_active %}checked{% endif %}>
+                            <label class="form-check-label" for="is_active">Active (can login)</label>
                         </div>
                     </div>
                     {% endif %}
 
-                    <!-- Submit -->
-                    <button type="submit" class="btn btn-primary">{% if edit_mode %}Update{% else %}Create{% endif %}</button>
-                    <a href="{% url 'staff-dashboard' %}" class="btn btn-secondary">Cancel</a>
-
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> {% if edit_mode %}Update{% else %}Create{% endif %} Staff
+                    </button>
+                    <a href="{% url 'staff-dashboard' %}" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Cancel
+                    </a>
                 </form>
             </div>
         </div>
@@ -157,14 +199,41 @@
     <!-- Right Column: Preview -->
     <div class="col-lg-4">
         <div class="card shadow mb-4">
-            <div class="card-header">
+            <div class="card-header py-3">
                 <h6 class="m-0 font-weight-bold text-primary">Profile Preview</h6>
             </div>
             <div class="card-body text-center">
-                <img id="image-preview" src="{% if form.instance.image %}{{ form.instance.image.url }}{% else %}{% static 'img/undraw_profile.svg' %}{% endif %}" style="width:150px; height:150px; object-fit:cover; border-radius:50%; border:2px solid #eee;">
-                <h5 id="name-preview" class="mt-3">{{ form.instance.first_name }} {{ form.instance.last_name|default:"New Staff Member" }}</h5>
-                <p class="text-muted" id="role-preview">{{ form.instance.get_role_display|default:"Role not selected" }}</p>
-                <p class="text-muted" id="carehome-preview">{{ form.instance.carehome.name|default:"No carehome assigned" }}</p>
+                <div class="rounded-circle overflow-hidden mx-auto" style="width: 150px; height: 150px; border: 3px solid #eee;">
+                    <img id="image-preview"
+                         src="{% if form.instance.image %}{{ form.instance.image.url }}{% else %}{% static 'img/undraw_profile.svg' %}{% endif %}"
+                         style="width: 100%; height: 100%; object-fit: cover;" alt="Profile preview">
+                </div>
+
+                <!-- Initials instead of name -->
+                <div class="initials-preview mx-auto my-3"
+                     style="width: 60px; height: 60px; line-height: 60px; border-radius: 50%; background-color: #4e73df; color: white; font-weight: bold; font-size: 20px;">
+                    <span id="initials-text">
+                        {% if form.instance.first_name and form.instance.last_name %}
+                            {{ form.instance.first_name|first|upper }}{{ form.instance.last_name|first|upper }}
+                        {% elif form.instance.first_name %}
+                            {{ form.instance.first_name|first|upper }}
+                        {% elif form.instance.last_name %}
+                            {{ form.instance.last_name|first|upper }}
+                        {% else %}
+                            U
+                        {% endif %}
+                    </span>
+                </div>
+
+                <p class="text-muted" id="role-preview">
+                    {% if form.instance.role %}{{ form.instance.get_role_display }}{% else %}Role not selected{% endif %}
+                </p>
+                <p class="text-muted" id="carehome-preview">
+                    {% if form.instance.carehome %}{{ form.instance.carehome.name }}{% else %}No carehome assigned{% endif %}
+                </p>
+                <p class="text-muted" id="phone-preview">
+                    {% if form.instance.phone %}{{ form.instance.phone }}{% else %}No phone{% endif %}
+                </p>
             </div>
         </div>
     </div>
@@ -174,29 +243,97 @@
 {% block scripts %}
 <script>
 $(document).ready(function() {
-    // Role toggle for carehome
-    $('input[name="role"]').change(function() {
-        const isTeamLead = $(this).val() === 'team_lead';
-        $('#carehome-group').toggle(isTeamLead);
-        $('#carehome-group select').prop('required', isTeamLead);
-    });
 
     // Image preview
     $('#image').change(function() {
         const file = this.files[0];
-        if(file){
+        if (file) {
+            $(this).next('.custom-file-label').text(file.name);
             const reader = new FileReader();
             reader.onload = e => $('#image-preview').attr('src', e.target.result);
             reader.readAsDataURL(file);
         }
     });
 
-    // Name preview update
-    $('input[name="first_name"], input[name="last_name"]').on('input', function(){
-        const first = $('input[name="first_name"]').val() || "";
-        const last = $('input[name="last_name"]').val() || "";
-        $('#name-preview').text((first + ' ' + last).trim() || "New Staff Member");
+    // Role toggle
+    $('input[name="role"]').change(function() {
+        const isTeamLead = $(this).val() === 'team_lead';
+        $('#carehome-group').toggle(isTeamLead);
+        $('#carehome-group select').prop('required', isTeamLead);
+        $('#role-preview').text($(this).next('label').text());
+    });
+
+    // Carehome preview
+    $('select[name="carehome"]').change(function() {
+        $('#carehome-preview').text($(this).find('option:selected').text() || 'No carehome assigned');
+    });
+
+    // Name & initials preview
+    function updateNameAndInitials() {
+        const firstName = $('#first_name').val().trim();
+        const lastName = $('#last_name').val().trim();
+        const initials = (firstName ? firstName[0].toUpperCase() : '') + (lastName ? lastName[0].toUpperCase() : '') || 'U';
+        $('#initials-text').text(initials);
+    }
+    $('#first_name, #last_name').on('input', updateNameAndInitials);
+    updateNameAndInitials();
+
+    // Phone preview
+    $('#phone').on('input blur', function() {
+        $('#phone-preview').text($(this).val() || 'No phone');
+    });
+
+    // Toggle password visibility
+    $('.toggle-password').click(function() {
+        const target = $('#' + $(this).data('target'));
+        const icon = $(this).find('i');
+        if (target.attr('type') === 'password') {
+            target.attr('type', 'text'); icon.removeClass('fa-eye').addClass('fa-eye-slash');
+        } else {
+            target.attr('type', 'password'); icon.removeClass('fa-eye-slash').addClass('fa-eye');
+        }
+    });
+
+    // Postcode validation
+    function validatePostcode() {
+        const postcode = $('#id_postcode').val().trim().toUpperCase();
+        const regex = /^[A-Z]{1,2}[0-9][A-Z0-9]? ?[0-9][A-Z]{2}$/;
+        const isValid = regex.test(postcode);
+        $('#id_postcode').toggleClass('is-valid', isValid).toggleClass('is-invalid', !isValid);
+        $('#postcode-error').toggleClass('d-none', isValid);
+        $('#postcode-success').toggleClass('d-none', !isValid);
+        return isValid;
+    }
+    $('#validate-btn').click(validatePostcode);
+    $('#id_postcode').blur(validatePostcode);
+
+    // UK phone validation
+    function validatePhone() {
+        const phone = $('#phone').val().trim();
+        const regex = /^(\+44\s?7\d{3}|\(?07\d{3}\)?)\s?\d{3}\s?\d{3}$/;
+        const isValid = regex.test(phone);
+        $('#phone').toggleClass('is-valid', isValid).toggleClass('is-invalid', !isValid);
+        $('#phone-error').toggleClass('d-none', isValid);
+        return isValid;
+    }
+    $('#phone').blur(validatePhone);
+
+    // Validate before form submit
+    $('form').submit(function(e) {
+        if (!validatePostcode() || !validatePhone()) {
+            e.preventDefault();
+            alert('Please correct postcode and phone number.');
+        }
     });
 });
 </script>
+
+<style>
+.initials-preview {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+</style>
 {% endblock %}
