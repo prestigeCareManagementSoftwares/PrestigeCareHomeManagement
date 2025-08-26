@@ -49,8 +49,9 @@
 
                     <!-- DOB -->
                     <div class="form-group">
-                        {{ form.dob.label_tag }}
-                        {{ form.dob }}
+                        <label>Dob:</label>
+                        <input type="text" id="dob_display" class="form-control" readonly>
+                        <input type="hidden" name="{{ form.dob.name }}" id="{{ form.dob.id_for_label }}">
                     </div>
 
                     <!-- Staff Involved -->
@@ -237,14 +238,11 @@
         const dobField = document.getElementById("{{ form.dob.id_for_label }}");
         const serviceUserSelect = document.getElementById("{{ form.service_user.id_for_label }}");
         const dobMap = {{ service_user_dob_map|safe }};
-
         serviceUserSelect.addEventListener("change", function() {
-            const selectedId = this.value;
-            if (dobMap[selectedId]) {
-                dobField.value = dobMap[selectedId];
-            } else {
-                dobField.value = "";
-            }
+        const selectedId = this.value;
+        const dob = dobMap[selectedId] || "";
+        document.getElementById("dob_display").value = dob;
+        dobField.value = dob; // hidden input for submission
         });
     });
 </script>
