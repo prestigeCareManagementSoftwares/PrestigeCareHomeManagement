@@ -181,6 +181,10 @@ class ServiceUser(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
 
+    def get_formatted_name(self):
+        initials = f"{self.first_name[0]}{self.last_name[0]}".upper()
+        return f"{self.first_name} {self.last_name} ({initials})"
+
     def get_initials(self):
         return (self.first_name[0] if self.first_name else '') + (self.last_name[0] if self.last_name else '')
 
