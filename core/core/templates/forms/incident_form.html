@@ -233,6 +233,19 @@
         toggleContactFields('{{ form.contacted_police.id_for_label }}', 'policeContactFields');
         toggleContactFields('{{ form.contacted_paramedics.id_for_label }}', 'paramedicsContactFields');
         toggleContactFields('{{ form.contacted_other.id_for_label }}', 'otherContactFields');
+        // --- DOB Auto-populate ---
+        const dobField = document.getElementById("{{ form.dob.id_for_label }}");
+        const serviceUserSelect = document.getElementById("{{ form.service_user.id_for_label }}");
+        const dobMap = {{ service_user_dob_map|safe }};
+
+        serviceUserSelect.addEventListener("change", function() {
+            const selectedId = this.value;
+            if (dobMap[selectedId]) {
+                dobField.value = dobMap[selectedId];
+            } else {
+                dobField.value = "";
+            }
+        });
     });
 </script>
 {% endblock %}

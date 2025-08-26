@@ -1183,6 +1183,10 @@ def fill_incident_form(request):
             return redirect('incident_report_list')
     else:
         form = IncidentReportForm()
+        from django.core.serializers.json import DjangoJSONEncoder
+        import json
+        service_users = ServiceUser.objects.all().values("id", "dob")
+        service_user_dob_map = {str(u["id"]): u["dob"].strftime("%Y-%m-%d") for u in service_users}
 
     return render(request, 'forms/incident_form.html', {'form': form})
 
@@ -1291,6 +1295,10 @@ def edit_incident_form(request, form_id):
             return redirect('incident_detail', form_id=instance.id)
     else:
         form = IncidentReportForm(instance=instance)
+    from django.core.serializers.json import DjangoJSONEncoder
+    import json
+    service_users = ServiceUser.objects.all().values("id", "dob")
+    service_user_dob_map = {str(u["id"]): u["dob"].strftime("%Y-%m-%d") for u in service_users}
 
     return render(request, 'forms/incident_form.html', {
         'form': form,
