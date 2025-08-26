@@ -1188,7 +1188,10 @@ def fill_incident_form(request):
         service_users = ServiceUser.objects.all().values("id", "dob")
         service_user_dob_map = {str(u["id"]): u["dob"].strftime("%Y-%m-%d") for u in service_users}
 
-    return render(request, 'forms/incident_form.html', {'form': form})
+    return render(request, 'forms/incident_form.html', {'form': form,
+                                                        'service_user_dob_map': json.dumps(service_user_dob_map,
+                                                                                           cls=DjangoJSONEncoder),
+                                                        })
 
 
 @login_required
@@ -1306,7 +1309,7 @@ def edit_incident_form(request, form_id):
             {'field': 'image1', 'url': instance.image1.url if instance.image1 else None},
             {'field': 'image2', 'url': instance.image2.url if instance.image2 else None},
             {'field': 'image3', 'url': instance.image3.url if instance.image3 else None},
-        ]
+        ] ,'service_user_dob_map': json.dumps(service_user_dob_map, cls=DjangoJSONEncoder),
     })
 
 
