@@ -356,7 +356,6 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     last_name = models.CharField(max_length=150, blank=True)
 
     # Add new fields for Next of Kin and Postcode
-    postcode = models.CharField(max_length=10, blank=True, null=True)
     next_of_kin_first_name = models.CharField(max_length=30, blank=True, null=True)
     next_of_kin_last_name = models.CharField(max_length=30, blank=True, null=True)
     next_of_kin_phone = models.CharField(max_length=20, blank=True, null=True)
