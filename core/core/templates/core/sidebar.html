@@ -57,7 +57,6 @@
     <!-- Show to Staff ONLY -->
    <!-- Show to Staff and Team Lead ONLY -->
 {% if request.user.is_authenticated and request.user.role == 'staff' or request.user.role == 'team_lead'%}
-
 <!-- ABC Behaviour Monitoring -->
 <li class="nav-item">
     <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#abcCollapse"
@@ -114,6 +113,7 @@
         </div>
     </div>
 </li>
+
 
 <hr class="sidebar-divider">
 {% endif %}
