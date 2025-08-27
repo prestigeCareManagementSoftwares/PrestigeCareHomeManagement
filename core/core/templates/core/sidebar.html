@@ -55,30 +55,68 @@
     <div class="sidebar-heading">MANAGEMENT</div>
 
     <!-- Show to Staff ONLY -->
-    {% if request.user.is_authenticated and request.user.role == 'staff' or request.user.role == 'team_lead'%}
-    <li class="nav-item">
-        <a class="nav-link" href="{% url 'fill_abc_form' %}">
-            <i class="fas fa-file-alt fa-sm mr-2"></i>
-            <span>Create ABC Behaviour Monitoring</span>
-        </a>
-    </li>
+   <!-- Show to Staff and Team Lead ONLY -->
+{% if request.user.is_authenticated and request.user.role == 'staff' or request.user.role == 'team_lead'%}
 
-    <li class="nav-item">
-        <a class="nav-link" href="{% url 'fill_incident_form' %}">
-            <i class="fas fa-exclamation-triangle fa-sm mr-2"></i>
-            <span>Create Incident Logs</span>
-        </a>
-    </li>
+<!-- ABC Behaviour Monitoring -->
+<li class="nav-item">
+    <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#abcCollapse"
+       aria-expanded="true" aria-controls="abcCollapse">
+        <i class="fas fa-file-alt fa-sm mr-2"></i>
+        <span>ABC Behaviour Monitoring</span>
+    </a>
+    <div id="abcCollapse" class="collapse" aria-labelledby="headingABC" data-parent="#accordionSidebar">
+        <div class="bg-white py-2 collapse-inner rounded">
+            <a class="collapse-item" href="{% url 'abc-dashboard' %}">
+                <i class="fas fa-tachometer-alt fa-sm mr-2"></i>Dashboard
+            </a>
+            <a class="collapse-item" href="{% url 'fill_abc_form' %}">
+                <i class="fas fa-plus fa-sm mr-2"></i>Create
+            </a>
+        </div>
+    </div>
+</li>
 
-    <li class="nav-item">
-        <a class="nav-link" href="{% url 'create-log' %}">
-            <i class="fas fa-plus fa-sm mr-2"></i>
-            <span>Create Logs</span>
-        </a>
-    </li>
+<!-- Incident Logs -->
+<li class="nav-item">
+    <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#incidentCollapse"
+       aria-expanded="true" aria-controls="incidentCollapse">
+        <i class="fas fa-exclamation-triangle fa-sm mr-2"></i>
+        <span>Incident Logs</span>
+    </a>
+    <div id="incidentCollapse" class="collapse" aria-labelledby="headingIncident" data-parent="#accordionSidebar">
+        <div class="bg-white py-2 collapse-inner rounded">
+            <a class="collapse-item" href="{% url 'incident-dashboard' %}">
+                <i class="fas fa-tachometer-alt fa-sm mr-2"></i>Dashboard
+            </a>
+            <a class="collapse-item" href="{% url 'fill_incident_form' %}">
+                <i class="fas fa-plus fa-sm mr-2"></i>Create
+            </a>
+        </div>
+    </div>
+</li>
 
-    <hr class="sidebar-divider">
-    {% endif %}
+<!-- Logs -->
+<li class="nav-item">
+    <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#logsCollapse"
+       aria-expanded="true" aria-controls="logsCollapse">
+        <i class="fas fa-plus fa-sm mr-2"></i>
+        <span>Logs</span>
+    </a>
+    <div id="logsCollapse" class="collapse" aria-labelledby="headingLogs" data-parent="#accordionSidebar">
+        <div class="bg-white py-2 collapse-inner rounded">
+            <a class="collapse-item" href="{% url 'logs-dashboard' %}">
+                <i class="fas fa-tachometer-alt fa-sm mr-2"></i>Dashboard
+            </a>
+            <a class="collapse-item" href="{% url 'create-log' %}">
+                <i class="fas fa-plus fa-sm mr-2"></i>Create
+            </a>
+        </div>
+    </div>
+</li>
+
+<hr class="sidebar-divider">
+{% endif %}
 
     <!-- Staff Section: For Manager or Team Lead -->
     {% if request.user.is_authenticated %}
