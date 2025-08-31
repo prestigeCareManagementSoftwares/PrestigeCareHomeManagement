@@ -24,12 +24,14 @@
                         <div class="custom-file">
                             <input type="file" class="custom-file-input" id="image" name="image" accept="image/*">
                             <label class="custom-file-label" for="image">
-                                {% if form.instance.image %}Current: {{ form.instance.image.name }}{% else %}Choose file{% endif %}
+                                {% if form.instance.image %}Current: {{ form.instance.image.name }}{% else %}Choose
+                                file{% endif %}
                             </label>
                         </div>
                         {% if form.instance.image %}
                         <small class="form-text text-muted">
-                            Current: <a href="{{ form.instance.image.url }}" target="_blank">{{ form.instance.image.name }}</a>
+                            Current: <a href="{{ form.instance.image.url }}" target="_blank">{{ form.instance.image.name
+                            }}</a>
                         </small>
                         {% endif %}
                     </div>
@@ -51,7 +53,9 @@
                     <!-- DOB -->
                     <div class="form-group">
                         <label>Date of Birth *</label>
-                        <input type="date" class="form-control" name="dob" value="{{ form.instance.dob|default:'' }}" required>
+                        <input type="date" class="form-control" name="dob"
+                               value="{{ form.instance.dob|date:'Y-m-d'|default:'' }}" required>
+
                     </div>
 
                     <!-- Contact Info -->
@@ -82,7 +86,8 @@
                         <select class="form-control" name="carehome" required>
                             <option value="">Select a carehome</option>
                             {% for carehome in carehomes %}
-                            <option value="{{ carehome.id }}" {% if form.instance.carehome.id == carehome.id %}selected{% endif %}>
+                            <option value="{{ carehome.id }}" {% if form.instance.carehome.id== carehome.id %}selected{%
+                                    endif %}>
                                 {{ carehome.name }}
                             </option>
                             {% endfor %}
@@ -92,7 +97,8 @@
                     <!-- Notes -->
                     <div class="form-group">
                         <label>Additional Notes</label>
-                        <textarea class="form-control" name="notes" rows="3">{{ form.instance.notes|default:'' }}</textarea>
+                        <textarea class="form-control" name="notes"
+                                  rows="3">{{ form.instance.notes|default:'' }}</textarea>
                     </div>
 
                     <!-- Next of Kin -->
@@ -147,7 +153,8 @@
                 <h6 class="m-0 font-weight-bold text-primary">Profile Preview</h6>
             </div>
             <div class="card-body text-center">
-                <div class="rounded-circle overflow-hidden mx-auto" style="width: 150px; height: 150px; border: 3px solid #eee;">
+                <div class="rounded-circle overflow-hidden mx-auto"
+                     style="width: 150px; height: 150px; border: 3px solid #eee;">
                     <img id="image-preview"
                          src="{% if form.instance.image %}{{ form.instance.image.url }}{% else %}{% static 'img/default-profile.png' %}{% endif %}"
                          style="width: 100%; height: 100%; object-fit: cover;"
@@ -165,9 +172,9 @@
                 </div>
                 <p class="text-muted" id="carehome-preview">
                     {% if form.instance.carehome %}
-                        {{ form.instance.carehome.name }}
+                    {{ form.instance.carehome.name }}
                     {% else %}
-                        No carehome selected
+                    No carehome selected
                     {% endif %}
                 </p>
             </div>
@@ -178,56 +185,56 @@
 
 {% block scripts %}
 <script>
-$(document).ready(function() {
-    // Image preview
-    $('#image').change(function() {
-        const file = this.files[0];
-        if (file) {
-            $(this).next('.custom-file-label').text(file.name);
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                $('#image-preview').attr('src', e.target.result);
-            };
-            reader.readAsDataURL(file);
+    $(document).ready(function() {
+        // Image preview
+        $('#image').change(function() {
+            const file = this.files[0];
+            if (file) {
+                $(this).next('.custom-file-label').text(file.name);
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    $('#image-preview').attr('src', e.target.result);
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Initials preview
+        function updateInitials() {
+            const firstName = $('input[name="first_name"]').val().trim();
+            const lastName = $('input[name="last_name"]').val().trim();
+            const initials = (firstName ? firstName[0].toUpperCase() : '') + (lastName ? lastName[0].toUpperCase() : '') || 'U';
+            $('#initials-text').text(initials);
         }
-    });
+        $('input[name="first_name"], input[name="last_name"]').on('input', updateInitials);
+        updateInitials();
 
-    // Initials preview
-    function updateInitials() {
-        const firstName = $('input[name="first_name"]').val().trim();
-        const lastName = $('input[name="last_name"]').val().trim();
-        const initials = (firstName ? firstName[0].toUpperCase() : '') + (lastName ? lastName[0].toUpperCase() : '') || 'U';
-        $('#initials-text').text(initials);
-    }
-    $('input[name="first_name"], input[name="last_name"]').on('input', updateInitials);
-    updateInitials();
+        // Carehome preview
+        $('select[name="carehome"]').change(function() {
+            $('#carehome-preview').text($(this).find('option:selected').text() || 'No carehome selected');
+        });
 
-    // Carehome preview
-    $('select[name="carehome"]').change(function() {
-        $('#carehome-preview').text($(this).find('option:selected').text() || 'No carehome selected');
+        // Phone validation
+        $('#service-user-form').submit(function(e) {
+            const phone = $('input[name="phone"]').val().trim();
+            const regex = /^(\+44\s?7\d{3}|\(?07\d{3}\)?)\s?\d{3}\s?\d{3}$/;
+            if (!regex.test(phone)) {
+                e.preventDefault();
+                $('#phone-error').removeClass('d-none');
+                $('input[name="phone"]').focus();
+            } else {
+                $('#phone-error').addClass('d-none');
+            }
+        });
     });
-
-    // Phone validation
-    $('#service-user-form').submit(function(e) {
-        const phone = $('input[name="phone"]').val().trim();
-        const regex = /^(\+44\s?7\d{3}|\(?07\d{3}\)?)\s?\d{3}\s?\d{3}$/;
-        if (!regex.test(phone)) {
-            e.preventDefault();
-            $('#phone-error').removeClass('d-none');
-            $('input[name="phone"]').focus();
-        } else {
-            $('#phone-error').addClass('d-none');
-        }
-    });
-});
 </script>
 
 <style>
-.initials-preview {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-}
+    .initials-preview {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+    }
 </style>
 {% endblock %}
