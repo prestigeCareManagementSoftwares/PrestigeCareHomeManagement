@@ -41,7 +41,7 @@ class LoginForm(AuthenticationForm):
 class ServiceUserForm(forms.ModelForm):
     class Meta:
         model = ServiceUser
-        fields = '__all__'
+        exclude = ['emergency_contact']
         widgets = {
             'carehome': forms.Select(attrs={'class': 'form-control'}),
             'first_name': forms.TextInput(attrs={'class': 'form-control'}),
@@ -52,7 +52,7 @@ class ServiceUserForm(forms.ModelForm):
                 'placeholder': '+44 7123 456789 or 07123 456789'
             }),
             'email': forms.EmailInput(attrs={'class': 'form-control'}),
-            'emergency_contact': forms.TextInput(attrs={'class': 'form-control'}),
+            # 'emergency_contact': forms.TextInput(attrs={'class': 'form-control'}),
             'address': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
             'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
             'next_of_kin_first_name': forms.TextInput(attrs={'class': 'form-control'}),
