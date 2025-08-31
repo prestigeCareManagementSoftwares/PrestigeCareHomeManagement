@@ -36,7 +36,9 @@
                     <select name="service_users" id="id_service_users" class="form-control" multiple required>
                         {% if editing %}
                             {% for su in mapping_instance.service_users.all %}
-                                <option value="{{ su.id }}" selected>{{ su.get_formatted_name }} ({{ su.carehome.name }})</option>
+                                <option value="{{ su.id }}" selected>
+                                    {{ su.get_formatted_name }} ({{ su.carehome.name }})
+                                </option>
                             {% endfor %}
                         {% else %}
                             <option value="">Select Care Home(s) first</option>
@@ -111,6 +113,12 @@
 <script>
 $(document).ready(function() {
     // Initialize Select2
+    $('#id_staff').select2({
+        placeholder: "Select staff",
+        allowClear: true,
+        width: '100%'
+    });
+
     $('#id_carehomes').select2({
         placeholder: "Select care home(s)",
         allowClear: true,
@@ -123,6 +131,16 @@ $(document).ready(function() {
         width: '100%'
     });
 
+    // Preselected service users (only when editing)
+    var preselectedServiceUsers = [];
+    {% if editing %}
+        preselectedServiceUsers = [
+            {% for su in mapping_instance.service_users.all %}
+                "{{ su.id }}"{% if not forloop.last %}, {% endif %}
+            {% endfor %}
+        ];
+    {% endif %}
+
     // Handle carehome selection change
     $('#id_carehomes').on('change', function() {
         const selectedCarehomes = $(this).val();
@@ -133,10 +151,10 @@ $(document).ready(function() {
         if (selectedCarehomes && selectedCarehomes.length > 0) {
             $serviceUsers.select2({
                 placeholder: "Loading service users...",
-                allowClear: false
+                allowClear: false,
+                width: '100%'
             });
 
-            // Prepare carehome IDs - send as comma-separated string
             const carehomeIds = selectedCarehomes.join(',');
 
             $.ajax({
@@ -147,18 +165,24 @@ $(document).ready(function() {
                     $serviceUsers.empty();
                     if (response.service_users && response.service_users.length) {
                         $.each(response.service_users, function(i, user) {
-                            $serviceUsers.append(
-                                $('<option>', {
-                                    value: user.id,
-                                    text: user.name + (user.carehome ? ' (' + user.carehome.name + ')' : '')
-                                })
-                            );
+                            const option = $('<option>', {
+                                value: user.id,
+                                text: user.name + (user.carehome ? ' (' + user.carehome.name + ')' : '')
+                            });
+
+                            // Preselect already mapped users
+                            if (preselectedServiceUsers.includes(user.id.toString())) {
+                                option.attr('selected', 'selected');
+                            }
+
+                            $serviceUsers.append(option);
                         });
                         $serviceUsers.prop('disabled', false).trigger('change');
                     } else {
                         $serviceUsers.select2({
                             placeholder: "No service users found for selected care homes",
-                            allowClear: false
+                            allowClear: false,
+                            width: '100%'
                         });
                     }
                 },
@@ -166,21 +190,31 @@ $(document).ready(function() {
                     console.error('Error:', xhr.responseJSON);
                     $serviceUsers.select2({
                         placeholder: "Error loading service users",
-                        allowClear: false
+                        allowClear: false,
+                        width: '100%'
                     });
                 }
             });
         } else {
             $serviceUsers.select2({
                 placeholder: "First select care home(s)",
-                allowClear: true
+                allowClear: true,
+                width: '100%'
             }).prop('disabled', false);
         }
     });
 
-    // If editing, trigger carehomes change to load service users
+    // If editing, trigger pre-population
     {% if editing %}
-        $('#id_carehomes').trigger('change');
+        // Staff preselect
+        $('#id_staff').val("{{ mapping_instance.staff.id }}").trigger('change');
+
+        // Carehomes preselect
+        $('#id_carehomes').val([
+            {% for ch in mapping_instance.carehomes.all %}
+                "{{ ch.id }}"{% if not forloop.last %}, {% endif %}
+            {% endfor %}
+        ]).trigger('change');
     {% endif %}
 });
 </script>
