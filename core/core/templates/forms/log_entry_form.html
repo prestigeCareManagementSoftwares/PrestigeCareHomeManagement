@@ -4,100 +4,47 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Carehome Log Form</title>
-    <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         body {
             background-color: #f8f9fa;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        .header-container {
-            background-color: #4b6cb7;
-            color: white;
-            border-radius: 8px;
             padding: 20px;
-            margin-bottom: 25px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
-        .log-container {
-            background-color: white;
-            border-radius: 10px;
-            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
-            padding: 25px;
-            margin-bottom: 30px;
+        .container {
+            max-width: 900px;
         }
         .log-entry {
-            padding: 15px;
-            border-left: 4px solid #4b6cb7;
+            margin-bottom: 25px;
+        }
+        .log-text {
+            resize: vertical;
+            min-height: 80px;
+        }
+        .header-container {
             margin-bottom: 20px;
-            background-color: #f8f9fa;
-            border-radius: 5px;
-        }
-        .time-slot {
-            font-weight: bold;
-            color: #4b6cb7;
-            font-size: 1.1rem;
-            margin-bottom: 10px;
-        }
-        .profile-img {
-            border: 3px solid #4b6cb7;
-        }
-        .btn-action {
-            min-width: 100px;
         }
         .shift-badge {
             background-color: #6f42c1;
-            padding: 5px 10px;
-            border-radius: 20px;
-            font-size: 0.9rem;
-        }
-        .instructions {
-            background-color: #e9ecef;
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 20px;
-            border-left: 4px solid #ffc107;
-        }
-        .log-text {
-            border: 1px solid #ced4da;
-            border-radius: 5px;
-            padding: 12px;
-            resize: vertical;
-        }
-        .log-text:focus {
-            border-color: #4b6cb7;
-            box-shadow: 0 0 0 0.2rem rgba(75, 108, 183, 0.25);
-        }
-        .lock-btn {
-            transition: all 0.3s ease;
-        }
-        .lock-btn:hover {
-            transform: scale(1.05);
-        }
-        .entry-status {
+            color: white;
+            padding: 3px 8px;
+            border-radius: 4px;
             font-size: 0.85rem;
-            margin-top: 5px;
-        }
-        .completed {
-            color: #28a745;
-        }
-        .pending {
-            color: #ffc107;
         }
     </style>
 </head>
 <body>
-    <div class="container py-5">
-        <div class="header-container text-center">
-            <h1 class="h3 mb-2">Carehome Log Form</h1>
-            <p class="mb-0">Record and track care activities with accurate timing</p>
+    <div class="container">
+        <!-- Header section -->
+        <div class="d-sm-flex align-items-center justify-content-between mb-4 header-container">
+            <h1 class="h4 mb-0 text-gray-800">Log Form (<span class="shift-badge">Day Shift: 8:00-16:00</span>)</h1>
         </div>
 
+        <!-- User info section -->
         <div class="row align-items-center mb-4">
             <div class="col-md-1 text-center">
-                <img src="https://ui-avatars.com/api/?name=Staff+Member&background=4b6cb7&color=fff" class="rounded-circle profile-img" height="70" alt="Staff">
+                <img src="https://ui-avatars.com/api/?name=Staff+Member&background=4b6cb7&color=fff" class="rounded-circle" height="70" alt="Staff">
             </div>
             <div class="col-md-5">
                 <div><strong>Date:</strong> October 15, 2023</div>
@@ -105,218 +52,133 @@
             </div>
             <div class="col-md-3">
                 <div><strong>Service User:</strong> Robert Wilson</div>
-                <div><strong>Carehome:</strong> Sunshine Care <span class="shift-badge">Day Shift (8:00 - 16:00)</span></div>
+                <div><strong>Carehome:</strong> Sunshine Care</div>
             </div>
             <div class="col-md-1 text-center">
-                <img src="https://ui-avatars.com/api/?name=Robert+Wilson&background=6f42c1&color=fff" class="rounded-circle profile-img" height="70" alt="Service User">
+                <img src="https://ui-avatars.com/api/?name=Robert+Wilson&background=6f42c1&color=fff" class="rounded-circle" height="70" alt="Service User">
             </div>
         </div>
 
-        <div class="instructions">
-            <h5 class="mb-3"><i class="fas fa-info-circle me-2"></i>Log Entry Instructions</h5>
-            <ul class="mb-0">
-                <li>Complete each log entry in chronological order</li>
-                <li>Entries will be automatically locked once completed</li>
-                <li>You can update the current entry until you move to the next</li>
-                <li>Click "Submit & Lock" when all entries are completed</li>
-            </ul>
-        </div>
+        <hr>
 
-        <div class="log-container">
-            <div id="log-entries-container">
-                <!-- Morning Care -->
-                <div id="entry-1" class="log-entry" data-entry-id="1">
-                    <div class="time-slot">08:00 - Morning Care</div>
-                    <form class="log-form">
-                        <textarea name="content" class="form-control log-text" rows="3">Assisted with morning routine, provided medication with breakfast.</textarea>
-                        <div class="mt-2 d-flex justify-content-between align-items-center">
-                            <button type="button" class="btn btn-primary btn-action update-btn">
-                                <i class="fas fa-save me-1"></i> Update
-                            </button>
-                            <span class="entry-status completed"><i class="fas fa-check-circle me-1"></i>Completed</span>
-                        </div>
-                    </form>
-                </div>
-
-                <!-- Mid-Morning -->
-                <div id="entry-2" class="log-entry" data-entry-id="2">
-                    <div class="time-slot">10:00 - Mid-Morning Check</div>
-                    <form class="log-form">
-                        <textarea name="content" class="form-control log-text" rows="3">Vitals checked: BP 125/80, pulse 72. Engaged in light exercises.</textarea>
-                        <div class="mt-2 d-flex justify-content-between align-items-center">
-                            <button type="button" class="btn btn-primary btn-action update-btn">
-                                <i class="fas fa-save me-1"></i> Update
-                            </button>
-                            <span class="entry-status completed"><i class="fas fa-check-circle me-1"></i>Completed</span>
-                        </div>
-                    </form>
-                </div>
-
-                <!-- Lunch -->
-                <div id="entry-3" class="log-entry" data-entry-id="3">
-                    <div class="time-slot">12:30 - Lunch</div>
-                    <form class="log-form">
-                        <textarea name="content" class="form-control log-text" rows="3">Ate 75% of meal. Preferred the soup and dessert. Drank full glass of water.</textarea>
-                        <div class="mt-2 d-flex justify-content-between align-items-center">
-                            <button type="button" class="btn btn-primary btn-action update-btn">
-                                <i class="fas fa-save me-1"></i> Update
-                            </button>
-                            <span class="entry-status completed"><i class="fas fa-check-circle me-1"></i>Completed</span>
-                        </div>
-                    </form>
-                </div>
-
-                <!-- Afternoon -->
-                <div id="entry-4" class="log-entry" data-entry-id="4">
-                    <div class="time-slot">14:00 - Afternoon Activities</div>
-                    <form class="log-form">
-                        <textarea name="content" class="form-control log-text" rows="3" disabled>Participated in group music therapy session. Seemed engaged and happy.</textarea>
-                        <div class="mt-2 d-flex justify-content-between align-items-center">
-                            <button type="button" class="btn btn-primary btn-action update-btn" disabled>
-                                <i class="fas fa-save me-1"></i> Update
-                            </button>
-                            <span class="entry-status completed"><i class="fas fa-check-circle me-1"></i>Completed</span>
-                        </div>
-                    </form>
-                </div>
-
-                <!-- Current Entry -->
-                <div id="entry-5" class="log-entry" data-entry-id="5">
-                    <div class="time-slot">15:30 - Afternoon Tea & Meds</div>
-                    <form class="log-form">
-                        <textarea name="content" class="form-control log-text" rows="3">Had tea with biscuit. Administered afternoon medication.</textarea>
-                        <div class="mt-2 d-flex justify-content-between align-items-center">
-                            <button type="button" class="btn btn-success btn-action save-btn">
-                                <i class="fas fa-paper-plane me-1"></i> Save
-                            </button>
-                            <span class="entry-status pending"><i class="fas fa-clock me-1"></i>In Progress</span>
-                        </div>
-                    </form>
-                </div>
-
-                <!-- Next Entry -->
-                <div id="entry-6" class="log-entry" data-entry-id="6">
-                    <div class="time-slot">16:00 - Handover</div>
-                    <form class="log-form">
-                        <textarea name="content" class="form-control log-text" rows="3" disabled></textarea>
-                        <div class="mt-2 d-flex justify-content-between align-items-center">
-                            <button type="button" class="btn btn-success btn-action save-btn" disabled>
-                                <i class="fas fa-paper-plane me-1"></i> Save
-                            </button>
-                            <span class="entry-status pending"><i class="fas fa-clock me-1"></i>Pending</span>
-                        </div>
-                    </form>
-                </div>
+        <!-- Log entries -->
+        <div id="log-entries-container">
+            <!-- Entry 1 -->
+            <div id="entry-1" class="log-entry" data-entry-id="1">
+                <div><strong>08:00</strong></div>
+                <form class="log-form">
+                    <textarea name="content" class="form-control log-text" rows="2">Morning care provided. Assisted with washing and dressing.</textarea>
+                    <div class="mt-2">
+                        <button type="button" class="btn btn-primary update-btn">Update</button>
+                    </div>
+                </form>
+                <hr>
             </div>
 
-            <hr class="my-4">
+            <!-- Entry 2 -->
+            <div id="entry-2" class="log-entry" data-entry-id="2">
+                <div><strong>10:00</strong></div>
+                <form class="log-form">
+                    <textarea name="content" class="form-control log-text" rows="2">Medication administered. Breakfast completed.</textarea>
+                    <div class="mt-2">
+                        <button type="button" class="btn btn-primary update-btn">Update</button>
+                    </div>
+                </form>
+                <hr>
+            </div>
 
-            <div class="d-flex justify-content-end">
-                <button type="button" class="btn btn-danger lock-btn">
-                    <i class="fas fa-lock me-1"></i> Submit & Lock
-                </button>
+            <!-- Entry 3 -->
+            <div id="entry-3" class="log-entry" data-entry-id="3">
+                <div><strong>12:00</strong></div>
+                <form class="log-form">
+                    <textarea name="content" class="form-control log-text" rows="2">Lunch served. Ate well. Social activity in common room.</textarea>
+                    <div class="mt-2">
+                        <button type="button" class="btn btn-primary update-btn">Update</button>
+                    </div>
+                </form>
+                <hr>
+            </div>
+
+            <!-- Entry 4 -->
+            <div id="entry-4" class="log-entry" data-entry-id="4">
+                <div><strong>14:00</strong></div>
+                <form class="log-form">
+                    <textarea name="content" class="form-control log-text" rows="2" disabled>Afternoon rest period. Vital signs checked - all normal.</textarea>
+                    <div class="mt-2">
+                        <button type="button" class="btn btn-primary update-btn" disabled>Update</button>
+                    </div>
+                </form>
+                <hr>
+            </div>
+
+            <!-- Entry 5 (Current) -->
+            <div id="entry-5" class="log-entry" data-entry-id="5">
+                <div><strong>15:30</strong></div>
+                <form class="log-form">
+                    <textarea name="content" class="form-control log-text" rows="2">Afternoon tea. Preparing for evening handover.</textarea>
+                    <div class="mt-2">
+                        <button type="button" class="btn btn-success save-btn">Save</button>
+                    </div>
+                </form>
+                <hr>
+            </div>
+
+            <!-- Entry 6 (Next) -->
+            <div id="entry-6" class="log-entry" data-entry-id="6">
+                <div><strong>16:00</strong></div>
+                <form class="log-form">
+                    <textarea name="content" class="form-control log-text" rows="2" disabled></textarea>
+                    <div class="mt-2">
+                        <button type="button" class="btn btn-success save-btn" disabled>Save</button>
+                    </div>
+                </form>
+                <hr>
             </div>
         </div>
+
+        <!-- Submit button -->
+        <form>
+            <button type="button" class="btn btn-danger" onclick="return confirm('Once locked, entries cannot be edited. Proceed?')">
+                Submit & Lock
+            </button>
+        </form>
     </div>
-
-    <!-- Bootstrap JS and Popper.js -->
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.min.js"></script>
 
     <script>
         document.addEventListener("DOMContentLoaded", function () {
             const entries = document.querySelectorAll('.log-entry');
-            const lockButton = document.querySelector('.lock-btn');
 
-            // Add click event to Save/Update buttons
+            // Add event listeners to all buttons
             document.querySelectorAll('.save-btn, .update-btn').forEach(button => {
                 button.addEventListener('click', function() {
                     const entry = this.closest('.log-entry');
                     const textarea = entry.querySelector('.log-text');
                     const entryId = entry.dataset.entryId;
 
-                    // Simulate saving data
                     if (textarea.value.trim() !== '') {
-                        // Change save button to update button if it was a save
+                        // If this was a save button, change it to update
                         if (this.classList.contains('save-btn')) {
                             this.classList.remove('btn-success', 'save-btn');
                             this.classList.add('btn-primary', 'update-btn');
-                            this.innerHTML = '<i class="fas fa-save me-1"></i> Update';
+                            this.textContent = 'Update';
 
-                            // Update status
-                            const statusSpan = entry.querySelector('.entry-status');
-                            statusSpan.classList.remove('pending');
-                            statusSpan.classList.add('completed');
-                            statusSpan.innerHTML = '<i class="fas fa-check-circle me-1"></i>Completed';
+                            // Enable the next entry if exists
+                            const nextEntry = entry.nextElementSibling;
+                            if (nextEntry && nextEntry.classList.contains('log-entry')) {
+                                const nextTextarea = nextEntry.querySelector('.log-text');
+                                const nextButton = nextEntry.querySelector('.save-btn, .update-btn');
+
+                                nextTextarea.disabled = false;
+                                nextButton.disabled = false;
+                            }
                         }
 
-                        // Enable the next entry if exists
-                        const nextEntry = entry.nextElementSibling;
-                        if (nextEntry && nextEntry.classList.contains('log-entry')) {
-                            const nextTextarea = nextEntry.querySelector('.log-text');
-                            const nextButton = nextEntry.querySelector('.save-btn, .update-btn');
-                            const nextStatus = nextEntry.querySelector('.entry-status');
-
-                            nextTextarea.disabled = false;
-                            nextButton.disabled = false;
-                            nextStatus.innerHTML = '<i class="fas fa-clock me-1"></i>In Progress';
-                        }
-
-                        // Show success feedback
-                        showAlert('Log entry saved successfully!', 'success');
+                        alert('Entry saved successfully!');
                     } else {
-                        showAlert('Please enter some content before saving.', 'warning');
+                        alert('Please enter some content before saving.');
                     }
                 });
             });
-
-            // Lock button handler
-            lockButton.addEventListener('click', function() {
-                if (confirm('Once locked, entries cannot be edited. Proceed?')) {
-                    // Disable all textareas and buttons
-                    document.querySelectorAll('.log-text').forEach(textarea => {
-                        textarea.disabled = true;
-                    });
-                    document.querySelectorAll('.save-btn, .update-btn').forEach(button => {
-                        button.disabled = true;
-                    });
-
-                    // Change lock button appearance
-                    this.innerHTML = '<i class="fas fa-check-circle me-1"></i> Submitted & Locked';
-                    this.classList.remove('btn-danger');
-                    this.classList.add('btn-success');
-                    this.disabled = true;
-
-                    showAlert('Log form has been successfully submitted and locked.', 'success');
-                }
-            });
-
-            // Helper function to show alerts
-            function showAlert(message, type) {
-                // Remove any existing alerts
-                const existingAlert = document.querySelector('.alert');
-                if (existingAlert) {
-                    existingAlert.remove();
-                }
-
-                // Create alert element
-                const alertDiv = document.createElement('div');
-                alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
-                alertDiv.innerHTML = `
-                    ${message}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                `;
-
-                // Insert after the header
-                document.querySelector('.header-container').after(alertDiv);
-
-                // Auto dismiss after 3 seconds
-                setTimeout(() => {
-                    if (alertDiv.isConnected) {
-                        alertDiv.remove();
-                    }
-                }, 3000);
-            }
         });
     </script>
 </body>
