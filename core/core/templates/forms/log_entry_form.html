@@ -1,219 +1,168 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Carehome Log Form</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        body {
-            background-color: #f8f9fa;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            padding: 20px;
-        }
-        .container {
-            max-width: 900px;
-        }
-        .log-entry {
-            margin-bottom: 25px;
-        }
-        .log-text {
-            resize: vertical;
-            min-height: 80px;
-        }
-        .header-container {
-            margin-bottom: 20px;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <!-- Header section -->
-        <div class="d-sm-flex align-items-center justify-content-between mb-4 header-container">
-            <h1 class="h4 mb-0 text-gray-800">Log Form (Day Shift: 8:00-16:00)</h1>
-        </div>
+{% extends "core/base.html" %}
+{% load static %}
 
-        <!-- User info section -->
-        <div class="row align-items-center mb-4">
-            <div class="col-md-1 text-center">
-                <img src="https://ui-avatars.com/api/?name=Staff+Member&background=4b6cb7&color=fff" class="rounded-circle" height="70" alt="Staff">
-            </div>
-            <div class="col-md-5">
-                <div><strong>Date:</strong> October 15, 2023</div>
-                <div><strong>Staff:</strong> Sarah Johnson</div>
-            </div>
-            <div class="col-md-3">
-                <div><strong>Service User:</strong> Robert Wilson</div>
-                <div><strong>Carehome:</strong> Sunshine Care</div>
-            </div>
-            <div class="col-md-1 text-center">
-                <img src="https://ui-avatars.com/api/?name=Robert+Wilson&background=6f42c1&color=fff" class="rounded-circle" height="70" alt="Service User">
-            </div>
-        </div>
+{% block content %}
+<div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h4 mb-0 text-gray-800">Log Form ({{ shift }})</h1>
+</div>
 
-        <hr>
-
-        <!-- Log entries -->
-        <div id="log-entries-container">
-            <!-- Entry 1 -->
-            <div id="entry-1" class="mb-4 log-entry" data-entry-id="1">
-                <div><strong>08:00</strong></div>
-                <form class="log-form">
-                    <textarea name="content" class="form-control log-text" rows="2">Morning care provided. Assisted with washing and dressing.</textarea>
-                    <div class="mt-2">
-                        <button type="button" class="btn btn-primary update-btn">Update</button>
-                    </div>
-                </form>
-                <hr>
-            </div>
-
-            <!-- Entry 2 -->
-            <div id="entry-2" class="mb-4 log-entry" data-entry-id="2">
-                <div><strong>10:00</strong></div>
-                <form class="log-form">
-                    <textarea name="content" class="form-control log-text" rows="2">Medication administered. Breakfast completed.</textarea>
-                    <div class="mt-2">
-                        <button type="button" class="btn btn-primary update-btn">Update</button>
-                    </div>
-                </form>
-                <hr>
-            </div>
-
-            <!-- Entry 3 -->
-            <div id="entry-3" class="mb-4 log-entry" data-entry-id="3">
-                <div><strong>12:00</strong></div>
-                <form class="log-form">
-                    <textarea name="content" class="form-control log-text" rows="2">Lunch served. Ate well. Social activity in common room.</textarea>
-                    <div class="mt-2">
-                        <button type="button" class="btn btn-primary update-btn">Update</button>
-                    </div>
-                </form>
-                <hr>
-            </div>
-
-            <!-- Entry 4 -->
-            <div id="entry-4" class="mb-4 log-entry" data-entry-id="4">
-                <div><strong>14:00</strong></div>
-                <form class="log-form">
-                    <textarea name="content" class="form-control log-text" rows="2" disabled>Afternoon rest period. Vital signs checked - all normal.</textarea>
-                    <div class="mt-2">
-                        <button type="button" class="btn btn-primary update-btn" disabled>Update</button>
-                    </div>
-                </form>
-                <hr>
-            </div>
-
-            <!-- Entry 5 (Current) -->
-            <div id="entry-5" class="mb-4 log-entry" data-entry-id="5">
-                <div><strong>15:30</strong></div>
-                <form class="log-form">
-                    <textarea name="content" class="form-control log-text" rows="2">Afternoon tea. Preparing for evening handover.</textarea>
-                    <div class="mt-2">
-                        <button type="button" class="btn btn-success save-btn">Save</button>
-                    </div>
-                </form>
-                <hr>
-            </div>
-
-            <!-- Entry 6 (Next) -->
-            <div id="entry-6" class="mb-4 log-entry" data-entry-id="6">
-                <div><strong>16:00</strong></div>
-                <form class="log-form">
-                    <textarea name="content" class="form-control log-text" rows="2" disabled></textarea>
-                    <div class="mt-2">
-                        <button type="button" class="btn btn-success save-btn" disabled>Save</button>
-                    </div>
-                </form>
-                <hr>
-            </div>
-        </div>
-
-        <!-- Submit button -->
-        <form>
-            <button type="button" class="btn btn-danger" onclick="return confirm('Once locked, entries cannot be edited. Proceed?')">
-                Submit & Lock
-            </button>
-        </form>
+<div class="row align-items-center mb-4">
+    <div class="col-md-1 text-center">
+        {% if request.user.image %}
+        <img src="{{ request.user.image.url }}" class="rounded-circle" height="70" alt="Staff">
+        {% else %}
+        <img src="{% static 'img/undraw_profile.svg' %}" class="rounded-circle" height="70" alt="Staff">
+        {% endif %}
     </div>
+    <div class="col-md-5">
+        <div><strong>Date:</strong> {{ today }}</div>
+        <div><strong>Staff:</strong> {{ request.user.get_full_name }}</div>
+    </div>
+    <div class="col-md-3">
+        <div><strong>Service User:</strong> {{ service_user.first_name }} {{ service_user.last_name }}</div>
+        <div><strong>Carehome:</strong> {{ carehome.name }} {{shift}} </div>
+    </div>
+    <div class="col-md-1 text-center">
+        {% if service_user.image %}
+        <img src="{{ service_user.image.url }}" class="rounded-circle" height="70" alt="Service User">
+        {% else %}
+        <img src="{% static 'img/default-user.png' %}" class="rounded-circle" height="70" alt="Service User">
+        {% endif %}
+    </div>
+</div>
 
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            const entries = document.querySelectorAll('.log-entry');
-            const lockButton = document.querySelector('button[type="button"]');
+<hr>
 
-            // Enable first empty entry or first entry if all have content
-            let firstEmptyEntry = null;
-            entries.forEach(entry => {
-                const textarea = entry.querySelector('.log-text');
-                if (!textarea.value.trim() && !firstEmptyEntry) {
-                    firstEmptyEntry = entry;
-                }
+{% if log_entries %}
+<div id="log-entries-container">
+    {% for entry in log_entries %}
+    <div id="entry-{{ entry.id }}" class="mb-4 log-entry" data-entry-id="{{ entry.id }}" {% if not forloop.first %}data-locked="true"{% endif %}>
+        <div><strong>{{ entry.time_slot|time:"H:i" }}</strong></div>
+        <form method="post" class="log-form">
+            {% csrf_token %}
+            <textarea name="content" class="form-control log-text" rows="2"
+                {% if entry.is_locked %}disabled{% endif %}
+                {% if not forloop.first and not entry.content %}disabled{% endif %}>{{ entry.content }}</textarea>
+            <div class="mt-2">
+                {% if entry.content %}
+                <button type="button" class="btn btn-primary update-btn" {% if not forloop.first and not entry.content %}disabled{% endif %}>Update</button>
+                {% else %}
+                <button type="button" class="btn btn-success save-btn" {% if not forloop.first and not entry.content %}disabled{% endif %}>Save</button>
+                {% endif %}
+            </div>
+        </form>
+        <hr>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="alert alert-warning">No log entries found.</div>
+{% endif %}
+
+{% if not latest_log.is_locked %}
+<form method="post" action="{% url 'lock-log' latest_log.id %}">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-danger"
+            onclick="return confirm('Once locked, entries cannot be edited. Proceed?')">
+        Submit & Lock
+    </button>
+</form>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const entries = document.querySelectorAll('.log-entry');
+    const lockButton = document.querySelector('button[type="submit"]');
+
+    // Enable first empty entry or first entry if all have content
+    let firstEmptyEntry = null;
+    entries.forEach(entry => {
+        const textarea = entry.querySelector('.log-text');
+        if (!textarea.value.trim() && !firstEmptyEntry) {
+            firstEmptyEntry = entry;
+        }
+    });
+
+    const initialEntry = firstEmptyEntry || entries[0];
+    if (initialEntry) {
+        enableEntry(initialEntry);
+    }
+
+    // Handle save/update button clicks
+    entries.forEach(entry => {
+        const button = entry.querySelector('.save-btn') || entry.querySelector('.update-btn');
+        const textarea = entry.querySelector('.log-text');
+
+        if (button) {
+            button.addEventListener('click', function() {
+                saveEntry(entry, textarea, button);
             });
+        }
+    });
 
-            const initialEntry = firstEmptyEntry || entries[0];
-            if (initialEntry) {
-                enableEntry(initialEntry);
-            }
+    function enableEntry(entry) {
+        const textarea = entry.querySelector('.log-text');
+        const button = entry.querySelector('.save-btn') || entry.querySelector('.update-btn');
 
-            // Handle save/update button clicks
-            entries.forEach(entry => {
-                const button = entry.querySelector('.save-btn') || entry.querySelector('.update-btn');
-                const textarea = entry.querySelector('.log-text');
+        if (textarea && button) {
+            textarea.disabled = false;
+            button.disabled = false;
+            entry.dataset.locked = "false";
+        }
+    }
 
-                if (button) {
-                    button.addEventListener('click', function() {
-                        saveEntry(entry, textarea, button);
-                    });
+    function saveEntry(entry, textarea, button) {
+        const form = entry.querySelector('form');
+        const formData = new FormData(form);
+        const entryId = entry.dataset.entryId;
+        const csrfToken = formData.get("csrfmiddlewaretoken");
+
+        // Add content to form data
+        formData.append('content', textarea.value);
+
+        fetch(`/save-log/${entryId}/`, {
+            method: "POST",
+            headers: { "X-CSRFToken": csrfToken },
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Change save button to update button if it was a save
+                if (button.classList.contains('save-btn')) {
+                    button.classList.remove('save-btn', 'btn-success');
+                    button.classList.add('update-btn', 'btn-primary');
+                    button.textContent = 'Update';
                 }
-            });
 
-            function enableEntry(entry) {
-                const textarea = entry.querySelector('.log-text');
-                const button = entry.querySelector('.save-btn') || entry.querySelector('.update-btn');
-
-                if (textarea && button) {
-                    textarea.disabled = false;
-                    button.disabled = false;
-                    entry.dataset.locked = "false";
+                // Find and enable the next entry
+                const nextEntry = entry.nextElementSibling;
+                if (nextEntry && nextEntry.classList.contains('log-entry')) {
+                    enableEntry(nextEntry);
                 }
+
+                // Enable the lock button if all entries have content
+                if (lockButton && allEntriesHaveContent()) {
+                    lockButton.disabled = false;
+                }
+            } else {
+                alert("Error saving log entry: " + (data.error || 'Unknown error'));
             }
-
-            function saveEntry(entry, textarea, button) {
-                const form = entry.querySelector('form');
-                const formData = new FormData(form);
-                const entryId = entry.dataset.entryId;
-
-                // Simulate AJAX request
-                setTimeout(() => {
-                    // Change save button to update button if it was a save
-                    if (button.classList.contains('save-btn')) {
-                        button.classList.remove('save-btn', 'btn-success');
-                        button.classList.add('update-btn', 'btn-primary');
-                        button.textContent = 'Update';
-                    }
-
-                    // Find and enable the next entry
-                    const nextEntry = entry.nextElementSibling;
-                    if (nextEntry && nextEntry.classList.contains('log-entry')) {
-                        enableEntry(nextEntry);
-                    }
-
-                    // Enable the lock button if all entries have content
-                    if (lockButton && allEntriesHaveContent()) {
-                        lockButton.disabled = false;
-                    }
-
-                    alert('Entry saved successfully!');
-                }, 300);
-            }
-
-            function allEntriesHaveContent() {
-                return Array.from(entries).every(entry => {
-                    const textarea = entry.querySelector('.log-text');
-                    return textarea && textarea.value.trim() !== '';
-                });
-            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert("An error occurred while saving the log entry.");
         });
-    </script>
-</body>
-</html>
+    }
+
+    function allEntriesHaveContent() {
+        return Array.from(entries).every(entry => {
+            const textarea = entry.querySelector('.log-text');
+            return textarea && textarea.value.trim() !== '';
+        });
+    }
+});
+</script>
+{% endblock %}
