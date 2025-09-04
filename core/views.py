@@ -879,71 +879,58 @@ def log_detail_view(request, pk):
 
     return render(request, 'logs/log_detail.html', context)
 
-
 @login_required
-def create_log_view(request):
-    try:
-        mapping = Mapping.objects.get(staff=request.user)
-    except Mapping.DoesNotExist:
-        messages.error(request,
-                       "Your account is not mapped to any carehomes or service users. Please contact your administrator.")
-        return redirect('admin-dashboard')  # Or wherever makes sense in your app
+def log_entry_form_view(request, latest_log_id):
+    latest_log = get_object_or_404(LatestLogEntry, pk=latest_log_id, user=request.user)
+    service_user = latest_log.service_user
+    carehome = latest_log.carehome
+    shift = latest_log.shift  # 'morning' or 'night'
+    today = latest_log.date
 
-    if request.method == "POST":
-        # Get form data
-        carehome_id = request.POST.get("carehome")
-        service_user_id = request.POST.get("service_user")
+    # Pick correct shift start/end from CareHome
+    if shift == 'morning':
+        start_time = carehome.morning_shift_start
+        end_time = carehome.morning_shift_end
+    else:  # night
+        start_time = carehome.night_shift_start
+        end_time = carehome.night_shift_end
 
-        if not carehome_id or not service_user_id:
-            messages.error(request, "Please select both a carehome and service user")
-            return redirect('create_log_view')
+    if not start_time or not end_time:
+        messages.error(request, f"{shift.capitalize()} shift times are not set for this carehome.")
+        return redirect('create_log_view')
 
-        try:
-            carehome = mapping.carehomes.get(id=carehome_id)
-            service_user = mapping.service_users.get(id=service_user_id)
-        except (CareHome.DoesNotExist, ServiceUser.DoesNotExist):
-            messages.error(request,
-                           "Invalid selection - you can only create logs for mapped carehomes and service users")
-            return redirect('create_log_view')
+    # Build start and end datetimes
+    start_dt = datetime.combine(today, start_time)
+    end_dt = datetime.combine(today, end_time)
 
-        shift = request.POST.get("shift", "").lower()
-        if shift not in ['morning', 'night']:
-            messages.error(request, "Please select a valid shift")
-            return redirect('create_log_view')
+    # Handle night shift that crosses midnight
+    if shift == 'night' and end_time < start_time:
+        end_dt += timedelta(days=1)
 
-        today = timezone.localdate()
+    # Generate slots (hourly — can adjust if you need custom intervals)
+    time_slots = []
+    current = start_dt
+    while current < end_dt:
+        time_slots.append(current.time())
+        current += timedelta(hours=1)
 
-        # Check if log already exists
-        existing_log = LatestLogEntry.objects.filter(
-            user=request.user,
-            carehome=carehome,
-            service_user=service_user,
-            shift=shift,
-            date=today
-        ).first()
-
-        if existing_log:
-            messages.info(request, "You've already created a log for this shift today")
-            return redirect('log_detail_view', pk=existing_log.id)
-
-        # Create new log
-        new_log = LatestLogEntry.objects.create(
-            user=request.user,
-            carehome=carehome,
-            service_user=service_user,
-            shift=shift,
-            date=today,
-            status='incomplete'
+    # Create or fetch log entries
+    log_entries = []
+    for slot in time_slots:
+        entry, created = LogEntry.objects.get_or_create(
+            latest_log=latest_log,
+            time_slot=slot,
+            defaults={'content': '', 'is_locked': False}
         )
-        messages.success(request, "New log created successfully")
-        return redirect('log-entry-form', latest_log_id=new_log.id)
+        log_entries.append(entry)
 
-    # GET request - show selection form
-    return render(request, 'logs/log_entry_create.html', {
-        "carehomes": mapping.carehomes.all(),
-        "service_users": mapping.service_users.all(),
-        "shifts": ['Morning', 'Night'],  # Display names
-        "shift_values": ['morning', 'night']  # Actual values
+    return render(request, 'logs/log_entry_form.html', {
+        'today': today,
+        'carehome': carehome,
+        'service_user': service_user,
+        'shift': shift.capitalize(),
+        'log_entries': log_entries,
+        'latest_log': latest_log,
     })
 
 def view_incident_report(request, pk):
