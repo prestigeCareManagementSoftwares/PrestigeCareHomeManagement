@@ -1049,6 +1049,11 @@ def lock_log_entries(request, latest_log_id):
             user=request.user  # Ensures user owns this log
         )
 
+        if latest_log.status == 'locked':
+            # 🚨 Already locked
+            messages.warning(request, "This log is already locked.")
+            return redirect('user-daily-log-dashboard', service_user_id=latest_log.service_user.id)
+
         # Start atomic transaction
         with transaction.atomic():
             # Lock all related entries
@@ -1066,7 +1071,7 @@ def lock_log_entries(request, latest_log_id):
                 raise Exception("PDF generation failed")
 
             messages.success(request, f"Successfully locked log with {updated} entries")
-            return redirect('staff_latest_logs_view')
+            return redirect('user-daily-log-dashboard', service_user_id=latest_log.service_user.id)
 
     except Exception as e:
         messages.error(request, f"Error locking log: {str(e)}")
