@@ -82,15 +82,14 @@ def create_log_view(request):
         if not all([carehome_id, shift, service_user_id]):
             messages.error(request, "All fields are required.")
         else:
-            # ✅ Create the LatestLogEntry record
+            # ✅ Create the LatestLogEntry record without created_by
             latest_log = LatestLogEntry.objects.create(
                 carehome_id=carehome_id,
                 shift=shift,
                 service_user_id=service_user_id,
-                created_by=request.user
             )
 
-            # Optional: store in session if you still need it
+            # Store in session if needed
             request.session['log_info'] = {
                 'carehome_id': carehome_id,
                 'shift': shift,
@@ -98,7 +97,7 @@ def create_log_view(request):
                 'latest_log_id': latest_log.id,
             }
 
-            # ✅ Redirect with the latest_log_id argument
+            # Redirect with the ID
             return redirect('log-entry-form', latest_log_id=latest_log.id)
 
     return render(request, 'pdf_templates/select_log_data.html', {
