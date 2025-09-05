@@ -86,14 +86,19 @@ def create_log_view(request):
         else:
             today = now().date()
 
-            # ✅ Use get_or_create instead of create
+            # Use get_or_create to avoid duplicate logs
             latest_log, created = LatestLogEntry.objects.get_or_create(
                 carehome_id=carehome_id,
                 shift=shift,
                 service_user_id=service_user_id,
                 user=request.user,
-                date=today,   # make sure you include date
+                date=today,
             )
+
+            # ✅ If the log is already locked, alert and redirect
+            if latest_log.status == 'locked':
+                messages.warning(request, "This log is already locked.")
+                return redirect('user-daily-log-dashboard', service_user_id=latest_log.service_user.id)
 
             if not created:
                 messages.info(request, "A log for this shift already exists, opening it instead.")
@@ -113,7 +118,6 @@ def create_log_view(request):
         'shifts': shifts,
         'selected_carehome_id': selected_carehome_id,
     })
-
 
 def render_pdf_view(template_src, context_dict):
     html = render_to_string(template_src, context_dict)
@@ -1038,6 +1042,7 @@ def generate_log_pdf(latest_log):
         print(f"Error generating PDF: {str(e)}")
         return False
 
+
 @login_required
 def lock_log_entries(request, latest_log_id):
     try:
@@ -1048,15 +1053,7 @@ def lock_log_entries(request, latest_log_id):
             user=request.user  # Ensures user owns this log
         )
 
-        # 🚨 Check if already locked
-        if latest_log.status == 'locked':
-            messages.warning(request, "This log is already locked.")
-            return redirect(
-                'user-daily-log-dashboard',
-                service_user_id=latest_log.service_user.id
-            )
-
-        # ✅ Use atomic transaction to prevent partial updates
+        # Start atomic transaction
         with transaction.atomic():
             # Lock all related entries
             updated = LogEntry.objects.filter(
@@ -1072,14 +1069,8 @@ def lock_log_entries(request, latest_log_id):
             if not generate_log_pdf(latest_log):
                 raise Exception("PDF generation failed")
 
-            messages.success(
-                request,
-                f"Successfully locked log with {updated} entries."
-            )
-            return redirect(
-                'user-daily-log-dashboard',
-                service_user_id=latest_log.service_user.id
-            )
+            messages.success(request, f"Successfully locked log with {updated} entries")
+            return redirect('staff_latest_logs_view')
 
     except Exception as e:
         messages.error(request, f"Error locking log: {str(e)}")
