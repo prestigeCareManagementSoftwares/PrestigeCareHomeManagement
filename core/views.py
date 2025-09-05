@@ -1066,7 +1066,7 @@ def lock_log_entries(request, latest_log_id):
                 raise Exception("PDF generation failed")
 
             messages.success(request, f"Successfully locked log with {updated} entries")
-            return redirect('staff-dashboard')
+            return redirect('staff_latest_logs_view')
 
     except Exception as e:
         messages.error(request, f"Error locking log: {str(e)}")
