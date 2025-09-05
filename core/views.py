@@ -40,19 +40,24 @@ from django.http import JsonResponse
 from datetime import time
 
 def get_shifts_from_carehome(carehome):
-    from datetime import datetime, timedelta, date
-
-    if not carehome or not carehome.day_shift_start:
+    if not carehome:
         return []
 
-    start = carehome.day_shift_start
-    day_end = (datetime.combine(date.today(), start) + timedelta(hours=12)).time()
-    night_end = (datetime.combine(date.today(), start) + timedelta(hours=24)).time()
+    shifts = []
 
-    return [
-        f"Day Shift ({start.strftime('%I:%M %p')} - {day_end.strftime('%I:%M %p')})",
-        f"Night Shift ({day_end.strftime('%I:%M %p')} - {night_end.strftime('%I:%M %p')})"
-    ]
+    if carehome.morning_shift_start and carehome.morning_shift_end:
+        shifts.append(
+            f"Morning Shift ({carehome.morning_shift_start.strftime('%I:%M %p')} - "
+            f"{carehome.morning_shift_end.strftime('%I:%M %p')})"
+        )
+
+    if carehome.night_shift_start and carehome.night_shift_end:
+        shifts.append(
+            f"Night Shift ({carehome.night_shift_start.strftime('%I:%M %p')} - "
+            f"{carehome.night_shift_end.strftime('%I:%M %p')})"
+        )
+
+    return shifts
 
 
 def create_log_view(request):
