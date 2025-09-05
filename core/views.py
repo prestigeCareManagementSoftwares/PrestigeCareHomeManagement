@@ -1038,7 +1038,6 @@ def generate_log_pdf(latest_log):
         print(f"Error generating PDF: {str(e)}")
         return False
 
-
 @login_required
 def lock_log_entries(request, latest_log_id):
     try:
@@ -1049,12 +1048,15 @@ def lock_log_entries(request, latest_log_id):
             user=request.user  # Ensures user owns this log
         )
 
+        # 🚨 Check if already locked
         if latest_log.status == 'locked':
-            # 🚨 Already locked
             messages.warning(request, "This log is already locked.")
-            return redirect('user-daily-log-dashboard', service_user_id=latest_log.service_user.id)
+            return redirect(
+                'user-daily-log-dashboard',
+                service_user_id=latest_log.service_user.id
+            )
 
-        # Start atomic transaction
+        # ✅ Use atomic transaction to prevent partial updates
         with transaction.atomic():
             # Lock all related entries
             updated = LogEntry.objects.filter(
@@ -1070,8 +1072,14 @@ def lock_log_entries(request, latest_log_id):
             if not generate_log_pdf(latest_log):
                 raise Exception("PDF generation failed")
 
-            messages.success(request, f"Successfully locked log with {updated} entries")
-            return redirect('user-daily-log-dashboard', service_user_id=latest_log.service_user.id)
+            messages.success(
+                request,
+                f"Successfully locked log with {updated} entries."
+            )
+            return redirect(
+                'user-daily-log-dashboard',
+                service_user_id=latest_log.service_user.id
+            )
 
     except Exception as e:
         messages.error(request, f"Error locking log: {str(e)}")
