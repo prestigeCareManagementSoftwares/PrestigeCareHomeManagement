@@ -39,27 +39,22 @@ from .forms import LogEntryForm
 from django.http import JsonResponse
 from datetime import time
 
-def get_shifts_from_carehome(carehome):
-    if not carehome:
-        return []
+def generate_log_entries(latest_log, carehome, shift_name):
+    if "Morning" in shift_name:
+        start = datetime.combine(latest_log.date, carehome.morning_shift_start)
+        end = datetime.combine(latest_log.date, carehome.morning_shift_end)
+    else:
+        start = datetime.combine(latest_log.date, carehome.night_shift_start)
+        end = datetime.combine(latest_log.date, carehome.night_shift_end)
 
-    shifts = []
-
-    if carehome.morning_shift_start and carehome.morning_shift_end:
-        shifts.append(
-            f"Morning Shift ({carehome.morning_shift_start.strftime('%I:%M %p')} - "
-            f"{carehome.morning_shift_end.strftime('%I:%M %p')})"
+    current_time = start
+    while current_time < end:
+        LogEntry.objects.get_or_create(
+            latest_log=latest_log,
+            time_slot=current_time.time()  # store only time if your model expects it
         )
+        current_time += timedelta(hours=1)
 
-    if carehome.night_shift_start and carehome.night_shift_end:
-        shifts.append(
-            f"Night Shift ({carehome.night_shift_start.strftime('%I:%M %p')} - "
-            f"{carehome.night_shift_end.strftime('%I:%M %p')})"
-        )
-
-    return shifts
-
-from django.utils.timezone import now
 
 def create_log_view(request):
     carehomes = CareHome.objects.all()
