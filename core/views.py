@@ -98,7 +98,7 @@ def create_log_view(request):
             # ✅ If the log is already locked, alert and redirect
             if latest_log.status == 'locked':
                 messages.warning(request, "This log is already locked.")
-                return redirect('user-daily-log-dashboard', service_user_id=latest_log.service_user.id)
+                return redirect('staff_latest_logs_view', service_user_id=latest_log.service_user.id)
 
             if not created:
                 messages.info(request, "A log for this shift already exists, opening it instead.")
