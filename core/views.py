@@ -14,6 +14,7 @@ from django.db import transaction
 from django.db.models import Q
 from django.forms import model_to_dict
 from django.http import HttpResponseForbidden, FileResponse, Http404
+from django.utils.timezone import now
 from django.views.decorators.csrf import csrf_exempt
 import requests
 from django.views.decorators.http import require_POST, require_GET
