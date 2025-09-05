@@ -59,6 +59,8 @@ def get_shifts_from_carehome(carehome):
 
     return shifts
 
+from django.utils.timezone import now
+
 def create_log_view(request):
     carehomes = CareHome.objects.all()
     selected_carehome_id = request.GET.get('carehome') or request.POST.get('carehome')
@@ -82,13 +84,19 @@ def create_log_view(request):
         if not all([carehome_id, shift, service_user_id]):
             messages.error(request, "All fields are required.")
         else:
-            # ✅ Create LatestLogEntry with user
-            latest_log = LatestLogEntry.objects.create(
+            today = now().date()
+
+            # ✅ Use get_or_create instead of create
+            latest_log, created = LatestLogEntry.objects.get_or_create(
                 carehome_id=carehome_id,
                 shift=shift,
                 service_user_id=service_user_id,
-                user=request.user
+                user=request.user,
+                date=today,   # make sure you include date
             )
+
+            if not created:
+                messages.info(request, "A log for this shift already exists, opening it instead.")
 
             request.session['log_info'] = {
                 'carehome_id': carehome_id,
@@ -105,6 +113,7 @@ def create_log_view(request):
         'shifts': shifts,
         'selected_carehome_id': selected_carehome_id,
     })
+
 
 def render_pdf_view(template_src, context_dict):
     html = render_to_string(template_src, context_dict)
