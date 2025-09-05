@@ -55,6 +55,25 @@ def generate_log_entries(latest_log, carehome, shift_name):
         )
         current_time += timedelta(hours=1)
 
+def get_shifts_from_carehome(carehome):
+    if not carehome:
+        return []
+
+    shifts = []
+
+    if carehome.morning_shift_start and carehome.morning_shift_end:
+        shifts.append(
+            f"Morning Shift ({carehome.morning_shift_start.strftime('%I:%M %p')} - "
+            f"{carehome.morning_shift_end.strftime('%I:%M %p')})"
+        )
+
+    if carehome.night_shift_start and carehome.night_shift_end:
+        shifts.append(
+            f"Night Shift ({carehome.night_shift_start.strftime('%I:%M %p')} - "
+            f"{carehome.night_shift_end.strftime('%I:%M %p')})"
+        )
+
+    return shifts
 def create_log_view(request):
     carehomes = CareHome.objects.all()
     selected_carehome_id = request.GET.get('carehome') or request.POST.get('carehome')
