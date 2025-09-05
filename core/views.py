@@ -59,6 +59,7 @@ def get_shifts_from_carehome(carehome):
 
     return shifts
 
+
 def create_log_view(request):
     carehomes = CareHome.objects.all()
     selected_carehome_id = request.GET.get('carehome') or request.POST.get('carehome')
@@ -82,16 +83,12 @@ def create_log_view(request):
         if not all([carehome_id, shift, service_user_id]):
             messages.error(request, "All fields are required.")
         else:
-            # ✅ Create the initial log entry
-            new_log = LatestLogEntry.objects.create(
-                carehome_id=carehome_id,
-                service_user_id=service_user_id,
-                shift=shift,
-                date=timezone.now().date(),
-                created_by=request.user  # if you have this field
-            )
-
-            return redirect('log-entry-form', latest_log_id=new_log.id)
+            request.session['log_info'] = {
+                'carehome_id': carehome_id,
+                'shift': shift,
+                'service_user_id': service_user_id
+            }
+            return redirect('log-entry-form')
 
     return render(request, 'pdf_templates/select_log_data.html', {
         'carehomes': carehomes,
