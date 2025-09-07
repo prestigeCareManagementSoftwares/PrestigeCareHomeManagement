@@ -130,6 +130,9 @@ def create_log_view(request):
                 # ✅ Make datetimes timezone-aware to prevent -1 hour issue
                 current_time = timezone.make_aware(datetime.combine(today, start_time))
                 end_datetime = timezone.make_aware(datetime.combine(today, end_time))
+
+                if end_datetime <= current_time:
+                    end_datetime += timedelta(days=1)
                 # Create log entries in 1-hour intervals
                 while current_time < end_datetime:
                     LogEntry.objects.get_or_create(
