@@ -133,7 +133,8 @@ def create_log_view(request):
                 while current_time != end_time:
                     LogEntry.objects.get_or_create(
                         latest_log=latest_log,
-                        time_slot=current_time
+                        time_slot=current_time,
+                        defaults={'carehome': carehome}
                     )
                     # Increment by 1 hour
                     current_hour = current_time.hour + 1
