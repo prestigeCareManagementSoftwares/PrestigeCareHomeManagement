@@ -128,8 +128,8 @@ def create_log_view(request):
                     end_time = carehome.night_shift_end
 
                 # ✅ Make datetimes timezone-aware to prevent -1 hour issue
-                current_time = timezone.make_aware(datetime.combine(today, start_time))
-                end_datetime = timezone.make_aware(datetime.combine(today, end_time))
+                current_time = timezone.make_aware(datetime.combine(today, start_time), timezone.get_current_timezone())
+                end_datetime = timezone.make_aware(datetime.combine(today, end_time), timezone.get_current_timezone())
 
                 if end_datetime <= current_time:
                     end_datetime += timedelta(days=1)
@@ -965,8 +965,8 @@ def log_entry_form_view(request, latest_log_id):
         return redirect('create_log_view')
 
     # Build start and end datetimes
-    start_dt = datetime.combine(today, start_time)
-    end_dt = datetime.combine(today, end_time)
+    start_dt = timezone.make_aware(datetime.combine(today, start_time), timezone.get_current_timezone())
+    end_dt = timezone.make_aware(datetime.combine(today, end_time), timezone.get_current_timezone())
 
     # Handle night shift that crosses midnight
     if shift == 'night' and end_time < start_time:
