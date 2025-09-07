@@ -117,6 +117,7 @@ def create_log_view(request):
                 )
 
             # If log is newly created, generate log entries according to shift times
+            # Instead of making times timezone-aware, work with time objects directly
             if created:
                 carehome = get_object_or_404(CareHome, id=carehome_id)
                 # Determine shift start and end
@@ -127,20 +128,18 @@ def create_log_view(request):
                     start_time = carehome.night_shift_start
                     end_time = carehome.night_shift_end
 
-                # ✅ Make datetimes timezone-aware to prevent -1 hour issue
-                current_time = timezone.make_aware(datetime.combine(today, start_time), timezone.get_current_timezone())
-                end_datetime = timezone.make_aware(datetime.combine(today, end_time), timezone.get_current_timezone())
-
-                if end_datetime <= current_time:
-                    end_datetime += timedelta(days=1)
-                # Create log entries in 1-hour intervals
-                while current_time < end_datetime:
+                # Create log entries in 1-hour intervals using time objects only
+                current_time = start_time
+                while current_time != end_time:
                     LogEntry.objects.get_or_create(
                         latest_log=latest_log,
-                        time_slot=current_time.time()
+                        time_slot=current_time
                     )
-                    current_time += timedelta(hours=1)
-
+                    # Increment by 1 hour
+                    current_hour = current_time.hour + 1
+                    if current_hour >= 24:
+                        current_hour -= 24
+                    current_time = time(current_hour, 0)
             # Store log info in session
             request.session['log_info'] = {
                 'carehome_id': carehome_id,
