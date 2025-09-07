@@ -75,6 +75,8 @@ def get_shifts_from_carehome(carehome):
         )
 
     return shifts
+
+
 def create_log_view(request):
     carehomes = CareHome.objects.all()
     selected_carehome_id = request.GET.get('carehome') or request.POST.get('carehome')
@@ -112,12 +114,9 @@ def create_log_view(request):
             # Check if the log is already locked
             if latest_log.status == 'locked':
                 messages.warning(request, "This log is already locked.")
-                return redirect(
-                    'staff_latest_logs_view'
-                )
+                return redirect('staff_latest_logs_view')
 
             # If log is newly created, generate log entries according to shift times
-            # Instead of making times timezone-aware, work with time objects directly
             if created:
                 carehome = get_object_or_404(CareHome, id=carehome_id)
                 # Determine shift start and end
@@ -129,18 +128,41 @@ def create_log_view(request):
                     end_time = carehome.night_shift_end
 
                 # Create log entries in 1-hour intervals using time objects only
-                current_time = start_time
-                while current_time != end_time:
-                    LogEntry.objects.get_or_create(
-                        latest_log=latest_log,
-                        time_slot=current_time,
-                        defaults={'carehome': carehome}
-                    )
-                    # Increment by 1 hour
-                    current_hour = current_time.hour + 1
-                    if current_hour >= 24:
-                        current_hour -= 24
-                    current_time = time(current_hour, 0)
+                # This avoids timezone issues
+                current_time_obj = start_time
+                end_time_obj = end_time
+
+                # Handle night shift crossing midnight
+                if end_time_obj < start_time_obj:
+                    # Night shift spans two days
+                    while True:
+                        LogEntry.objects.get_or_create(
+                            latest_log=latest_log,
+                            time_slot=current_time_obj,
+                            defaults={'carehome': carehome}
+                        )
+
+                        # Increment by 1 hour
+                        current_hour = (current_time_obj.hour + 1) % 24
+                        current_time_obj = time(current_hour, 0)
+
+                        if current_time_obj == end_time_obj:
+                            break
+                else:
+                    # Regular shift (doesn't cross midnight)
+                    while current_time_obj <= end_time_obj:
+                        LogEntry.objects.get_or_create(
+                            latest_log=latest_log,
+                            time_slot=current_time_obj,
+                            defaults={'carehome': carehome}
+                        )
+
+                        # Increment by 1 hour
+                        current_hour = current_time_obj.hour + 1
+                        if current_hour >= 24:
+                            break
+                        current_time_obj = time(current_hour, 0)
+
             # Store log info in session
             request.session['log_info'] = {
                 'carehome_id': carehome_id,
@@ -944,6 +966,7 @@ def log_detail_view(request, pk):
 
     return render(request, 'logs/log_detail.html', context)
 
+
 @login_required
 def log_entry_form_view(request, latest_log_id):
     latest_log = get_object_or_404(LatestLogEntry, pk=latest_log_id, user=request.user)
@@ -953,7 +976,7 @@ def log_entry_form_view(request, latest_log_id):
     today = latest_log.date
 
     # Pick correct shift start/end from CareHome
-    if shift == 'morning':
+    if "Morning" in shift:
         start_time = carehome.morning_shift_start
         end_time = carehome.morning_shift_end
     else:  # night
@@ -964,20 +987,32 @@ def log_entry_form_view(request, latest_log_id):
         messages.error(request, f"{shift.capitalize()} shift times are not set for this carehome.")
         return redirect('create_log_view')
 
-    # Build start and end datetimes
-    start_dt = timezone.make_aware(datetime.combine(today, start_time), timezone.get_current_timezone())
-    end_dt = timezone.make_aware(datetime.combine(today, end_time), timezone.get_current_timezone())
-
-    # Handle night shift that crosses midnight
-    if shift == 'night' and end_time < start_time:
-        end_dt += timedelta(days=1)
-
-    # Generate slots (hourly — can adjust if you need custom intervals)
+    # Generate time slots without timezone conversion
     time_slots = []
-    current = start_dt
-    while current < end_dt:
-        time_slots.append(current.time())
-        current += timedelta(hours=1)
+    current_time_obj = start_time
+
+    # Handle night shift crossing midnight
+    if end_time < start_time:
+        # Night shift spans two days
+        while True:
+            time_slots.append(current_time_obj)
+
+            # Increment by 1 hour
+            current_hour = (current_time_obj.hour + 1) % 24
+            current_time_obj = time(current_hour, 0)
+
+            if current_time_obj == end_time:
+                break
+    else:
+        # Regular shift (doesn't cross midnight)
+        while current_time_obj <= end_time:
+            time_slots.append(current_time_obj)
+
+            # Increment by 1 hour
+            current_hour = current_time_obj.hour + 1
+            if current_hour >= 24:
+                break
+            current_time_obj = time(current_hour, 0)
 
     # Create or fetch log entries
     log_entries = []
@@ -985,7 +1020,7 @@ def log_entry_form_view(request, latest_log_id):
         entry, created = LogEntry.objects.get_or_create(
             latest_log=latest_log,
             time_slot=slot,
-            defaults={'content': '', 'is_locked': False}
+            defaults={'content': '', 'is_locked': False, 'carehome': carehome}
         )
         log_entries.append(entry)
 
