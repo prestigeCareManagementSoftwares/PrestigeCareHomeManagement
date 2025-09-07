@@ -127,9 +127,9 @@ def create_log_view(request):
                     start_time = carehome.night_shift_start
                     end_time = carehome.night_shift_end
 
-                current_time = datetime.combine(today, start_time)
-                end_datetime = datetime.combine(today, end_time)
-
+                # ✅ Make datetimes timezone-aware to prevent -1 hour issue
+                current_time = timezone.make_aware(datetime.combine(today, start_time))
+                end_datetime = timezone.make_aware(datetime.combine(today, end_time))
                 # Create log entries in 1-hour intervals
                 while current_time < end_datetime:
                     LogEntry.objects.get_or_create(
