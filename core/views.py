@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+import re
 import tempfile
 from email.quoprimime import unquote
 from http.cookiejar import logger
@@ -1075,18 +1076,22 @@ def create_log_view(request):
 
             # Robust shift type extraction
             shift_type = shift_label.strip().split()[0].strip().lower()
-            logger = logging.getLogger(__name__)
-            logger.warning(f"Invalid shift type encountered: {shift_label} -> {shift_type}")
-            if "morning" in shift_type:
-                shift_type = "morning"
+            # Extract first word and clean non-alphabetic characters
+            raw_shift_label = shift_label.strip()
+            first_word = raw_shift_label.split()[0] if raw_shift_label else ""
+            shift_type = re.sub(r'[^a-zA-Z]', '', first_word).lower()
+
+            logger.warning(f"Shift label received: {repr(shift_label)}")
+            logger.warning(f"Parsed shift_type: {repr(shift_type)}")
+
+            # Determine base start time based on shift_type
+            if shift_type == "morning":
                 base_start_time = carehome.morning_shift_start
-            elif "night" in shift_type:
-                shift_type = "night"
+            elif shift_type == "night":
                 base_start_time = carehome.night_shift_start
             else:
                 messages.error(request, f"Invalid shift type: '{shift_label}' (parsed as '{shift_type}')")
-                return redirect('staff-dashboard')  # fallback
-
+                return redirect('staff-dashboard')
             # Shift date (ensure NOT NULL)
             shift_date = now().date()
 
