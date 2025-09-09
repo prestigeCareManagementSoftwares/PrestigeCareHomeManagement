@@ -1074,9 +1074,7 @@ def create_log_view(request):
             carehome = get_object_or_404(CareHome, id=carehome_id)
             service_user = get_object_or_404(ServiceUser, id=service_user_id)
 
-            # Robust shift type extraction
-            shift_type = shift_label.strip().split()[0].strip().lower()
-            # Extract first word and clean non-alphabetic characters
+            # Robust shift type parsing
             raw_shift_label = shift_label.strip()
             first_word = raw_shift_label.split()[0] if raw_shift_label else ""
             shift_type = re.sub(r'[^a-zA-Z]', '', first_word).lower()
@@ -1084,7 +1082,6 @@ def create_log_view(request):
             logger.warning(f"Shift label received: {repr(shift_label)}")
             logger.warning(f"Parsed shift_type: {repr(shift_type)}")
 
-            # Determine base start time based on shift_type
             if shift_type == "morning":
                 base_start_time = carehome.morning_shift_start
             elif shift_type == "night":
@@ -1092,27 +1089,40 @@ def create_log_view(request):
             else:
                 messages.error(request, f"Invalid shift type: '{shift_label}' (parsed as '{shift_type}')")
                 return redirect('staff-dashboard')
-            # Shift date (ensure NOT NULL)
+
+            # Shift date
             shift_date = now().date()
 
-            # Create or get latest log entry
-            latest_log, created = LatestLogEntry.objects.get_or_create(
+            # Check if a latest log already exists
+            latest_log_qs = LatestLogEntry.objects.filter(
                 carehome=carehome,
                 shift=shift_type,
                 service_user=service_user,
                 user=request.user,
-                date=shift_date,
+                date=shift_date
             )
 
-            if latest_log.status == 'locked':
-                messages.warning(request, "This log is already locked.")
-                return redirect('staff_latest_logs_view')
+            if latest_log_qs.exists():
+                latest_log = latest_log_qs.first()
+                if latest_log.status == 'locked':
+                    messages.warning(request, "This log is already locked.")
+                else:
+                    messages.info(request, "A log already exists for this shift.")
+                return redirect('staff_latest_logs_view')  # navigate to log list view
 
-            if created:
-                # Generate log entries using full label if needed
-                generate_log_entries(latest_log, carehome, service_user, shift_label)
+            # Create new latest log
+            latest_log = LatestLogEntry.objects.create(
+                carehome=carehome,
+                shift=shift_type,
+                service_user=service_user,
+                user=request.user,
+                date=shift_date
+            )
 
-            # Save info in session for later use
+            # Generate log entries
+            generate_log_entries(latest_log, carehome, service_user, shift_label)
+
+            # Store in session
             request.session['log_info'] = {
                 'carehome_id': carehome.id,
                 'shift_label': shift_label,
