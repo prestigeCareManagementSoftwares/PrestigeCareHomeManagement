@@ -1040,7 +1040,6 @@ def generate_log_entries(latest_log, carehome, service_user, shift_name):
 
     return entries
 
-
 def create_log_view(request):
     carehomes = CareHome.objects.all()
     selected_carehome_id = request.GET.get('carehome') or request.POST.get('carehome')
@@ -1074,15 +1073,28 @@ def create_log_view(request):
             carehome = get_object_or_404(CareHome, id=carehome_id)
             service_user = get_object_or_404(ServiceUser, id=service_user_id)
 
+            # Extract shift type from the label
+            shift_type = shift_label.strip().split()[0].lower()  # "morning" or "night"
+
+            # Determine base start time
+            if shift_type == "morning":
+                base_start_time = carehome.morning_shift_start
+            elif shift_type == "night":
+                base_start_time = carehome.night_shift_start
+            else:
+                messages.error(request, "Invalid shift type.")
+                return redirect('staff-dashboard')  # fallback
+
             # The date of the shift is typically the day it starts
             shift_date = now().date()
 
+            # Get or create latest log entry
             latest_log, created = LatestLogEntry.objects.get_or_create(
                 carehome=carehome,
-                shift=shift_label.strip().split()[0].lower(),
+                shift=shift_type,  # store the simplified type
                 service_user=service_user,
                 user=request.user,
-                date=shift_date,
+                date=shift_date,  # ensure date is never null
             )
 
             if latest_log.status == 'locked':
@@ -1090,11 +1102,14 @@ def create_log_view(request):
                 return redirect('staff_latest_logs_view')
 
             if created:
+                # Generate log entries using the full label if needed
                 generate_log_entries(latest_log, carehome, service_user, shift_label)
 
+            # Store log info in session
             request.session['log_info'] = {
                 'carehome_id': carehome.id,
-                'shift': shift_label,
+                'shift_label': shift_label,  # full label for display
+                'shift_type': shift_type,    # simplified type for logic
                 'service_user_id': service_user.id,
                 'latest_log_id': latest_log.id,
             }
@@ -1116,6 +1131,7 @@ def create_log_view(request):
         'shifts': shifts,
         'selected_carehome_id': selected_carehome_id,
     })
+
 
 def get_shifts_from_carehome(carehome):
     if not carehome:
