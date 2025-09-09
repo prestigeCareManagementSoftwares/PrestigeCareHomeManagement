@@ -1074,7 +1074,7 @@ def create_log_view(request):
             service_user = get_object_or_404(ServiceUser, id=service_user_id)
 
             # Extract shift type from the label
-            shift_type = shift_label.strip().split()[0].lower()  # "morning" or "night"
+            shift_type = shift_label.strip().split()[0].strip().lower()  # "morning" or "night"
 
             # Determine base start time
             if shift_type == "morning":
