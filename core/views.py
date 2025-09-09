@@ -1011,9 +1011,6 @@ def lock_log_entries(request, latest_log_id):
         return redirect('staff-dashboard')
 
 
-from datetime import datetime, timedelta
-
-
 def generate_log_entries(latest_log, carehome, service_user, shift_name):
     """
     Generates a 12-hour sequence of hourly log entries for a given shift.
@@ -1406,7 +1403,6 @@ def download_incident_pdf(request, form_id):
     response['Content-Disposition'] = f'attachment; filename="incident_report_{form_id}.pdf"'
     return response
 
-
 @login_required
 def log_entry_form(request, latest_log_id):
     latest_log = get_object_or_404(LatestLogEntry, id=latest_log_id)
@@ -1451,8 +1447,17 @@ def log_entry_form(request, latest_log_id):
         )
         log_entries.append(entry)
 
-    # Sort entries by time slot if needed
-    log_entries.sort(key=lambda x: x.time_slot)
+    # ✅ Fix sorting for night shift
+    if shift == "night":
+        # Ensure logs start at night_shift_start, then continue past midnight
+        start_hour = (carehome.night_shift_start or time(21, 0)).hour
+        log_entries.sort(key=lambda x: (
+            x.time_slot.hour < start_hour,  # push 0–9 AM to the end
+            x.time_slot
+        ))
+    else:
+        # Normal ordering for morning shift
+        log_entries.sort(key=lambda x: x.time_slot)
 
     return render(request, 'forms/log_entry_form.html', {
         'log_entries': log_entries,
@@ -1466,6 +1471,7 @@ def log_entry_form(request, latest_log_id):
         "user_role": request.user.role,  # Flag to show this is an update
         'force_edit_param': 'force_edit=true'  # For edit buttons in template
     })
+
 
 
 def generate_time_slots(start_time, end_time):
