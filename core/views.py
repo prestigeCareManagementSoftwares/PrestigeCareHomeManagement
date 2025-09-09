@@ -1423,12 +1423,13 @@ def log_entry_form(request, latest_log_id):
         return redirect('log-detail-view', latest_log_id=latest_log.id)
 
     # Dynamically choose shift start time
-    if shift == "morning":
+    if shift == "Morning":
         base_start_time = carehome.morning_shift_start
-    elif shift == "night":
+    elif shift == "Night":
         base_start_time = carehome.night_shift_start
     else:
-        base_start_time = time(8, 0)  # fallback
+        messages.error(request, "Invalid shift type.")
+        return redirect('staff-dashboard')        # fallback
 
     time_slots = generate_shift_times(base_start_time)
 
