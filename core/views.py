@@ -1014,7 +1014,7 @@ def lock_log_entries(request, latest_log_id):
 from datetime import datetime, timedelta
 
 
-def generate_log_entries(latest_log, carehome, shift_name):
+def generate_log_entries(latest_log, carehome, service_user,shift_name):
     """
     Generates a 12-hour sequence of hourly log entries for a given shift.
     Handles shifts that cross midnight.
@@ -1040,6 +1040,7 @@ def generate_log_entries(latest_log, carehome, shift_name):
     while current_time < shift_end_datetime:
         LogEntry.objects.get_or_create(
             latest_log=latest_log,
+            service_user=service_user,
             time_slot=current_time,
             defaults={'carehome': carehome}
         )

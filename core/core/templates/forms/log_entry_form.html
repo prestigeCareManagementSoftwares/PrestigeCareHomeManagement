@@ -34,10 +34,18 @@
 <hr>
 
 {% if log_entries %}
+{% if log_entries %}
 <div id="log-entries-container">
+
     {% for entry in log_entries %}
+    {% ifchanged entry.time_slot.date %}
+        <div class="date-header mt-4 mb-2">
+            <h4>{{ entry.time_slot|date:"l, F jS" }}</h4>
+        </div>
+    {% endifchanged %}
+
     <div id="entry-{{ entry.id }}" class="mb-4 log-entry" data-entry-id="{{ entry.id }}" {% if not forloop.first %}data-locked="true"{% endif %}>
-        <div><strong>{{ entry.time_slot|time:"H:i" }}</strong></div>
+        <div><strong>{{ entry.time_slot|date:"H:i" }}</strong></div>
         <form method="post" class="log-form">
             {% csrf_token %}
             <textarea name="content" class="form-control log-text" rows="2"
