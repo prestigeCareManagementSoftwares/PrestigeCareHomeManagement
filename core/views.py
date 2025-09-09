@@ -1014,19 +1014,17 @@ def lock_log_entries(request, latest_log_id):
 from datetime import datetime, timedelta
 
 
-def generate_log_entries(latest_log, carehome, service_user,shift_name):
+def generate_log_entries(latest_log, carehome, service_user, shift_name):
     """
     Generates a 12-hour sequence of hourly log entries for a given shift.
     Handles shifts that cross midnight.
     """
     if "Morning" in shift_name:
         start_time_obj = carehome.morning_shift_start
-        end_time_obj = carehome.morning_shift_end
-    else:  # Assuming "Night"
+    else:  # Assuming all other shifts are night shifts
         start_time_obj = carehome.night_shift_start
-        end_time_obj = carehome.night_shift_end
 
-    # The date of the entries starts from the date of the latest log entry
+    # Combine the date with the shift start time
     shift_start_datetime = datetime.combine(latest_log.date, start_time_obj)
 
     # Calculate the end datetime by adding 12 hours
@@ -1036,8 +1034,8 @@ def generate_log_entries(latest_log, carehome, service_user,shift_name):
     current_time = shift_start_datetime
 
     # Loop to create 12 entries
-    # The loop condition is simple and correct because we're using full datetime objects
     while current_time < shift_end_datetime:
+        # Use a consistent set of fields for get_or_create to prevent NotNullViolation
         LogEntry.objects.get_or_create(
             latest_log=latest_log,
             service_user=service_user,
@@ -1045,29 +1043,6 @@ def generate_log_entries(latest_log, carehome, service_user,shift_name):
             defaults={'carehome': carehome}
         )
         current_time += timedelta(hours=1)
-
-def get_shifts_from_carehome(carehome):
-    if not carehome:
-        return []
-
-    shifts = []
-
-    if carehome.morning_shift_start and carehome.morning_shift_end:
-        shifts.append(
-            f"Morning Shift ({carehome.morning_shift_start.strftime('%I:%M %p')} - "
-            f"{carehome.morning_shift_end.strftime('%I:%M %p')})"
-        )
-
-    if carehome.night_shift_start and carehome.night_shift_end:
-        shifts.append(
-            f"Night Shift ({carehome.night_shift_start.strftime('%I:%M %p')} - "
-            f"{carehome.night_shift_end.strftime('%I:%M %p')})"
-        )
-
-    return shifts
-
-
-from datetime import datetime, timedelta, time
 
 
 def create_log_view(request):
@@ -1092,7 +1067,6 @@ def create_log_view(request):
 
         if not all([carehome_id, shift_label, service_user_id]):
             messages.error(request, "All fields are required.")
-            # Return to the same page with context
             return render(request, 'pdf_templates/select_log_data.html', {
                 'carehomes': carehomes,
                 'service_users': service_users,
@@ -1107,7 +1081,6 @@ def create_log_view(request):
             # The date of the shift is typically the day it starts
             shift_date = now().date()
 
-            # Create or get the latest log
             latest_log, created = LatestLogEntry.objects.get_or_create(
                 carehome=carehome,
                 shift=shift_label,
@@ -1116,16 +1089,13 @@ def create_log_view(request):
                 date=shift_date,
             )
 
-            # Check if the log is already locked
             if latest_log.status == 'locked':
                 messages.warning(request, "This log is already locked.")
                 return redirect('staff_latest_logs_view')
 
-            # If log is newly created, generate log entries
             if created:
-                generate_log_entries(latest_log, carehome, shift_label)
+                generate_log_entries(latest_log, carehome, service_user, shift_label)
 
-            # Store log info in session
             request.session['log_info'] = {
                 'carehome_id': carehome.id,
                 'shift': shift_label,
@@ -1137,7 +1107,6 @@ def create_log_view(request):
 
         except (CareHome.DoesNotExist, ServiceUser.DoesNotExist):
             messages.error(request, "Invalid carehome or service user selected.")
-            # Return to the same page with context
             return render(request, 'pdf_templates/select_log_data.html', {
                 'carehomes': carehomes,
                 'service_users': service_users,
@@ -1151,6 +1120,27 @@ def create_log_view(request):
         'shifts': shifts,
         'selected_carehome_id': selected_carehome_id,
     })
+
+def get_shifts_from_carehome(carehome):
+    if not carehome:
+        return []
+
+    shifts = []
+
+    if carehome.morning_shift_start and carehome.morning_shift_end:
+        shifts.append(
+            f"Morning Shift ({carehome.morning_shift_start.strftime('%I:%M %p')} - "
+            f"{carehome.morning_shift_end.strftime('%I:%M %p')})"
+        )
+
+    if carehome.night_shift_start and carehome.night_shift_end:
+        shifts.append(
+            f"Night Shift ({carehome.night_shift_start.strftime('%I:%M %p')} - "
+            f"{carehome.night_shift_end.strftime('%I:%M %p')})"
+        )
+
+    return shifts
+
 
 @login_required
 def edit_log_entry_by_admin(request, latest_log_id):
