@@ -20,7 +20,7 @@
     </div>
     <div class="col-md-3">
         <div><strong>Service User:</strong> {{ service_user.first_name }} {{ service_user.last_name }}</div>
-        <div><strong>Carehome:</strong> {{ carehome.name }} {{shift}} </div>
+        <div><strong>Carehome:</strong> {{ carehome.name }} {{ shift }}</div>
     </div>
     <div class="col-md-1 text-center">
         {% if service_user.image %}
@@ -40,14 +40,9 @@
         <div><strong>{{ entry.time_slot|time:"H:i" }}</strong></div>
         <form method="post" class="log-form">
             {% csrf_token %}
-            <textarea name="content" class="form-control log-text" rows="2"
-                {% if entry.is_locked %}disabled{% endif %}>{{ entry.content }}</textarea>
+            <textarea name="content" class="form-control log-text" rows="2">{{ entry.content }}</textarea>
             <div class="mt-2">
-                {% if entry.content %}
-                <button type="button" class="btn btn-primary update-btn">Update</button>
-                {% else %}
                 <button type="button" class="btn btn-success save-btn">Save</button>
-                {% endif %}
             </div>
         </form>
         <hr>
@@ -75,16 +70,13 @@ document.addEventListener("DOMContentLoaded", function () {
     const entries = document.querySelectorAll('.log-entry');
     const lockButton = document.querySelector('button[type="submit"]');
 
-    // Enable editing for all entries
     entries.forEach(entry => {
         const textarea = entry.querySelector('.log-text');
-        const button = entry.querySelector('.save-btn') || entry.querySelector('.update-btn');
+        const button = entry.querySelector('.save-btn');
 
         if (textarea && button) {
-            textarea.disabled = false; // allow edit always
-            button.disabled = false;
+            textarea.disabled = false; // always editable for admin
 
-            // Watch for changes → turn button into Update
             textarea.addEventListener('input', function () {
                 if (button.textContent !== 'Update') {
                     button.classList.remove('btn-success');

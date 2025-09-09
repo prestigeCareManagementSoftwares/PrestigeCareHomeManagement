@@ -1169,21 +1169,28 @@ def get_shifts_from_carehome(carehome):
 
     return shifts
 
-
 @login_required
 def edit_log_entry_by_admin(request, latest_log_id):
+    # Fetch the latest log entry
     log = get_object_or_404(LatestLogEntry, id=latest_log_id)
 
+    # Only allow admin roles to edit
     if request.user.role not in ['team_lead', 'manager'] and not request.user.is_superuser:
-        return HttpResponseForbidden("Permission denied.")
+        messages.error(request, "You do not have permission to edit this log.")
+        return redirect('staff-dashboard')  # staff gets redirected
 
-    entries = LogEntry.objects.filter(latest_log=log)
+    # Fetch all related log entries
+    entries = LogEntry.objects.filter(latest_log=log).order_by("time_slot")
+
     return render(request, 'forms/log_entry_form.html', {
         'log_entries': entries,
         'latest_log': log,
-        'admin_edit': True
+        'admin_edit': True,   # template flag for editable mode
+        'shift': log.shift,   # pass shift label
+        'carehome': log.carehome,
+        'service_user': log.service_user,
+        'today': log.date,
     })
-
 
 @require_POST
 @login_required
