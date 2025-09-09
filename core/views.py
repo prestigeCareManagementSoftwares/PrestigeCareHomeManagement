@@ -1013,7 +1013,7 @@ def lock_log_entries(request, latest_log_id):
 def generate_log_entries(latest_log, carehome, service_user, shift_name):
     """
     Generates a 12-hour sequence of hourly log entries for a given shift.
-    Handles shifts that cross midnight properly by keeping logical order.
+    Handles shifts that cross midnight by normalizing dates.
     """
     if "Morning" in shift_name:
         start_time_obj = carehome.morning_shift_start
@@ -1021,26 +1021,22 @@ def generate_log_entries(latest_log, carehome, service_user, shift_name):
         start_time_obj = carehome.night_shift_start
 
     shift_start_datetime = datetime.combine(latest_log.date, start_time_obj)
-    shift_end_datetime = shift_start_datetime + timedelta(hours=12)
-
-    current_time = shift_start_datetime
 
     entries = []
-    while current_time < shift_end_datetime:
-        # ✅ For night shift, normalize everything to shift start date
-        if "Night" in shift_name and current_time.date() != latest_log.date:
-            normalized_time = datetime.combine(latest_log.date, current_time.time())
-        else:
-            normalized_time = current_time
+    for i in range(12):
+        slot_time = shift_start_datetime + timedelta(hours=i)
+
+        # ✅ For night shift: keep same date, only time varies
+        if "Night" in shift_name:
+            slot_time = datetime.combine(latest_log.date, slot_time.time())
 
         entry, _ = LogEntry.objects.get_or_create(
             latest_log=latest_log,
             service_user=service_user,
-            time_slot=normalized_time,
+            time_slot=slot_time,
             defaults={'carehome': carehome}
         )
         entries.append(entry)
-        current_time += timedelta(hours=1)
 
     return entries
 
