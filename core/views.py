@@ -1075,6 +1075,8 @@ def create_log_view(request):
 
             # Robust shift type extraction
             shift_type = shift_label.strip().split()[0].strip().lower()
+            logger = logging.getLogger(__name__)
+            logger.warning(f"Invalid shift type encountered: {shift_label} -> {shift_type}")
             if "morning" in shift_type:
                 shift_type = "morning"
                 base_start_time = carehome.morning_shift_start
