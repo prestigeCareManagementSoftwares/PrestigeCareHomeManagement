@@ -1010,36 +1010,39 @@ def lock_log_entries(request, latest_log_id):
         messages.error(request, f"Error locking log: {str(e)}")
         return redirect('staff-dashboard')
 
-
 def generate_log_entries(latest_log, carehome, service_user, shift_name):
     """
     Generates a 12-hour sequence of hourly log entries for a given shift.
-    Handles shifts that cross midnight.
+    Handles shifts that cross midnight properly by keeping logical order.
     """
     if "Morning" in shift_name:
         start_time_obj = carehome.morning_shift_start
-    else:  # Assuming all other shifts are night shifts
+    else:  # Night shift
         start_time_obj = carehome.night_shift_start
 
-    # Combine the date with the shift start time
     shift_start_datetime = datetime.combine(latest_log.date, start_time_obj)
-
-    # Calculate the end datetime by adding 12 hours
-    # This automatically handles the day transition
     shift_end_datetime = shift_start_datetime + timedelta(hours=12)
 
     current_time = shift_start_datetime
 
-    # Loop to create 12 entries
+    entries = []
     while current_time < shift_end_datetime:
-        # Use a consistent set of fields for get_or_create to prevent NotNullViolation
-        LogEntry.objects.get_or_create(
+        # ✅ For night shift, normalize everything to shift start date
+        if "Night" in shift_name and current_time.date() != latest_log.date:
+            normalized_time = datetime.combine(latest_log.date, current_time.time())
+        else:
+            normalized_time = current_time
+
+        entry, _ = LogEntry.objects.get_or_create(
             latest_log=latest_log,
             service_user=service_user,
-            time_slot=current_time,
+            time_slot=normalized_time,
             defaults={'carehome': carehome}
         )
+        entries.append(entry)
         current_time += timedelta(hours=1)
+
+    return entries
 
 
 def create_log_view(request):
