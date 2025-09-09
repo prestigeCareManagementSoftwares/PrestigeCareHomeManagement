@@ -1424,9 +1424,9 @@ def log_entry_form(request, latest_log_id):
 
     # Dynamically choose shift start time
     if shift == "morning":
-        base_start_time = carehome.morning_shift_start or time(8, 0)
+        base_start_time = carehome.morning_shift_start
     elif shift == "night":
-        base_start_time = carehome.night_shift_start or time(20, 0)
+        base_start_time = carehome.night_shift_start
     else:
         base_start_time = time(8, 0)  # fallback
 
