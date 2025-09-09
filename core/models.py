@@ -15,6 +15,7 @@ from django.core.validators import RegexValidator
 from django.contrib.auth.base_user import BaseUserManager
 
 from django.db import models
+from django.utils.timezone import now
 from weasyprint import HTML
 
 from carehome_project import settings
@@ -509,7 +510,7 @@ class LatestLogEntry(models.Model):
         max_length=50,
         choices=SHIFT_CHOICES
     )
-    date = models.DateField(null=True, blank=True)
+    date = models.DateField(default=now)
     staff_name = models.CharField(max_length=100, blank=True)
     day_of_week = models.CharField(max_length=10, blank=True)
     status = models.CharField(
@@ -659,7 +660,7 @@ class MissedLog(models.Model):
 
     carehome = models.ForeignKey(CareHome, on_delete=models.CASCADE)
     service_user = models.ForeignKey(ServiceUser, on_delete=models.CASCADE)
-    date = models.DateField()
+    date = models.DateField(default=now)
     shift = models.CharField(max_length=20, choices=SHIFT_CHOICES)
     is_notified = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
