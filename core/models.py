@@ -459,7 +459,7 @@ class LogEntry(models.Model):
     carehome = models.ForeignKey('CareHome', on_delete=models.CASCADE)
     shift = models.CharField(max_length=50)  # e.g., Morning, Evening
     service_user = models.ForeignKey('ServiceUser', on_delete=models.CASCADE)
-    date = models.DateField(auto_now_add=True)
+    date = models.DateField()
     time_slot = models.TimeField()  # For each hour slot (e.g., 08:00, 09:00)
     content = models.TextField(blank=True)
     latest_log = models.ForeignKey(
@@ -509,7 +509,7 @@ class LatestLogEntry(models.Model):
         max_length=50,
         choices=SHIFT_CHOICES
     )
-    date = models.DateField(auto_now_add=True)
+    date = models.DateField()
     staff_name = models.CharField(max_length=100, blank=True)
     day_of_week = models.CharField(max_length=10, blank=True)
     status = models.CharField(
