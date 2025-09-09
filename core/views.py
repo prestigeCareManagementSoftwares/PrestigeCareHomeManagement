@@ -40,146 +40,6 @@ from .forms import LogEntryForm
 from django.http import JsonResponse
 from datetime import time
 
-def generate_log_entries(latest_log, carehome, shift_name):
-    if "Morning" in shift_name:
-        start = datetime.combine(latest_log.date, carehome.morning_shift_start)
-        end = datetime.combine(latest_log.date, carehome.morning_shift_end)
-    else:
-        start = datetime.combine(latest_log.date, carehome.night_shift_start)
-        end = datetime.combine(latest_log.date, carehome.night_shift_end)
-
-    current_time = start
-    while current_time < end:
-        LogEntry.objects.get_or_create(
-            latest_log=latest_log,
-            time_slot=current_time.time()  # store only time if your model expects it
-        )
-        current_time += timedelta(hours=1)
-
-def get_shifts_from_carehome(carehome):
-    if not carehome:
-        return []
-
-    shifts = []
-
-    if carehome.morning_shift_start and carehome.morning_shift_end:
-        shifts.append(
-            f"Morning Shift ({carehome.morning_shift_start.strftime('%I:%M %p')} - "
-            f"{carehome.morning_shift_end.strftime('%I:%M %p')})"
-        )
-
-    if carehome.night_shift_start and carehome.night_shift_end:
-        shifts.append(
-            f"Night Shift ({carehome.night_shift_start.strftime('%I:%M %p')} - "
-            f"{carehome.night_shift_end.strftime('%I:%M %p')})"
-        )
-
-    return shifts
-
-
-def create_log_view(request):
-    carehomes = CareHome.objects.all()
-    selected_carehome_id = request.GET.get('carehome') or request.POST.get('carehome')
-    service_users = []
-    shifts = []
-
-    selected_carehome = None
-    if selected_carehome_id:
-        try:
-            selected_carehome = CareHome.objects.get(id=selected_carehome_id)
-            service_users = ServiceUser.objects.filter(carehome=selected_carehome)
-            shifts = get_shifts_from_carehome(selected_carehome)
-        except CareHome.DoesNotExist:
-            messages.error(request, "Selected carehome does not exist.")
-
-    if request.method == 'POST' and 'start_log' in request.POST:
-        carehome_id = request.POST.get('carehome')
-        shift_label = request.POST.get('shift')
-        service_user_id = request.POST.get('service_user')
-
-        if not all([carehome_id, shift_label, service_user_id]):
-            messages.error(request, "All fields are required.")
-        else:
-            today = now().date()
-
-            # Create or get the latest log
-            latest_log, created = LatestLogEntry.objects.get_or_create(
-                carehome_id=carehome_id,
-                shift=shift_label,
-                service_user_id=service_user_id,
-                user=request.user,
-                date=today,
-            )
-
-            # Check if the log is already locked
-            if latest_log.status == 'locked':
-                messages.warning(request, "This log is already locked.")
-                return redirect('staff_latest_logs_view')
-
-            # If log is newly created, generate log entries according to shift times
-            if created:
-                carehome = get_object_or_404(CareHome, id=carehome_id)
-                # Determine shift start and end
-                if "Morning" in shift_label:
-                    start_time = carehome.morning_shift_start
-                    end_time = carehome.morning_shift_end
-                else:
-                    start_time = carehome.night_shift_start
-                    end_time = carehome.night_shift_end
-
-                # Create log entries in 1-hour intervals using time objects only
-                # This avoids timezone issues
-                current_time_obj = start_time
-                end_time_obj = end_time
-
-                # Handle night shift crossing midnight
-                if end_time_obj < start_time_obj:
-                    # Night shift spans two days
-                    while True:
-                        LogEntry.objects.get_or_create(
-                            latest_log=latest_log,
-                            time_slot=current_time_obj,
-                            defaults={'carehome': carehome}
-                        )
-
-                        # Increment by 1 hour
-                        current_hour = (current_time_obj.hour + 1) % 24
-                        current_time_obj = time(current_hour, 0)
-
-                        if current_time_obj == end_time_obj:
-                            break
-                else:
-                    # Regular shift (doesn't cross midnight)
-                    while current_time_obj <= end_time_obj:
-                        LogEntry.objects.get_or_create(
-                            latest_log=latest_log,
-                            time_slot=current_time_obj,
-                            defaults={'carehome': carehome}
-                        )
-
-                        # Increment by 1 hour
-                        current_hour = current_time_obj.hour + 1
-                        if current_hour >= 24:
-                            break
-                        current_time_obj = time(current_hour, 0)
-
-            # Store log info in session
-            request.session['log_info'] = {
-                'carehome_id': carehome_id,
-                'shift': shift_label,
-                'service_user_id': service_user_id,
-                'latest_log_id': latest_log.id,
-            }
-
-            return redirect('log-entry-form', latest_log_id=latest_log.id)
-
-    return render(request, 'pdf_templates/select_log_data.html', {
-        'carehomes': carehomes,
-        'service_users': service_users,
-        'shifts': shifts,
-        'selected_carehome_id': selected_carehome_id,
-    })
-
 def render_pdf_view(template_src, context_dict):
     html = render_to_string(template_src, context_dict)
     result = BytesIO()
@@ -1150,6 +1010,146 @@ def lock_log_entries(request, latest_log_id):
         messages.error(request, f"Error locking log: {str(e)}")
         return redirect('staff-dashboard')
 
+
+from datetime import datetime, timedelta
+
+
+def generate_log_entries(latest_log, carehome, shift_name):
+    """
+    Generates a 12-hour sequence of hourly log entries for a given shift.
+    Handles shifts that cross midnight.
+    """
+    if "Morning" in shift_name:
+        start_time_obj = carehome.morning_shift_start
+        end_time_obj = carehome.morning_shift_end
+    else:  # Assuming "Night"
+        start_time_obj = carehome.night_shift_start
+        end_time_obj = carehome.night_shift_end
+
+    # The date of the entries starts from the date of the latest log entry
+    shift_start_datetime = datetime.combine(latest_log.date, start_time_obj)
+
+    # Calculate the end datetime by adding 12 hours
+    # This automatically handles the day transition
+    shift_end_datetime = shift_start_datetime + timedelta(hours=12)
+
+    current_time = shift_start_datetime
+
+    # Loop to create 12 entries
+    # The loop condition is simple and correct because we're using full datetime objects
+    while current_time < shift_end_datetime:
+        LogEntry.objects.get_or_create(
+            latest_log=latest_log,
+            time_slot=current_time,
+            defaults={'carehome': carehome}
+        )
+        current_time += timedelta(hours=1)
+
+def get_shifts_from_carehome(carehome):
+    if not carehome:
+        return []
+
+    shifts = []
+
+    if carehome.morning_shift_start and carehome.morning_shift_end:
+        shifts.append(
+            f"Morning Shift ({carehome.morning_shift_start.strftime('%I:%M %p')} - "
+            f"{carehome.morning_shift_end.strftime('%I:%M %p')})"
+        )
+
+    if carehome.night_shift_start and carehome.night_shift_end:
+        shifts.append(
+            f"Night Shift ({carehome.night_shift_start.strftime('%I:%M %p')} - "
+            f"{carehome.night_shift_end.strftime('%I:%M %p')})"
+        )
+
+    return shifts
+
+
+from datetime import datetime, timedelta, time
+
+
+def create_log_view(request):
+    carehomes = CareHome.objects.all()
+    selected_carehome_id = request.GET.get('carehome') or request.POST.get('carehome')
+    service_users = []
+    shifts = []
+
+    selected_carehome = None
+    if selected_carehome_id:
+        try:
+            selected_carehome = get_object_or_404(CareHome, id=selected_carehome_id)
+            service_users = ServiceUser.objects.filter(carehome=selected_carehome)
+            shifts = get_shifts_from_carehome(selected_carehome)
+        except CareHome.DoesNotExist:
+            messages.error(request, "Selected carehome does not exist.")
+
+    if request.method == 'POST' and 'start_log' in request.POST:
+        carehome_id = request.POST.get('carehome')
+        shift_label = request.POST.get('shift')
+        service_user_id = request.POST.get('service_user')
+
+        if not all([carehome_id, shift_label, service_user_id]):
+            messages.error(request, "All fields are required.")
+            # Return to the same page with context
+            return render(request, 'pdf_templates/select_log_data.html', {
+                'carehomes': carehomes,
+                'service_users': service_users,
+                'shifts': shifts,
+                'selected_carehome_id': selected_carehome_id,
+            })
+
+        try:
+            carehome = get_object_or_404(CareHome, id=carehome_id)
+            service_user = get_object_or_404(ServiceUser, id=service_user_id)
+
+            # The date of the shift is typically the day it starts
+            shift_date = now().date()
+
+            # Create or get the latest log
+            latest_log, created = LatestLogEntry.objects.get_or_create(
+                carehome=carehome,
+                shift=shift_label,
+                service_user=service_user,
+                user=request.user,
+                date=shift_date,
+            )
+
+            # Check if the log is already locked
+            if latest_log.status == 'locked':
+                messages.warning(request, "This log is already locked.")
+                return redirect('staff_latest_logs_view')
+
+            # If log is newly created, generate log entries
+            if created:
+                generate_log_entries(latest_log, carehome, shift_label)
+
+            # Store log info in session
+            request.session['log_info'] = {
+                'carehome_id': carehome.id,
+                'shift': shift_label,
+                'service_user_id': service_user.id,
+                'latest_log_id': latest_log.id,
+            }
+
+            return redirect('log-entry-form', latest_log_id=latest_log.id)
+
+        except (CareHome.DoesNotExist, ServiceUser.DoesNotExist):
+            messages.error(request, "Invalid carehome or service user selected.")
+            # Return to the same page with context
+            return render(request, 'pdf_templates/select_log_data.html', {
+                'carehomes': carehomes,
+                'service_users': service_users,
+                'shifts': shifts,
+                'selected_carehome_id': selected_carehome_id,
+            })
+
+    return render(request, 'pdf_templates/select_log_data.html', {
+        'carehomes': carehomes,
+        'service_users': service_users,
+        'shifts': shifts,
+        'selected_carehome_id': selected_carehome_id,
+    })
 
 @login_required
 def edit_log_entry_by_admin(request, latest_log_id):
