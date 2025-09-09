@@ -1449,26 +1449,31 @@ def log_entry_form(request, latest_log_id):
     service_user = latest_log.service_user
     today = latest_log.date
 
-    # Permission check - staff can only edit their own logs
-    if request.user.role == 'staff' and latest_log.user != request.user:
-        messages.error(request, "You can only edit your own logs")
+    # Determine user permissions
+    can_edit = False
+    if request.user.role in ['team_lead', 'manager'] or request.user.is_superuser:
+        # Admin roles can always edit
+        can_edit = True
+    elif request.user.role == 'staff':
+        # Staff can only edit if they are the owner and the log is not locked/completed
+        if latest_log.user == request.user and latest_log.status != 'completed':
+            can_edit = True
+        else:
+            messages.info(request, "Staff can only edit their own logs before locking.")
+            return redirect('log-detail-view', latest_log_id=latest_log.id)
+    else:
+        # Any other role denied
+        messages.error(request, "You do not have permission to edit this log.")
         return redirect('staff-dashboard')
 
-    # For staff users - redirect to view if log is already completed
-    if (request.user.role == 'staff' and
-            latest_log.status == 'completed' and
-            not request.GET.get('force_edit')):
-        messages.info(request, "Viewing completed log. Use 'Edit' button to make changes.")
-        return redirect('log-detail-view', latest_log_id=latest_log.id)
-
     # Dynamically choose shift start time
-    if shift == "Morning":
+    if shift == "morning":
         base_start_time = carehome.morning_shift_start
-    elif shift == "Night":
+    elif shift == "night":
         base_start_time = carehome.night_shift_start
     else:
         messages.error(request, "Invalid shift type.")
-        return redirect('staff-dashboard')        # fallback
+        return redirect('staff-dashboard')  # fallback
 
     time_slots = generate_shift_times(base_start_time)
 
@@ -1486,16 +1491,14 @@ def log_entry_form(request, latest_log_id):
         )
         log_entries.append(entry)
 
-    # ✅ Fix sorting for night shift
+    # Fix sorting for night shift
     if shift == "night":
-        # Ensure logs start at night_shift_start, then continue past midnight
         start_hour = (carehome.night_shift_start or time(21, 0)).hour
         log_entries.sort(key=lambda x: (
-            x.time_slot.hour < start_hour,  # push 0–9 AM to the end
+            x.time_slot.hour < start_hour,  # push early AM to end
             x.time_slot
         ))
     else:
-        # Normal ordering for morning shift
         log_entries.sort(key=lambda x: x.time_slot)
 
     return render(request, 'forms/log_entry_form.html', {
@@ -1505,12 +1508,10 @@ def log_entry_form(request, latest_log_id):
         'carehome': carehome,
         'service_user': service_user,
         'today': today,
-        'can_edit': True,  # Since we got here, editing is allowed
+        'can_edit': can_edit,  # permission flag
         'is_update': True,
-        "user_role": request.user.role,  # Flag to show this is an update
-        'force_edit_param': 'force_edit=true'  # For edit buttons in template
+        'user_role': request.user.role
     })
-
 
 
 def generate_time_slots(start_time, end_time):
