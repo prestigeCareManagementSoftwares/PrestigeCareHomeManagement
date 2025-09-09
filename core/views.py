@@ -1079,7 +1079,7 @@ def create_log_view(request):
 
             latest_log, created = LatestLogEntry.objects.get_or_create(
                 carehome=carehome,
-                shift=shift_label,
+                shift=shift_label.strip().split()[0].lower(),
                 service_user=service_user,
                 user=request.user,
                 date=shift_date,
