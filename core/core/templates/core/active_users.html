@@ -15,9 +15,9 @@
     <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
         <h6 class="m-0 font-weight-bold text-primary">
             {% if request.user.role == 'team_lead' %}
-            Staff in {{ request.user.carehome.name }}
+                Staff in {{ request.user.carehome.name }}
             {% else %}
-            All Staff Members
+                All Staff Members
             {% endif %}
         </h6>
         <div class="dropdown no-arrow">
@@ -47,52 +47,43 @@
                 <tbody>
                 {% for staff in staff_list %}
                 <tr>
+                    <!-- Profile Image -->
                     <td class="text-center">
-                        <div class="dropdown">
-                            <a class="btn btn-sm btn-light dropdown-toggle" href="#" role="button"
-                               id="actionDropdown{{ staff.pk }}" data-toggle="dropdown" aria-haspopup="true"
-                               aria-expanded="false">
-                                <i class="fas fa-ellipsis-v"></i>
-                            </a>
-                            <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in"
-                                 aria-labelledby="actionDropdown{{ staff.pk }}">
-                                <a class="dropdown-item" href="{% url 'edit-staff' staff.pk %}">
-                                    <i class="fas fa-edit fa-sm fa-fw mr-2"></i> Edit
-                                </a>
-                                <a class="dropdown-item" href="{% url 'toggle-staff-status' staff.pk %}">
-                                    <i class="fas fa-toggle-on fa-sm fa-fw mr-2"></i>
-                                    {% if staff.is_active %}Deactivate{% else %}Activate{% endif %}
-                                </a>
-                                <a class="dropdown-item text-danger" href="{% url 'delete-staff' staff.pk %}"
-                                   onclick="return confirm('Are you sure you want to delete this staff member?');">
-                                    <i class="fas fa-trash fa-sm fa-fw mr-2"></i> Delete
-                                </a>
-                            </div>
+                        <div class="rounded-circle overflow-hidden d-inline-block {% if staff.availability_status == 'Available' %}border-success{% else %}border-secondary{% endif %}"
+                             style="width: 50px; height: 50px; border: 2px solid {% if staff.availability_status == 'Available' %}#28a745{% else %}#6c757d{% endif %};">
+                            <img src="{% if staff.image %}{{ staff.image.url }}{% else %}{% static 'img/default-profile.png' %}{% endif %}"
+                                 style="width: 100%; height: 100%; object-fit: cover;"
+                                 alt="{{ staff.get_full_name }}">
                         </div>
                     </td>
 
+                    <!-- Name & Role -->
                     <td>{{ staff.get_full_name }}</td>
                     <td>{{ staff.get_role_display }}</td>
+                    <td>{% if staff.carehome %}{{ staff.carehome.name }}{% else %}-{% endif %}</td>
+
+                    <!-- Status -->
                     <td>
-                        {% if staff.carehome %}
-                        {{ staff.carehome.name }}
-                        {% else %}
-                        -
-                        {% endif %}
+                        <span class="badge badge-{% if staff.availability_status == 'Available' %}success{% elif staff.availability_status == 'Offline' %}secondary{% else %}danger{% endif %}">
+                            {{ staff.availability_status }}
+                        </span>
                     </td>
-                    <td>
-                            <span class="badge badge-{% if staff.availability_status == 'Available' %}success{% elif staff.availability_status == 'Offline' %}secondary{% else %}danger{% endif %}">
-                                {{ staff.availability_status }}
-                            </span>
-                    </td>
-                    <td class="text-center">
-                        <a href="{% url 'edit-staff' staff.pk %}" class="btn btn-sm btn-primary">
-                            <i class="fas fa-edit"></i>
-                        </a>
-                        <a href="{% url 'toggle-staff-status' staff.pk %}"
-                           class="btn btn-sm btn-{% if staff.is_active %}danger{% else %}success{% endif %}">
-                            <i class="fas fa-{% if staff.is_active %}times{% else %}check{% endif %}"></i>
-                        </a>
+
+                    <!-- Actions -->
+                    <td class="text-center position-relative">
+                        <button class="btn btn-sm p-0 border-0 action-dots" type="button"
+                                onclick="toggleActionsMenu({{ staff.id }})">
+                            ⋮
+                        </button>
+
+                        <div id="actions-menu-{{ staff.id }}" class="actions-menu position-absolute shadow-sm bg-white border rounded">
+                            <a class="dropdown-item small" href="{% url 'edit-staff' staff.pk %}">Edit</a>
+                            <a class="dropdown-item small" href="{% url 'delete-staff' staff.pk %}"
+                               onclick="return confirm('Are you sure you want to delete this staff member?');">
+                               Delete
+                            </a>
+                            <a class="dropdown-item small" href="#">Update</a>
+                        </div>
                     </td>
                 </tr>
                 {% empty %}
@@ -105,4 +96,62 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function toggleActionsMenu(id) {
+    // Close all other menus
+    document.querySelectorAll('.actions-menu').forEach(menu => {
+        if (menu.id !== `actions-menu-${id}`) menu.style.display = 'none';
+    });
+
+    const menu = document.getElementById(`actions-menu-${id}`);
+    menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+}
+
+// Close menu if click outside
+document.addEventListener('click', function(event) {
+    if (!event.target.closest('.actions-menu') && !event.target.closest('.action-dots')) {
+        document.querySelectorAll('.actions-menu').forEach(menu => menu.style.display = 'none');
+    }
+});
+</script>
+
+<style>
+/* Three-dot button styling */
+.action-dots {
+    font-size: 18px;
+    cursor: pointer;
+    background: transparent;
+    color: #555;
+}
+
+.action-dots:hover {
+    color: #000;
+}
+
+/* Menu styling */
+.actions-menu {
+    display: none;
+    min-width: 120px;
+    top: 25px;
+    right: 0;
+    z-index: 1000;
+}
+
+.actions-menu a {
+    display: block;
+    padding: 5px 10px;
+    color: #333;
+    text-decoration: none;
+    font-size: 14px;
+}
+
+.actions-menu a:hover {
+    background-color: #f8f9fa;
+    color: #000;
+    border-radius: 3px;
+}
+</style>
 {% endblock %}
