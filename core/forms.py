@@ -406,6 +406,7 @@ class StaffEditForm(forms.ModelForm):
         carehome = cleaned_data.get('carehome')
         password1 = cleaned_data.get('password1')
         password2 = cleaned_data.get('password2')
+        date_of_joining = cleaned_data.get('date_of_joining')
 
         if role == CustomUser.TEAM_LEAD and not carehome:
             self.add_error('carehome', "Care Home is required for Team Leads.")
