@@ -20,16 +20,6 @@
                 All Staff Members
             {% endif %}
         </h6>
-        <div class="dropdown no-arrow">
-            <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink"
-               data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
-            </a>
-            <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in"
-                 aria-labelledby="dropdownMenuLink">
-                <a class="dropdown-item" href="#">Export Data</a>
-            </div>
-        </div>
     </div>
     <div class="card-body">
         <div class="table-responsive">
@@ -77,11 +67,15 @@
                         </button>
 
                         <div id="actions-menu-{{ staff.id }}" class="actions-menu position-absolute shadow-sm bg-white border rounded">
-                            <a class="dropdown-item small" href="{% url 'edit-staff' staff.pk %}">Edit</a>
-                            <a class="dropdown-item small" href="#">Generate Employee Id Card</a>
+                            <a class="dropdown-item small" href="{% url 'edit-staff' staff.pk %}">
+                                <i class="fas fa-edit mr-2"></i> Edit
+                            </a>
+                            <a class="dropdown-item small" href="#">
+                                <i class="fas fa-id-card mr-2"></i> Generate Employee ID
+                            </a>
                             <a class="dropdown-item small" href="{% url 'delete-staff' staff.pk %}"
                                onclick="return confirm('Are you sure you want to delete this staff member?');">
-                               Delete
+                               <i class="fas fa-trash-alt mr-2"></i> Delete
                             </a>
                         </div>
                     </td>
@@ -134,14 +128,15 @@ document.addEventListener('click', function(event) {
 /* Menu styling */
 .actions-menu {
     display: none;
-    min-width: 120px;
+    min-width: 160px;
     top: 25px;
     right: 0;
     z-index: 1000;
 }
 
 .actions-menu a {
-    display: block;
+    display: flex;
+    align-items: center;
     padding: 5px 10px;
     color: #333;
     text-decoration: none;
@@ -152,6 +147,10 @@ document.addEventListener('click', function(event) {
     background-color: #f8f9fa;
     color: #000;
     border-radius: 3px;
+}
+
+.actions-menu i {
+    width: 18px;
 }
 </style>
 {% endblock %}
