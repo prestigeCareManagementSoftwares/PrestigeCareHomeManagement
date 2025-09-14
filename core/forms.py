@@ -76,8 +76,9 @@ class StaffCreationForm(UserCreationForm):
         model = CustomUser
         fields = (
             'image', 'first_name', 'last_name', 'email', 'phone',
-            'address', 'postcode', 'role', 'carehome', 'next_of_kin_first_name',
-            'next_of_kin_last_name', 'next_of_kin_phone', 'next_of_kin_email',
+            'address', 'postcode', 'date_of_joining', 'role', 'carehome',
+            'next_of_kin_first_name', 'next_of_kin_last_name',
+            'next_of_kin_phone', 'next_of_kin_email',
             'password1', 'password2'
         )
         widgets = {
@@ -88,6 +89,7 @@ class StaffCreationForm(UserCreationForm):
             'last_name': forms.TextInput(attrs={'class': 'form-control'}),
             'phone': forms.TextInput(attrs={'class': 'form-control'}),
             'postcode': forms.TextInput(attrs={'class': 'form-control'}),
+            'date_of_joining': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
             'next_of_kin_first_name': forms.TextInput(attrs={'class': 'form-control'}),
             'next_of_kin_last_name': forms.TextInput(attrs={'class': 'form-control'}),
             'next_of_kin_phone': forms.TextInput(attrs={'class': 'form-control'}),
@@ -350,7 +352,6 @@ class ABCFormForm(forms.ModelForm):
 
         return instance
 
-
 class StaffEditForm(forms.ModelForm):
     role = forms.ChoiceField(
         choices=CustomUser.ROLE_CHOICES,
@@ -376,8 +377,9 @@ class StaffEditForm(forms.ModelForm):
         model = CustomUser
         fields = (
             'image', 'first_name', 'last_name', 'email', 'phone',
-            'address', 'postcode', 'role', 'carehome', 'next_of_kin_first_name',
-            'next_of_kin_last_name', 'next_of_kin_phone', 'next_of_kin_email'
+            'address', 'postcode', 'date_of_joining', 'role', 'carehome',
+            'next_of_kin_first_name', 'next_of_kin_last_name',
+            'next_of_kin_phone', 'next_of_kin_email'
         )
         widgets = {
             'image': forms.FileInput(attrs={'class': 'form-control-file'}),
@@ -387,6 +389,7 @@ class StaffEditForm(forms.ModelForm):
             'last_name': forms.TextInput(attrs={'class': 'form-control'}),
             'phone': forms.TextInput(attrs={'class': 'form-control'}),
             'postcode': forms.TextInput(attrs={'class': 'form-control'}),
+            'date_of_joining': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
             'next_of_kin_first_name': forms.TextInput(attrs={'class': 'form-control'}),
             'next_of_kin_last_name': forms.TextInput(attrs={'class': 'form-control'}),
             'next_of_kin_phone': forms.TextInput(attrs={'class': 'form-control'}),

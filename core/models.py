@@ -360,7 +360,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default=STAFF)
     carehome = models.ForeignKey('CareHome', on_delete=models.SET_NULL, null=True, blank=True)
     last_active = models.DateTimeField(null=True, blank=True)
-
+    date_of_joining = models.DateField(null=True, blank=True)
     # Authentication fields
     email = models.EmailField(unique=True)
     first_name = models.CharField(max_length=30, blank=True)
