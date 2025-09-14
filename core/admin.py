@@ -20,12 +20,12 @@ class CustomUserAdmin(UserAdmin):
     # Fields for editing user
     fieldsets = (
         (None, {'fields': ('email', 'password')}),
-        ('Personal info', {'fields': ('first_name', 'last_name', 'phone', 'address', 'image', 'additional_info')}),
+        ('Personal info', {'fields': ('first_name', 'last_name', 'date_of_joining','phone', 'address', 'image', 'additional_info')}),
         ('Role info', {'fields': ('role', 'carehome')}),
         ('Permissions', {
             'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions'),
         }),
-        ('Important dates', {'fields': ('last_login', 'date_joined', 'last_active')}),
+        ('Important dates', {'fields': ('last_login', 'last_active')}),
     )
 
     # Fields for adding new user
