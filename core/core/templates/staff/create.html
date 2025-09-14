@@ -74,12 +74,12 @@
     <!-- Role -->
     <div class="form-group col-md-6">
         <label>Role *</label>
-        <div class="form-check form-check-inline">
+        <div class="form-check">
             <input class="form-check-input" type="radio" name="role" id="role_staff"
                    value="staff" {% if form.instance.role == 'staff' %}checked{% endif %}>
             <label class="form-check-label" for="role_staff">Staff Member</label>
         </div>
-        <div class="form-check form-check-inline">
+        <div class="form-check">
             <input class="form-check-input" type="radio" name="role" id="role_team_lead"
                    value="team_lead" {% if form.instance.role == 'team_lead' %}checked{% endif %}>
             <label class="form-check-label" for="role_team_lead">Team Lead</label>
