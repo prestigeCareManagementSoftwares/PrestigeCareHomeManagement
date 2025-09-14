@@ -20,6 +20,7 @@ urlpatterns = ([
                    path('carehomes/dashboard/', views.carehomes_dashboard, name='carehomes-dashboard'),
                    path('carehomes/create/', views.create_carehome, name='create-carehome'),
 
+                   path('staff/delete/<int:staff_id>/', views.delete_staff, name='delete-staff'),
                    # Service Users URLs
                    path('service-users/dashboard/', views.service_users_dashboard, name='service-users-dashboard'),
                    path('service-users/create/', views.create_service_user, name='create-service-user'),

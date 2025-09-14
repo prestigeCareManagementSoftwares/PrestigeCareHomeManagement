@@ -437,6 +437,24 @@ def create_staff(request):
     })
 
 @login_required
+def delete_staff(request, staff_id):
+    # Only superusers or team leads can delete
+    if not (request.user.is_superuser or request.user.role == 'manager'):
+        messages.error(request, "You do not have permission to delete staff.")
+        return redirect('staff-dashboard')
+
+    staff = get_object_or_404(CustomUser, pk=staff_id)
+
+    try:
+        staff_name = staff.get_full_name()
+        staff.delete()
+        messages.success(request, f"Staff member '{staff_name}' deleted successfully!")
+    except Exception as e:
+        messages.error(request, f"Error deleting staff member: {str(e)}")
+
+    return redirect('staff-dashboard')
+
+@login_required
 def edit_staff(request, pk):
     staff = get_object_or_404(CustomUser, pk=pk)
     carehomes = CareHome.objects.all()
