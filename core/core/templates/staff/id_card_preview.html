@@ -44,7 +44,7 @@ function loadPreview() {
                 </div>
                 <div class="info">
                     <div class="name"><span>${data.first_name}</span> <span>${data.last_name}</span></div>
-                    <div class="role">${data.role}</div>
+                    <div class="role">Support Worker</div>
                 </div>
             </div>
         </div>
@@ -175,11 +175,12 @@ document.addEventListener("DOMContentLoaded", function() {
     margin-top: 5px;
 }
 .barcode {
-    top: 60%;
-    left: 20%;
-    transform: translate(-50%, -50%);
-    z-index: 10;
     position: absolute;
+    top: 60%;
+    left: 50%;             /* center horizontally */
+    transform: translateX(-50%);  /* only horizontal centering */
+    z-index: 10;
+    max-width: 90%;        /* keep 5% margin on both sides */
 }
 </style>
 {% endblock %}
