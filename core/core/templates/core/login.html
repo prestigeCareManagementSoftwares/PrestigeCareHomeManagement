@@ -3,33 +3,143 @@
 {% load static %}
 
 {% block content %}
+<style>
+  body {
+    margin: 0;
+    font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial;
+    min-height: 100vh;
+    display: grid;
+    place-items: center;
+    background: linear-gradient(135deg, #3b82f6, #7c3aed);
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* Wave background */
+  .wave-stage {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    filter: saturate(120%);
+  }
+
+  .wave {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 160%;
+    height: 50vh;
+    min-height: 220px;
+    opacity: 0.65;
+  }
+
+  /* Position waves around middle */
+  .w1 { top: 45%; animation: drift1 14s ease-in-out infinite alternate, bob 10s ease-in-out infinite; }
+  .w2 { top: 50%; animation: drift2 20s ease-in-out infinite alternate, bob 14s ease-in-out infinite; opacity: 0.5; }
+  .w3 { top: 55%; animation: drift3 26s ease-in-out infinite alternate, bob 18s ease-in-out infinite; opacity: 0.35; }
+
+  /* Horizontal drifting */
+  @keyframes drift1 { from { transform: translate(-55%, 0); } to { transform: translate(-45%, 0); } }
+  @keyframes drift2 { from { transform: translate(-60%, 0); } to { transform: translate(-40%, 0); } }
+  @keyframes drift3 { from { transform: translate(-65%, 0); } to { transform: translate(-35%, 0); } }
+
+  /* Gentle vertical bob */
+  @keyframes bob {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-12px); }
+  }
+
+  /* Glassy login card */
+  .card {
+    position: relative;
+    z-index: 5;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(14px) saturate(140%);
+    box-shadow: 0 8px 30px rgba(2, 6, 23, 0.45);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: #fff;
+  }
+
+  .card h1, .card p, .card label { color: #fff; }
+  .form-control {
+    background: rgba(0,0,0,0.25);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: #fff;
+  }
+  .form-control::placeholder { color: rgba(255,255,255,0.7); }
+
+  .btn-primary {
+    background: linear-gradient(90deg, #3b82f6, #7c3aed);
+    border: none;
+  }
+</style>
+
+<!-- Animated wave background (middle screen) -->
+<div class="wave-stage">
+  <div class="wave w3">
+    <svg viewBox="0 0 1440 320" preserveAspectRatio="none">
+      <path fill="url(#g1)" d="M0,96L40,117.3C80,139,160,181,240,202.7C320,224,400,224,480,224C560,224,640,224,720,208C800,192,880,160,960,160C1040,160,1120,192,1200,186.7C1280,181,1360,139,1400,117.3L1440,96L1440,320L0,320Z"></path>
+      <defs>
+        <linearGradient id="g1" x1="0%" x2="100%">
+          <stop offset="0%" stop-color="#7c3aed" stop-opacity="0.9" />
+          <stop offset="100%" stop-color="#3b82f6" stop-opacity="0.9" />
+        </linearGradient>
+      </defs>
+    </svg>
+  </div>
+  <div class="wave w2">
+    <svg viewBox="0 0 1440 320" preserveAspectRatio="none">
+      <path fill="url(#g2)" d="M0,192L48,192C96,192,192,192,288,170.7C384,149,480,107,576,101.3C672,96,768,128,864,138.7C960,149,1056,139,1152,149.3C1248,160,1344,192,1392,208L1440,224L1440,320L0,320Z"></path>
+      <defs>
+        <linearGradient id="g2" x1="0%" x2="100%">
+          <stop offset="0%" stop-color="#60a5fa" stop-opacity="0.7" />
+          <stop offset="100%" stop-color="#8b5cf6" stop-opacity="0.7" />
+        </linearGradient>
+      </defs>
+    </svg>
+  </div>
+  <div class="wave w1">
+    <svg viewBox="0 0 1440 320" preserveAspectRatio="none">
+      <path fill="url(#g3)" d="M0,64L48,96C96,128,192,192,288,218.7C384,245,480,235,576,224C672,213,768,203,864,181.3C960,160,1056,128,1152,117.3C1248,107,1344,117,1392,122.7L1440,128L1440,320L0,320Z"></path>
+      <defs>
+        <linearGradient id="g3" x1="0%" x2="100%">
+          <stop offset="0%" stop-color="#4f46e5" stop-opacity="0.9" />
+          <stop offset="100%" stop-color="#06b6d4" stop-opacity="0.9" />
+        </linearGradient>
+      </defs>
+    </svg>
+  </div>
+</div>
+
+<!-- Login form -->
 <div class="container">
-    <div class="row justify-content-center">
-        <div class="col-xl-5 col-lg-6 col-md-8">
-            <div class="card shadow-lg my-5">
-                <div class="card-body p-0">
-                    <div class="p-5">
-                        <div class="text-center">
-                            <h1 class="h4 text-gray-900 mb-4">Welcome Back!</h1>
-                        </div>
-                        <form class="user" method="POST">
-                            {% csrf_token %}
-                            <div class="form-group">
-                                <input type="text" class="form-control form-control-user"
-                                    name="username" placeholder="Enter Username...">
-                            </div>
-                            <div class="form-group">
-                                <input type="password" class="form-control form-control-user"
-                                    name="password" placeholder="Password">
-                            </div>
-                            <button type="submit" class="btn btn-primary btn-user btn-block">
-                                Login
-                            </button>
-                        </form>
-                    </div>
-                </div>
+  <div class="row justify-content-center">
+    <div class="col-xl-5 col-lg-6 col-md-8">
+      <div class="card shadow-lg my-5">
+        <div class="card-body p-5">
+          <div class="text-center mb-4">
+            <h1 class="h4">Prestige Supported Living Care Limited</h1>
+            <p>Welcome back! Please login</p>
+          </div>
+          <form class="user" method="POST">
+            {% csrf_token %}
+            <div class="form-group mb-3">
+              <input type="text" class="form-control form-control-user"
+                     name="username" placeholder="Enter Username..." required>
             </div>
+            <div class="form-group mb-4">
+              <input type="password" class="form-control form-control-user"
+                     name="password" placeholder="Password" required>
+            </div>
+            <button type="submit" class="btn btn-primary btn-user btn-block">
+              Login
+            </button>
+          </form>
         </div>
+      </div>
     </div>
+  </div>
 </div>
 {% endblock %}
