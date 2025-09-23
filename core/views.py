@@ -1595,23 +1595,25 @@ def get_service_users(request):
     data = [{"id": su.id, "name": f"{su.first_name} {su.last_name}"} for su in service_users]
     return JsonResponse(data, safe=False)
 
-
 def id_card_preview(request, user_id):
     staff = get_object_or_404(CustomUser, pk=user_id)
 
-    # Calculate expiry as 1 year after date_of_joining
+    # Calculate expiry = date_of_joining + 1 year
     if staff.date_of_joining:
         expiry_date = staff.date_of_joining + relativedelta(years=1)
         expiry_str = expiry_date.strftime("%m/%Y")
     else:
-        expiry_str = "N/A"
+        expiry_str = "12/2025"  # fallback if no joining date
+
+    qr_code_value = f"PCMS{staff.first_name}{staff.last_name}{expiry_str}"
 
     context = {
         "first_name": staff.first_name,
         "last_name": staff.last_name,
         "role": staff.get_role_display(),
         "photo": staff.image.url if staff.image else "/static/img/default-profile.png",
-        "qr_code_value": f"PCMS{staff.first_name}{staff.last_name}{expiry_str}",
-        "expiry": expiry_str,
+        "id": staff.id,
+        "qr_code_value": qr_code_value,
     }
-    return render(request, "staff/id_card_preview.html", context)
+
+    return render(request, "staff/staff_id_preview.html", context)
