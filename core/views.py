@@ -1617,4 +1617,4 @@ def id_card_preview(request, user_id):
         "qr_code_value": qr_code_value,
     }
 
-    return render(request, "staff/staff_id_preview.html", context)
+    return render(request, "staff/id_card_preview.html", context)
