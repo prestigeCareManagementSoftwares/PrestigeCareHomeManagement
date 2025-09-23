@@ -1,0 +1,178 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container py-4">
+    <h2 class="mb-4">ID Card Preview: {{ first_name }} {{ last_name }}</h2>
+
+    <div id="previewContainer"></div>
+
+    <button type="button" class="btn btn-primary mt-4" id="downloadBtn">Download ID Cards</button>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+
+<script>
+// Django context data
+const data = {
+    first_name: "{{ first_name }}",
+    last_name: "{{ last_name }}",
+    role: "{{ role }}",
+    photo: "{{ photo }}",
+    id: "{{ id }}"
+};
+
+// Render ID card previews
+function loadPreview() {
+    const firstName = data.first_name;
+    const lastName = data.last_name;
+
+    const container = document.getElementById("previewContainer");
+    container.innerHTML = `
+        <!-- Front template -->
+        <div class="id-card mb-3">
+            <img src="{% static 'core/images/front-template.png' %}" class="template" />
+            <div class="content">
+                <div class="profile-pic">
+                    <img src="${data.photo}" alt="Profile" />
+                </div>
+                <div class="info">
+                    <div class="name"><span>${firstName}</span> <span>${lastName}</span></div>
+                    <div class="role">${data.role}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Back template -->
+        <div class="id-card">
+            <img src="{% static 'core/images/back-template.png' %}" class="template" />
+            <div class="content">
+                <div class="profile-pic">
+                    <img src="${data.photo}" alt="Profile" />
+                </div>
+                <div class="info">
+                    <div class="name"><span>${firstName}</span> <span>${lastName}</span></div>
+                    <div class="role">${data.role}</div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// Convert name to initials
+function getInitials(first, last) {
+    return `${first[0].toUpperCase()}${last[0].toUpperCase()}`;
+}
+
+// Download front & back ID cards as ZIP
+async function downloadIDCards() {
+    try {
+        if (!data.first_name || !data.last_name || !data.id) {
+            alert("Missing user data.");
+            return;
+        }
+
+        const initials = getInitials(data.first_name, data.last_name);
+        const idPart = data.id;
+        const cards = document.querySelectorAll('.id-card');
+        if (cards.length === 0) return;
+
+        const zip = new JSZip();
+        const folder = zip.folder("Employee_ID_Cards");
+
+        for (let i = 0; i < cards.length; i++) {
+            const canvas = await html2canvas(cards[i]);
+            const imageData = canvas.toDataURL('image/png').split(',')[1];
+            const side = i === 0 ? 'front' : 'back';
+            const filename = `${initials}_${idPart}_${side}_id_card.png`;
+            folder.file(filename, imageData, { base64: true });
+        }
+
+        const content = await zip.generateAsync({ type: 'blob' });
+        const url = URL.createObjectURL(content);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `${initials}_${idPart}_id_cards.zip`;
+        document.body.appendChild(link);
+        link.click();
+        setTimeout(() => {
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }, 100);
+    } catch (error) {
+        console.error("Download failed:", error);
+        alert("Download failed. Please try again.");
+    }
+}
+
+// Initialize preview and download
+document.addEventListener("DOMContentLoaded", function() {
+    loadPreview();
+    document.getElementById("downloadBtn").addEventListener("click", downloadIDCards);
+});
+</script>
+
+<style>
+/* ID card styling */
+.id-card {
+    width: 500px;
+    height: 300px;
+    background: white;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    border-radius: 12px;
+    position: relative;
+    overflow: hidden;
+    padding: 20px;
+    margin-bottom: 30px;
+}
+.id-card .template {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: 1;
+    top: 0;
+    left: 0;
+}
+.id-card .content {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    height: 100%;
+}
+.profile-pic {
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    overflow: hidden;
+    margin-right: 20px;
+    margin-left: 30px;
+    flex-shrink: 0;
+}
+.profile-pic img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.info {
+    flex-grow: 1;
+}
+.name {
+    font-size: 24px;
+    font-weight: bold;
+    margin-top: 50px;
+}
+.name span:last-child {
+    color: #8e44ad;
+}
+.role {
+    font-size: 18px;
+    color: #8e44ad;
+    margin-top: 5px;
+}
+</style>
+{% endblock %}

@@ -63,5 +63,6 @@ urlpatterns = ([
                    re_path(r'^\.(git|svn|env)/', lambda r: HttpResponseForbidden()),
                    re_path(r'@fs/', lambda r: HttpResponseForbidden()),
                    path('ajax/service-users/', views.get_service_users, name='ajax-service-users'),
+                   path('staff/<int:user_id>/id-card/', views.id_card_preview, name='id-card-preview'),
                ]
                + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT))

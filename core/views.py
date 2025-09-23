@@ -1594,3 +1594,18 @@ def get_service_users(request):
     service_users = ServiceUser.objects.filter(carehome_id=carehome_id)
     data = [{"id": su.id, "name": f"{su.first_name} {su.last_name}"} for su in service_users]
     return JsonResponse(data, safe=False)
+
+
+def id_card_preview(request, user_id):
+    staff = get_object_or_404(CustomUser, pk=user_id)
+    context = {
+        "first_name": staff.first_name,
+        "last_name": staff.last_name,
+        "role": staff.get_role_display(),
+        "email": staff.email,
+        "phone": staff.phone,
+        "id": staff.id,
+        "expiry": "12/2025",  # Replace with real expiry if needed
+        "photo": staff.image.url if staff.image else "/static/img/default-profile.png",
+    }
+    return render(request, "staff/id_card_preview.html", context)
