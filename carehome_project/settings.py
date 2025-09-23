@@ -135,8 +135,7 @@ USE_TZ = True
 # STATIC FILES (IMPORTANT for Render)
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [
-    BASE_DIR / "core/core/static",
-    BASE_DIR / "core/static",
+    BASE_DIR / "static",
 ]
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')  # For collectstatic on Render
 
