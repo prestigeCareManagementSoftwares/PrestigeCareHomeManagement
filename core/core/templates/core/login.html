@@ -4,18 +4,23 @@
 
 {% block content %}
 <style>
+  /* Import font like in the article */
+  @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@500;600&display=swap');
+
   body {
     margin: 0;
-    font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial;
+    padding: 0;
+    font-family: 'Poppins', sans-serif;
     min-height: 100vh;
-    display: grid;
-    place-items: center;
-    background: linear-gradient(135deg, #3b82f6, #7c3aed);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #A3BFFA, #C084FC); /* Softer care-home friendly purple/blue gradient */
     overflow: hidden;
     position: relative;
   }
 
-  /* Wave background */
+  /* Wave background, centered around middle */
   .wave-stage {
     position: fixed;
     inset: 0;
@@ -30,53 +35,128 @@
     transform: translateX(-50%);
     width: 160%;
     height: 50vh;
-    min-height: 220px;
-    opacity: 0.65;
+    min-height: 200px;
   }
 
-  /* Position waves around middle */
-  .w1 { top: 45%; animation: drift1 14s ease-in-out infinite alternate, bob 10s ease-in-out infinite; }
-  .w2 { top: 50%; animation: drift2 20s ease-in-out infinite alternate, bob 14s ease-in-out infinite; opacity: 0.5; }
-  .w3 { top: 55%; animation: drift3 26s ease-in-out infinite alternate, bob 18s ease-in-out infinite; opacity: 0.35; }
+  .w1 { top: 40%; animation: drift1 16s ease-in-out infinite alternate, bob 12s ease-in-out infinite; opacity: 0.6; }
+  .w2 { top: 50%; animation: drift2 22s ease-in-out infinite alternate, bob 16s ease-in-out infinite; opacity: 0.45; }
+  .w3 { top: 60%; animation: drift3 28s ease-in-out infinite alternate, bob 20s ease-in-out infinite; opacity: 0.30; }
 
-  /* Horizontal drifting */
-  @keyframes drift1 { from { transform: translate(-55%, 0); } to { transform: translate(-45%, 0); } }
-  @keyframes drift2 { from { transform: translate(-60%, 0); } to { transform: translate(-40%, 0); } }
-  @keyframes drift3 { from { transform: translate(-65%, 0); } to { transform: translate(-35%, 0); } }
+  @keyframes drift1 { from { transform: translate(-55%,0); } to { transform: translate(-45%,0); } }
+  @keyframes drift2 { from { transform: translate(-60%,0); } to { transform: translate(-40%,0); } }
+  @keyframes drift3 { from { transform: translate(-65%,0); } to { transform: translate(-35%,0); } }
 
-  /* Gentle vertical bob */
   @keyframes bob {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-12px); }
+    0%,100% { transform: translateY(0) translateX(-50%); }
+    50% { transform: translateY(-10px) translateX(-50%); }
   }
 
-  /* Glassy login card */
-  .card {
+  /* Glassmorphic form section like article */
+  section.login-form {
     position: relative;
+    width: 100%;
+    max-width: 400px;
+    background: rgba(255,255,255,0.15); /* light translucent white */
+    border: 2px solid rgba(255,255,255,0.5);
+    border-radius: 20px;
+    backdrop-filter: blur(25px);
+    padding: 2.5rem 2rem;
     z-index: 5;
-    border-radius: 14px;
-    background: rgba(255, 255, 255, 0.12);
-    backdrop-filter: blur(14px) saturate(140%);
-    box-shadow: 0 8px 30px rgba(2, 6, 23, 0.45);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    color: #fff;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+    color: #ffffff;
   }
 
-  .card h1, .card p, .card label { color: #fff; }
-  .form-control {
-    background: rgba(0,0,0,0.25);
-    border: 1px solid rgba(255,255,255,0.1);
-    color: #fff;
+  section.login-form h1 {
+    text-align: center;
+    font-size: 2rem;
+    margin-bottom: 1.5rem;
+    color: #ffffff;
   }
-  .form-control::placeholder { color: rgba(255,255,255,0.7); }
 
-  .btn-primary {
-    background: linear-gradient(90deg, #3b82f6, #7c3aed);
+  .inputbox {
+    position: relative;
+    margin-bottom: 1.5rem;
+  }
+
+  .inputbox input {
+    width: 100%;
+    padding: 0.75rem 2.5rem 0.75rem 0.75rem;
+    background: transparent;
     border: none;
+    border-bottom: 2px solid #ffffff;
+    color: #ffffff;
+    font-size: 1rem;
+    outline: none;
+  }
+
+  .inputbox label {
+    position: absolute;
+    left: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: rgba(255,255,255,0.9);
+    font-size: 1rem;
+    pointer-events: none;
+    transition: all 0.4s ease;
+  }
+
+  .inputbox input:focus ~ label,
+  .inputbox input:valid ~ label {
+    top: -10px;
+    font-size: 0.85rem;
+    color: #ffffff;
+  }
+
+  .inputbox .icon {
+    position: absolute;
+    right: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1.2rem;
+    color: #ffffff;
+  }
+
+  .remember-forget {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    font-size: 0.9rem;
+    color: #ffffff;
+  }
+
+  .remember-forget a {
+    color: #ffffff;
+    text-decoration: none;
+    font-weight: 600;
+  }
+  .remember-forget a:hover {
+    text-decoration: underline;
+  }
+
+  .btn-login {
+    width: 100%;
+    padding: 0.8rem;
+    border: none;
+    border-radius: 30px;
+    background: #ffffff;
+    color: #4f46e5; /* dark purple for text */
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+  .btn-login:hover {
+    background: rgba(255,255,255,0.8);
+  }
+
+  /* Adjust placeholders */
+  .login-form input::placeholder { /* if using placeholder attr */
+    color: rgba(255,255,255,0.7);
   }
 </style>
 
-<!-- Animated wave background (middle screen) -->
+<!-- Waves background -->
 <div class="wave-stage">
   <div class="wave w3">
     <svg viewBox="0 0 1440 320" preserveAspectRatio="none">
@@ -114,32 +194,31 @@
 </div>
 
 <!-- Login form -->
-<div class="container">
-  <div class="row justify-content-center">
-    <div class="col-xl-5 col-lg-6 col-md-8">
-      <div class="card shadow-lg my-5">
-        <div class="card-body p-5">
-          <div class="text-center mb-4">
-            <h1 class="h4">Prestige Supported Living Care Limited</h1>
-            <p>Welcome back! Please login</p>
-          </div>
-          <form class="user" method="POST">
-            {% csrf_token %}
-            <div class="form-group mb-3">
-              <input type="text" class="form-control form-control-user"
-                     name="username" placeholder="Enter Username..." required>
-            </div>
-            <div class="form-group mb-4">
-              <input type="password" class="form-control form-control-user"
-                     name="password" placeholder="Password" required>
-            </div>
-            <button type="submit" class="btn btn-primary btn-user btn-block">
-              Login
-            </button>
-          </form>
-        </div>
-      </div>
+<section class="login-form">
+  <h1>Prestige Supported Living Care Limited</h1>
+
+  <form method="POST">
+    {% csrf_token %}
+
+    <div class="inputbox">
+      <input type="text" name="username" required />
+      <label>Username</label>
+      <span class="icon">👤</span>
     </div>
-  </div>
-</div>
+
+    <div class="inputbox">
+      <input type="password" name="password" required />
+      <label>Password</label>
+      <span class="icon">🔒</span>
+    </div>
+
+    <div class="remember-forget">
+      <label><input type="checkbox" name="remember_me" /> Remember Me</label>
+      <a href="#">Forgot Password?</a>
+    </div>
+
+    <button type="submit" class="btn-login">Log In</button>
+  </form>
+
+</section>
 {% endblock %}
