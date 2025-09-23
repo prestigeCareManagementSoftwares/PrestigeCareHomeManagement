@@ -62,7 +62,7 @@ function loadPreview() {
         JsBarcode(barcodeElements, data.qr_code_value, {
             format: "CODE128",
             displayValue: false,
-            height: 35,
+            height: 40,
             width: 2,
             margin: 25,
             background: "transparent",
@@ -164,7 +164,7 @@ document.addEventListener("DOMContentLoaded", function() {
 .name {
     font-size: 24px;
     font-weight: bold;
-    margin-top: 25px;
+    margin-top: 20px;
 }
 .name span:last-child {
     color: #8e44ad;
@@ -180,7 +180,7 @@ document.addEventListener("DOMContentLoaded", function() {
     left: 10%;             /* horizontal center */
     transform: translateX(-50%);
     max-width: 90%;        /* leave 5% margin on left & right */
-    height: 60px;          /* fixed height */
+    height: 70px;          /* fixed height */
     z-index: 10;
 }
 </style>
