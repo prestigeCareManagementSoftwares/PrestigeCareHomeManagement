@@ -12,6 +12,7 @@
 {% endblock %}
 
 {% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.0/dist/JsBarcode.all.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
 
@@ -22,17 +23,19 @@ const data = {
     last_name: "{{ last_name }}",
     role: "{{ role }}",
     photo: "{{ photo }}",
-    id: "{{ id }}"
+    qr_code_value: "{{ qr_code_value }}",
+    id: "{{ request.user.id }}",
 };
+
+function getInitials(first, last) {
+    return `${first[0].toUpperCase()}${last[0].toUpperCase()}`;
+}
 
 // Render ID card previews
 function loadPreview() {
-    const firstName = data.first_name;
-    const lastName = data.last_name;
-
     const container = document.getElementById("previewContainer");
     container.innerHTML = `
-        <!-- Front template -->
+        <!-- Front side -->
         <div class="id-card mb-3">
             <img src="{% static 'core/images/front-template.png' %}" class="template" />
             <div class="content">
@@ -40,45 +43,42 @@ function loadPreview() {
                     <img src="${data.photo}" alt="Profile" />
                 </div>
                 <div class="info">
-                    <div class="name"><span>${firstName}</span> <span>${lastName}</span></div>
+                    <div class="name"><span>${data.first_name}</span> <span>${data.last_name}</span></div>
                     <div class="role">${data.role}</div>
                 </div>
             </div>
         </div>
 
-        <!-- Back template -->
+        <!-- Back side -->
         <div class="id-card">
             <img src="{% static 'core/images/back-template.png' %}" class="template" />
-            <div class="content">
-                <div class="profile-pic">
-                    <img src="${data.photo}" alt="Profile" />
-                </div>
-                <div class="info">
-                    <div class="name"><span>${firstName}</span> <span>${lastName}</span></div>
-                    <div class="role">${data.role}</div>
-                </div>
-            </div>
+            <svg class="barcode"></svg>
         </div>
     `;
-}
 
-// Convert name to initials
-function getInitials(first, last) {
-    return `${first[0].toUpperCase()}${last[0].toUpperCase()}`;
+    // Generate QR code on back
+    setTimeout(() => {
+        const barcodeElements = document.querySelector('.barcode');
+        JsBarcode(barcodeElements, data.qr_code_value, {
+            format: "CODE128",
+            displayValue: true,
+            height: 35,
+            width: 2,
+            margin: 15,
+            background: "transparent",
+            lineColor: "#000",
+            textAlign: "center",
+            fontSize: 20
+        });
+    }, 200);
 }
 
 // Download front & back ID cards as ZIP
 async function downloadIDCards() {
     try {
-        if (!data.first_name || !data.last_name || !data.id) {
-            alert("Missing user data.");
-            return;
-        }
-
         const initials = getInitials(data.first_name, data.last_name);
-        const idPart = data.id;
         const cards = document.querySelectorAll('.id-card');
-        if (cards.length === 0) return;
+        if (!cards.length) return;
 
         const zip = new JSZip();
         const folder = zip.folder("Employee_ID_Cards");
@@ -87,7 +87,7 @@ async function downloadIDCards() {
             const canvas = await html2canvas(cards[i]);
             const imageData = canvas.toDataURL('image/png').split(',')[1];
             const side = i === 0 ? 'front' : 'back';
-            const filename = `${initials}_${idPart}_${side}_id_card.png`;
+            const filename = `${initials}_${data.id}_${side}_id_card.png`;
             folder.file(filename, imageData, { base64: true });
         }
 
@@ -95,7 +95,7 @@ async function downloadIDCards() {
         const url = URL.createObjectURL(content);
         const link = document.createElement('a');
         link.href = url;
-        link.download = `${initials}_${idPart}_id_cards.zip`;
+        link.download = `${initials}_${data.id}_id_cards.zip`;
         document.body.appendChild(link);
         link.click();
         setTimeout(() => {
@@ -173,6 +173,13 @@ document.addEventListener("DOMContentLoaded", function() {
     font-size: 18px;
     color: #8e44ad;
     margin-top: 5px;
+}
+.barcode {
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 10;
+    position: absolute;
 }
 </style>
 {% endblock %}

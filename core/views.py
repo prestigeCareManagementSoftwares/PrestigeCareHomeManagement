@@ -1598,14 +1598,20 @@ def get_service_users(request):
 
 def id_card_preview(request, user_id):
     staff = get_object_or_404(CustomUser, pk=user_id)
+
+    # Calculate expiry as 1 year after date_of_joining
+    if staff.date_of_joining:
+        expiry_date = staff.date_of_joining + relativedelta(years=1)
+        expiry_str = expiry_date.strftime("%m/%Y")
+    else:
+        expiry_str = "N/A"
+
     context = {
         "first_name": staff.first_name,
         "last_name": staff.last_name,
         "role": staff.get_role_display(),
-        "email": staff.email,
-        "phone": staff.phone,
-        "id": staff.id,
-        "expiry": "12/2025",  # Replace with real expiry if needed
         "photo": staff.image.url if staff.image else "/static/img/default-profile.png",
+        "qr_code_value": f"PCMS{staff.first_name}{staff.last_name}{expiry_str}",
+        "expiry": expiry_str,
     }
     return render(request, "staff/id_card_preview.html", context)
