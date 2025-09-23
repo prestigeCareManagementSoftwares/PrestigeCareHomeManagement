@@ -17,169 +17,171 @@
 <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
 
 <script>
-    // Django context data
-    const data = {
-        first_name: "{{ first_name }}",
-        last_name: "{{ last_name }}",
-        role: "{{ role }}",
-        photo: "{{ photo }}",
-        qr_code_value: "{{ qr_code_value }}",
-        id: "{{ request.user.id }}",
-    };
+// Django context data
+const data = {
+    first_name: "{{ first_name }}",
+    last_name: "{{ last_name }}",
+    role: "{{ role }}",
+    photo: "{{ photo }}",
+    qr_code_value: "{{ qr_code_value }}",
+    id: "{{ request.user.id }}",
+};
 
-    function getInitials(first, last) {
-        return `${first[0].toUpperCase()}${last[0].toUpperCase()}`;
-    }
+function getInitials(first, last) {
+    return `${first[0].toUpperCase()}${last[0].toUpperCase()}`;
+}
 
-    // Render ID card previews
-    function loadPreview() {
-        const container = document.getElementById("previewContainer");
-        container.innerHTML = `
-            <!-- Front side -->
-            <div class="id-card mb-3">
-                <img src="{% static 'core/images/front-template.png' %}" class="template" />
-                <div class="content">
-                    <div class="profile-pic">
-                        <img src="${data.photo}" alt="Profile" />
-                    </div>
-                    <div class="info">
-                        <div class="name"><span>${data.first_name}</span> <span>${data.last_name}</span></div>
-                        <div class="role">Support Worker</div>
-                    </div>
+// Render ID card previews
+function loadPreview() {
+    const container = document.getElementById("previewContainer");
+    container.innerHTML = `
+        <!-- Front side -->
+        <div class="id-card mb-3">
+            <img src="{% static 'core/images/front-template.png' %}" class="template" />
+            <div class="content">
+                <div class="profile-pic">
+                    <img src="${data.photo}" alt="Profile" />
+                </div>
+                <div class="info">
+                    <div class="name"><span>${data.first_name}</span> <span>${data.last_name}</span></div>
+                    <div class="role">Support Worker</div>
                 </div>
             </div>
+        </div>
 
-            <!-- Back side -->
-            <div class="id-card">
-                <img src="{% static 'core/images/back-template.png' %}" class="template" />
-                <svg class="barcode"></svg>
-            </div>
-        `;
+        <!-- Back side -->
+        <div class="id-card">
+            <img src="{% static 'core/images/back-template.png' %}" class="template" />
+            <svg class="barcode"></svg>
+        </div>
+    `;
 
-        // Generate QR code on back
-        setTimeout(() => {
-            const barcodeElements = document.querySelector('.barcode');
-            JsBarcode(barcodeElements, data.qr_code_value, {
-        format: "CODE128",
-        displayValue: false,   // hide text
-        height: 60,
-        width: 2,              // line thickness
-        margin: 0,             // no extra margin
-        background: "transparent",
-        lineColor: "#000"
-    });
+    // Generate QR code on back
+    setTimeout(() => {
+        const barcodeElements = document.querySelector('.barcode');
+        JsBarcode(barcodeElements, data.qr_code_value, {
+            format: "CODE128",
+            displayValue: false,
+            height: 35,
+            width: 2,
+            margin: 25,
+            background: "transparent",
+            lineColor: "#000",
+            textAlign: "center",
+            fontSize: 20
+        });
+    }, 200);
+}
 
-    }
+// Download front & back ID cards as ZIP
+async function downloadIDCards() {
+    try {
+        const initials = getInitials(data.first_name, data.last_name);
+        const cards = document.querySelectorAll('.id-card');
+        if (!cards.length) return;
 
-    // Download front & back ID cards as ZIP
-    async function downloadIDCards() {
-        try {
-            const initials = getInitials(data.first_name, data.last_name);
-            const cards = document.querySelectorAll('.id-card');
-            if (!cards.length) return;
+        const zip = new JSZip();
+        const folder = zip.folder("Employee_ID_Cards");
 
-            const zip = new JSZip();
-            const folder = zip.folder("Employee_ID_Cards");
-
-            for (let i = 0; i < cards.length; i++) {
-                const canvas = await html2canvas(cards[i]);
-                const imageData = canvas.toDataURL('image/png').split(',')[1];
-                const side = i === 0 ? 'front' : 'back';
-                const filename = `${initials}_${data.id}_${side}_id_card.png`;
-                folder.file(filename, imageData, { base64: true });
-            }
-
-            const content = await zip.generateAsync({ type: 'blob' });
-            const url = URL.createObjectURL(content);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = `${initials}_${data.id}_id_cards.zip`;
-            document.body.appendChild(link);
-            link.click();
-            setTimeout(() => {
-                document.body.removeChild(link);
-                URL.revokeObjectURL(url);
-            }, 100);
-        } catch (error) {
-            console.error("Download failed:", error);
-            alert("Download failed. Please try again.");
+        for (let i = 0; i < cards.length; i++) {
+            const canvas = await html2canvas(cards[i]);
+            const imageData = canvas.toDataURL('image/png').split(',')[1];
+            const side = i === 0 ? 'front' : 'back';
+            const filename = `${initials}_${data.id}_${side}_id_card.png`;
+            folder.file(filename, imageData, { base64: true });
         }
-    }
 
-    // Initialize preview and download
-    document.addEventListener("DOMContentLoaded", function() {
-        loadPreview();
-        document.getElementById("downloadBtn").addEventListener("click", downloadIDCards);
-    });
+        const content = await zip.generateAsync({ type: 'blob' });
+        const url = URL.createObjectURL(content);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `${initials}_${data.id}_id_cards.zip`;
+        document.body.appendChild(link);
+        link.click();
+        setTimeout(() => {
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }, 100);
+    } catch (error) {
+        console.error("Download failed:", error);
+        alert("Download failed. Please try again.");
+    }
+}
+
+// Initialize preview and download
+document.addEventListener("DOMContentLoaded", function() {
+    loadPreview();
+    document.getElementById("downloadBtn").addEventListener("click", downloadIDCards);
+});
 </script>
 
 <style>
-    /* ID card styling */
-    .id-card {
-        width: 500px;
-        height: 300px;
-        background: white;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-        border-radius: 12px;
-        position: relative;
-        overflow: hidden;
-        padding: 20px;
-        margin-bottom: 30px;
-    }
-    .id-card .template {
-        position: absolute;
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        z-index: 1;
-        top: 0;
-        left: 0;
-    }
-    .id-card .content {
-        position: relative;
-        z-index: 2;
-        display: flex;
-        align-items: center;
-        height: 100%;
-    }
-    .profile-pic {
-        width: 140px;
-        height: 140px;
-        border-radius: 50%;
-        overflow: hidden;
-        margin-right: 20px;
-        margin-left: 30px;
-        flex-shrink: 0;
-    }
-    .profile-pic img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
-    .info {
-        flex-grow: 1;
-    }
-    .name {
-        font-size: 24px;
-        font-weight: bold;
-        margin-top: 30px;
-    }
-    .name span:last-child {
-        color: #8e44ad;
-    }
-    .role {
-        font-size: 18px;
-        color: #8e44ad;
-        margin-top: 5px;
-    }
-    .barcode {
-        position: absolute;
-        bottom: 30px;          /* distance from bottom */
-        left: 50%;             /* horizontal center */
-        transform: translateX(-50%);
-        max-width: 90%;        /* leave 5% margin on left & right */
-        height: 60px;          /* fixed height */
-        z-index: 10;
-    }
+/* ID card styling */
+.id-card {
+    width: 500px;
+    height: 300px;
+    background: white;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    border-radius: 12px;
+    position: relative;
+    overflow: hidden;
+    padding: 20px;
+    margin-bottom: 30px;
+}
+.id-card .template {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: 1;
+    top: 0;
+    left: 0;
+}
+.id-card .content {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    height: 100%;
+}
+.profile-pic {
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    overflow: hidden;
+    margin-right: 20px;
+    margin-left: 30px;
+    flex-shrink: 0;
+}
+.profile-pic img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.info {
+    flex-grow: 1;
+}
+.name {
+    font-size: 24px;
+    font-weight: bold;
+    margin-top: 30px;
+}
+.name span:last-child {
+    color: #8e44ad;
+}
+.role {
+    font-size: 18px;
+    color: #8e44ad;
+    margin-top: 5px;
+}
+.barcode {
+    position: absolute;
+    bottom: 30px;          /* distance from bottom */
+    left: 50%;             /* horizontal center */
+    transform: translateX(-50%);
+    max-width: 90%;        /* leave 5% margin on left & right */
+    height: 60px;          /* fixed height */
+    z-index: 10;
+}
 </style>
 {% endblock %}
