@@ -1,10 +1,8 @@
-<!-- core/templates/core/login.html -->
 {% extends "core/base_login.html" %}
 {% load static %}
 
 {% block content %}
 <style>
-  /* Import font like in the article */
   @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@500;600&display=swap');
 
   body {
@@ -15,20 +13,18 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(135deg, #A3BFFA, #C084FC); /* Softer care-home friendly purple/blue gradient */
+    background: linear-gradient(135deg, #A3BFFA, #C084FC);
     overflow: hidden;
     position: relative;
   }
 
-  /* Wave background, centered around middle */
+  /* Waves background */
   .wave-stage {
     position: fixed;
     inset: 0;
     z-index: 0;
     pointer-events: none;
-    filter: saturate(120%);
   }
-
   .wave {
     position: absolute;
     left: 50%;
@@ -37,39 +33,57 @@
     height: 50vh;
     min-height: 200px;
   }
-
-  .w1 { top: 40%; animation: drift1 16s ease-in-out infinite alternate, bob 12s ease-in-out infinite; opacity: 0.6; }
-  .w2 { top: 50%; animation: drift2 22s ease-in-out infinite alternate, bob 16s ease-in-out infinite; opacity: 0.45; }
-  .w3 { top: 60%; animation: drift3 28s ease-in-out infinite alternate, bob 20s ease-in-out infinite; opacity: 0.30; }
+  .w1 { top: 40%; animation: drift1 16s ease-in-out infinite alternate; opacity: 0.6; }
+  .w2 { top: 50%; animation: drift2 22s ease-in-out infinite alternate; opacity: 0.45; }
+  .w3 { top: 60%; animation: drift3 28s ease-in-out infinite alternate; opacity: 0.30; }
 
   @keyframes drift1 { from { transform: translate(-55%,0); } to { transform: translate(-45%,0); } }
   @keyframes drift2 { from { transform: translate(-60%,0); } to { transform: translate(-40%,0); } }
   @keyframes drift3 { from { transform: translate(-65%,0); } to { transform: translate(-35%,0); } }
 
-  @keyframes bob {
-    0%,100% { transform: translateY(0) translateX(-50%); }
-    50% { transform: translateY(-10px) translateX(-50%); }
+  /* Layout split */
+  .login-wrapper {
+    position: relative;
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 90%;
+    max-width: 1200px;
+    gap: 2rem;
   }
 
-  /* Glassmorphic form section like article */
+  .left-panel {
+    flex: 1;
+    color: #fff;
+    text-align: center;
+  }
+  .left-panel img {
+    width: 120px;
+    margin-bottom: 1rem;
+  }
+  .left-panel h1 {
+    font-size: 1.8rem;
+    line-height: 1.4;
+    font-weight: 600;
+  }
+
+  .right-panel {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+  }
+
+  /* Glassmorphic form */
   section.login-form {
-    position: relative;
     width: 100%;
     max-width: 400px;
-    background: rgba(255,255,255,0.15); /* light translucent white */
+    background: rgba(255,255,255,0.15);
     border: 2px solid rgba(255,255,255,0.5);
     border-radius: 20px;
     backdrop-filter: blur(25px);
     padding: 2.5rem 2rem;
-    z-index: 5;
     box-shadow: 0 8px 20px rgba(0,0,0,0.25);
-    color: #ffffff;
-  }
-
-  section.login-form h1 {
-    text-align: center;
-    font-size: 2rem;
-    margin-bottom: 1.5rem;
     color: #ffffff;
   }
 
@@ -100,8 +114,10 @@
     transition: all 0.4s ease;
   }
 
+  /* Float up when focused, filled, or autofilled */
   .inputbox input:focus ~ label,
-  .inputbox input:valid ~ label {
+  .inputbox input:not(:placeholder-shown) ~ label,
+  .inputbox input:-webkit-autofill ~ label {
     top: -10px;
     font-size: 0.85rem;
     color: #ffffff;
@@ -125,22 +141,13 @@
     color: #ffffff;
   }
 
-  .remember-forget a {
-    color: #ffffff;
-    text-decoration: none;
-    font-weight: 600;
-  }
-  .remember-forget a:hover {
-    text-decoration: underline;
-  }
-
   .btn-login {
     width: 100%;
     padding: 0.8rem;
     border: none;
     border-radius: 30px;
     background: #ffffff;
-    color: #4f46e5; /* dark purple for text */
+    color: #4f46e5;
     font-size: 1rem;
     font-weight: 600;
     cursor: pointer;
@@ -149,76 +156,46 @@
   .btn-login:hover {
     background: rgba(255,255,255,0.8);
   }
-
-  /* Adjust placeholders */
-  .login-form input::placeholder { /* if using placeholder attr */
-    color: rgba(255,255,255,0.7);
-  }
 </style>
 
 <!-- Waves background -->
 <div class="wave-stage">
-  <div class="wave w3">
-    <svg viewBox="0 0 1440 320" preserveAspectRatio="none">
-      <path fill="url(#g1)" d="M0,96L40,117.3C80,139,160,181,240,202.7C320,224,400,224,480,224C560,224,640,224,720,208C800,192,880,160,960,160C1040,160,1120,192,1200,186.7C1280,181,1360,139,1400,117.3L1440,96L1440,320L0,320Z"></path>
-      <defs>
-        <linearGradient id="g1" x1="0%" x2="100%">
-          <stop offset="0%" stop-color="#7c3aed" stop-opacity="0.9" />
-          <stop offset="100%" stop-color="#3b82f6" stop-opacity="0.9" />
-        </linearGradient>
-      </defs>
-    </svg>
-  </div>
-  <div class="wave w2">
-    <svg viewBox="0 0 1440 320" preserveAspectRatio="none">
-      <path fill="url(#g2)" d="M0,192L48,192C96,192,192,192,288,170.7C384,149,480,107,576,101.3C672,96,768,128,864,138.7C960,149,1056,139,1152,149.3C1248,160,1344,192,1392,208L1440,224L1440,320L0,320Z"></path>
-      <defs>
-        <linearGradient id="g2" x1="0%" x2="100%">
-          <stop offset="0%" stop-color="#60a5fa" stop-opacity="0.7" />
-          <stop offset="100%" stop-color="#8b5cf6" stop-opacity="0.7" />
-        </linearGradient>
-      </defs>
-    </svg>
-  </div>
-  <div class="wave w1">
-    <svg viewBox="0 0 1440 320" preserveAspectRatio="none">
-      <path fill="url(#g3)" d="M0,64L48,96C96,128,192,192,288,218.7C384,245,480,235,576,224C672,213,768,203,864,181.3C960,160,1056,128,1152,117.3C1248,107,1344,117,1392,122.7L1440,128L1440,320L0,320Z"></path>
-      <defs>
-        <linearGradient id="g3" x1="0%" x2="100%">
-          <stop offset="0%" stop-color="#4f46e5" stop-opacity="0.9" />
-          <stop offset="100%" stop-color="#06b6d4" stop-opacity="0.9" />
-        </linearGradient>
-      </defs>
-    </svg>
-  </div>
+  <!-- keep your SVG wave elements here like before -->
 </div>
 
-<!-- Login form -->
-<section class="login-form">
-  <h1>Prestige Supported Living Care Limited</h1>
+<div class="login-wrapper">
+  <!-- Left side: name + logo -->
+  <div class="left-panel">
+    <img src="{% static 'images/carehome_logo.png' %}" alt="Carehome Logo">
+    <h1>Prestige Supported Living Care Limited</h1>
+  </div>
 
-  <form method="POST">
-    {% csrf_token %}
+  <!-- Right side: form -->
+  <div class="right-panel">
+    <section class="login-form">
+      <form method="POST">
+        {% csrf_token %}
 
-    <div class="inputbox">
-      <input type="text" name="username" required />
-      <label>Username</label>
-      <span class="icon">👤</span>
-    </div>
+        <div class="inputbox">
+          <input type="text" name="username" placeholder=" " required />
+          <label>Username</label>
+          <span class="icon">👤</span>
+        </div>
 
-    <div class="inputbox">
-      <input type="password" name="password" required />
-      <label>Password</label>
-      <span class="icon">🔒</span>
-    </div>
+        <div class="inputbox">
+          <input type="password" name="password" placeholder=" " required />
+          <label>Password</label>
+          <span class="icon">🔒</span>
+        </div>
 
-    <div class="remember-forget">
-      <label><input type="checkbox" name="remember_me" /> Remember Me</label>
-      <a href="#">Forgot Password?</a>
-    </div>
+        <div class="remember-forget">
+          <label><input type="checkbox" name="remember_me" /> Remember Me</label>
+          <a href="#">Forgot Password?</a>
+        </div>
 
-    <button type="submit" class="btn-login">Log In</button>
-  </form>
-
-</section>
+        <button type="submit" class="btn-login">Log In</button>
+      </form>
+    </section>
+  </div>
+</div>
 {% endblock %}
