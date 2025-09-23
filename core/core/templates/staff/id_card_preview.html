@@ -61,7 +61,7 @@ function loadPreview() {
         const barcodeElements = document.querySelector('.barcode');
         JsBarcode(barcodeElements, data.qr_code_value, {
             format: "CODE128",
-            displayValue: true,
+            displayValue: false,
             height: 35,
             width: 2,
             margin: 15,
@@ -164,7 +164,7 @@ document.addEventListener("DOMContentLoaded", function() {
 .name {
     font-size: 24px;
     font-weight: bold;
-    margin-top: 50px;
+    margin-top: 40px;
 }
 .name span:last-child {
     color: #8e44ad;
@@ -175,8 +175,8 @@ document.addEventListener("DOMContentLoaded", function() {
     margin-top: 5px;
 }
 .barcode {
-    top: 50%;
-    left: 50%;
+    top: 55%;
+    left: 20%;
     transform: translate(-50%, -50%);
     z-index: 10;
     position: absolute;
