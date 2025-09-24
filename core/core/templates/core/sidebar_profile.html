@@ -1,30 +1,71 @@
 <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
-    <!-- Profile header -->
-    <div class="sidebar-brand d-flex flex-column align-items-center py-4">
-        {% if user_profile.image %}
-          <img src="{{ user_profile.image.url }}" class="rounded-circle mb-2" width="80">
-        {% else %}
-          <img src="{% static 'img/undraw_profile.svg' %}" class="rounded-circle mb-2" width="80">
-        {% endif %}
-        <h6 class="text-white">{{ user_profile.get_full_name }}</h6>
-        <a class="btn btn-sm btn-light mt-2"><i class="fas fa-edit"></i> Edit</a>
-    </div>
 
-    <hr class="sidebar-divider">
+  <!-- Profile Section -->
+  <div class="sidebar-brand d-flex flex-column align-items-center py-4">
+    <img src="{% static 'img/undraw_profile.svg' %}" class="rounded-circle mb-2 border border-light" width="90" height="90">
+    <h6 class="text-white font-weight-bold">John Doe</h6>
+    <small class="text-light">Staff Member</small>
+    <a href="#" class="btn btn-sm btn-light mt-2">
+      <i class="fas fa-edit"></i> Edit Profile
+    </a>
+  </div>
 
-    <li class="nav-item">
-        <a class="nav-link" href="#profile-info"><i class="fas fa-user"></i><span>Profile Info</span></a>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link" href="#logs"><i class="fas fa-history"></i><span>Logs</span></a>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link" href="#incidents"><i class="fas fa-exclamation-circle"></i><span>Incidents</span></a>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link" href="#docs"><i class="fas fa-file-alt"></i><span>Documents</span></a>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link" href="#notifications"><i class="fas fa-bell"></i><span>Notifications</span></a>
-    </li>
+  <hr class="sidebar-divider">
+
+  <!-- Sidebar Menu -->
+  <li class="nav-item active">
+    <a class="nav-link" href="#profile-info">
+      <i class="fas fa-user"></i>
+      <span>Profile Info</span>
+    </a>
+  </li>
+
+  <li class="nav-item">
+    <a class="nav-link" href="#logs">
+      <i class="fas fa-history"></i>
+      <span>Logs</span>
+    </a>
+  </li>
+
+  <li class="nav-item">
+    <a class="nav-link" href="#incidents">
+      <i class="fas fa-exclamation-circle"></i>
+      <span>Incidents</span>
+    </a>
+  </li>
+
+  <li class="nav-item">
+    <a class="nav-link" href="#docs">
+      <i class="fas fa-file-alt"></i>
+      <span>Documents</span>
+    </a>
+  </li>
+
+  <li class="nav-item">
+    <a class="nav-link" href="#notifications">
+      <i class="fas fa-bell"></i>
+      <span>Notifications</span>
+    </a>
+  </li>
+
+  <li class="nav-item">
+    <a class="nav-link" href="#attendance">
+      <i class="fas fa-clock"></i>
+      <span>Check-in / Out</span>
+    </a>
+  </li>
+
+  <li class="nav-item">
+    <a class="nav-link" href="#mapping">
+      <i class="fas fa-project-diagram"></i>
+      <span>Mapping</span>
+    </a>
+  </li>
+
+  <hr class="sidebar-divider d-none d-md-block">
+
+  <!-- Sidebar Toggler -->
+  <div class="text-center d-none d-md-inline">
+    <button class="rounded-circle border-0" id="sidebarToggle"></button>
+  </div>
 </ul>
