@@ -5,9 +5,9 @@
 <div class="container-fluid">
   <div class="row">
 
-    <!-- Sidebar -->
-    <div class="col-md-3">
-      <div class="card shadow mb-4">
+    <!-- Left Sidebar -->
+    <div class="col-md-3 mb-4">
+      <div class="card shadow-sm">
         <div class="card-body text-center">
           {% if user_profile.image %}
             <img src="{{ user_profile.image.url }}" class="rounded-circle mb-3" width="120">
@@ -16,94 +16,113 @@
           {% endif %}
           <h4>{{ user_profile.get_full_name }}</h4>
           <p class="text-muted">{{ user_profile.get_role_display }}</p>
-          <a href="{% url '#' %}" class="btn btn-sm btn-outline-primary">
+          <a href="{% url 'profile_edit' %}" class="btn btn-sm btn-outline-primary">
             <i class="fas fa-edit"></i> Edit Profile
           </a>
         </div>
-      </div>
 
-      <div class="list-group shadow-sm">
-        <a href="#profile-info" class="list-group-item list-group-item-action active" data-toggle="list">
-          <i class="fas fa-user mr-2"></i> Profile Info
-        </a>
-        <a href="#logs" class="list-group-item list-group-item-action" data-toggle="list">
-          <i class="fas fa-history mr-2"></i> Logs
-        </a>
-        <a href="#incidents" class="list-group-item list-group-item-action" data-toggle="list">
-          <i class="fas fa-exclamation-circle mr-2"></i> Incidents
-        </a>
-        <a href="#abc" class="list-group-item list-group-item-action" data-toggle="list">
-          <i class="fas fa-tasks mr-2"></i> ABC Monitoring
-        </a>
-        <a href="#docs" class="list-group-item list-group-item-action" data-toggle="list">
-          <i class="fas fa-file-alt mr-2"></i> Documents
-        </a>
-        <a href="#notifications" class="list-group-item list-group-item-action" data-toggle="list">
-          <i class="fas fa-bell mr-2"></i> Notifications
-        </a>
-        <a href="#attendance" class="list-group-item list-group-item-action" data-toggle="list">
-          <i class="fas fa-clock mr-2"></i> Check-in/Out
-        </a>
-        <a href="#mapping" class="list-group-item list-group-item-action" data-toggle="list">
-          <i class="fas fa-project-diagram mr-2"></i> Mapping
-        </a>
+        <!-- Sidebar Menu -->
+        <div class="list-group list-group-flush">
+          <a href="#profile-info" class="list-group-item list-group-item-action active" data-toggle="list">
+            <i class="fas fa-user mr-2"></i> Profile Info
+          </a>
+          <a href="#logs" class="list-group-item list-group-item-action" data-toggle="list">
+            <i class="fas fa-history mr-2"></i> Logs
+          </a>
+          <a href="#incidents" class="list-group-item list-group-item-action" data-toggle="list">
+            <i class="fas fa-exclamation-circle mr-2"></i> Incidents
+          </a>
+          <a href="#abc" class="list-group-item list-group-item-action" data-toggle="list">
+            <i class="fas fa-tasks mr-2"></i> ABC Monitoring
+          </a>
+          <a href="#docs" class="list-group-item list-group-item-action" data-toggle="list">
+            <i class="fas fa-file-alt mr-2"></i> Documents
+          </a>
+          <a href="#notifications" class="list-group-item list-group-item-action" data-toggle="list">
+            <i class="fas fa-bell mr-2"></i> Notifications
+          </a>
+          <a href="#attendance" class="list-group-item list-group-item-action" data-toggle="list">
+            <i class="fas fa-clock mr-2"></i> Check-in/Out
+          </a>
+          <a href="#mapping" class="list-group-item list-group-item-action" data-toggle="list">
+            <i class="fas fa-project-diagram mr-2"></i> Mapping
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="col-md-9 mb-4">
+      <div class="card shadow-sm p-4 bg-white rounded">
+
+        <div class="tab-content">
+
+          <!-- Profile Info -->
+          <div class="tab-pane fade show active" id="profile-info">
+            <h5 class="mb-3">Personal Info</h5>
+            <p><b>Address:</b> {{ user_profile.address|default:"-" }}</p>
+            <p><b>Postcode:</b> {{ user_profile.postcode|default:"-" }}</p>
+            <p><b>Date Joined:</b> {{ user_profile.date_of_joining|default:"-" }}</p>
+
+            <h5 class="mt-4">Next of Kin</h5>
+            <p>{{ user_profile.next_of_kin_first_name|default:"-" }} {{ user_profile.next_of_kin_last_name|default:"-" }}</p>
+            <p>{{ user_profile.next_of_kin_phone|default:"-" }}</p>
+            <p>{{ user_profile.next_of_kin_email|default:"-" }}</p>
+          </div>
+
+          <!-- Logs -->
+          <div class="tab-pane fade" id="logs">
+            <p class="text-muted">Logs content goes here...</p>
+          </div>
+
+          <!-- Incidents -->
+          <div class="tab-pane fade" id="incidents">
+            <p class="text-muted">Incidents content goes here...</p>
+          </div>
+
+          <!-- ABC Monitoring -->
+          <div class="tab-pane fade" id="abc">
+            <p class="text-muted">ABC Monitoring content goes here...</p>
+          </div>
+
+          <!-- Documents -->
+          <div class="tab-pane fade" id="docs">
+            <p class="text-muted">Documents content goes here...</p>
+          </div>
+
+          <!-- Notifications -->
+          <div class="tab-pane fade" id="notifications">
+            <p class="text-muted">Notifications content goes here...</p>
+          </div>
+
+          <!-- Check-in/Out -->
+          <div class="tab-pane fade" id="attendance">
+            <p class="text-muted">Check-in/Out content goes here...</p>
+          </div>
+
+          <!-- Mapping -->
+          <div class="tab-pane fade" id="mapping">
+            <p class="text-muted">Mapping content goes here...</p>
+          </div>
+
+        </div>
       </div>
     </div>
 
-    <!-- Main content -->
-    <div class="col-md-9">
-      <div class="tab-content shadow-sm p-4 bg-white rounded">
-
-        <!-- Profile Info -->
-        <div class="tab-pane fade show active" id="profile-info">
-          <h5 class="mb-3">Personal Info</h5>
-          <p><b>Address:</b> {{ user_profile.address }}</p>
-          <p><b>Postcode:</b> {{ user_profile.postcode }}</p>
-          <p><b>Date Joined:</b> {{ user_profile.date_of_joining }}</p>
-
-          <h5 class="mt-4">Next of Kin</h5>
-          <p>{{ user_profile.next_of_kin_first_name }} {{ user_profile.next_of_kin_last_name }}</p>
-          <p>{{ user_profile.next_of_kin_phone }}</p>
-          <p>{{ user_profile.next_of_kin_email }}</p>
-        </div>
-
-        <!-- Logs -->
-        <div class="tab-pane fade" id="logs">
-          {% comment %}{% include "profile/partials/logs.html" %}{% endcomment %}
-        </div>
-
-        <!-- Incidents -->
-        <div class="tab-pane fade" id="incidents">
-          {% comment %}{% include "profile/partials/incidents.html" %}{% endcomment %}
-        </div>
-
-        <!-- ABC Monitoring -->
-        <div class="tab-pane fade" id="abc">
-          {% comment %}{% include "profile/partials/abc.html" %}{% endcomment %}
-        </div>
-
-        <!-- Documents -->
-        <div class="tab-pane fade" id="docs">
-          {% comment %}{% include "profile/partials/documents.html" %}{% endcomment %}
-        </div>
-
-        <!-- Notifications -->
-        <div class="tab-pane fade" id="notifications">
-          {% comment %}{% include "profile/partials/notifications.html" %}{% endcomment %}
-        </div>
-
-        <!-- Attendance -->
-        <div class="tab-pane fade" id="attendance">
-          {% comment %}{% include "profile/partials/attendance.html" %}{% endcomment %}
-        </div>
-
-        <!-- Mapping -->
-        <div class="tab-pane fade" id="mapping">
-          {% comment %}{% include "profile/partials/mapping.html" %}{% endcomment %}
-        </div>
-
-      </div>
-    </div>
   </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  $(document).ready(function(){
+    $('.list-group-item').on('click', function(e){
+      e.preventDefault();
+      $('.list-group-item').removeClass('active');
+      $(this).addClass('active');
+      $('.tab-pane').removeClass('show active');
+      $($(this).attr('href')).addClass('show active');
+    });
+  });
+</script>
 {% endblock %}
