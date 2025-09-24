@@ -52,33 +52,22 @@ function loadPreview() {
         <!-- Back side -->
         <div class="id-card">
             <img src="{% static 'core/images/back-template.png' %}" class="template" />
-            <svg class="barcode"></svg>
+            <canvas class="barcode"></canvas>
         </div>
     `;
 
-    // Generate QR code on back
+    // Generate barcode directly into canvas (works with html2canvas)
     setTimeout(() => {
-        const barcodeElements = document.querySelector('.barcode');
-        JsBarcode(barcodeElements, data.qr_code_value, {
+        const barcodeCanvas = document.querySelector('.barcode');
+        JsBarcode(barcodeCanvas, data.qr_code_value, {
             format: "CODE128",
             displayValue: false,
             height: 70,
             width: 2,
             margin: 25,
             background: "transparent",
-            lineColor: "#000",
-            textAlign: "center",
-            fontSize: 20
+            lineColor: "#000"
         });
-        const svgData = new XMLSerializer().serializeToString(barcodeElement);
-        const svgBlob = new Blob([svgData], { type: "image/svg+xml;charset=utf-8" });
-        const url = URL.createObjectURL(svgBlob);
-
-        const img = new Image();
-        img.onload = () => URL.revokeObjectURL(url); // cleanup
-        img.src = url;
-        img.className = "barcode-img"; // add class for CSS
-        barcodeElement.replaceWith(img);
     }, 200);
 }
 
@@ -185,11 +174,11 @@ document.addEventListener("DOMContentLoaded", function() {
 }
 .barcode {
     position: absolute;
-    bottom: 75px;          /* distance from bottom */
-    left: 30%;             /* horizontal center */
+    bottom: 75px;
+    left: 50%;
     transform: translateX(-50%);
-    max-width: 55%;        /* leave 5% margin on left & right */
-    height: 70px;          /* fixed height */
+    max-width: 55%;
+    height: 70px;
     z-index: 10;
 }
 </style>
