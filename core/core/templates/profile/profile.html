@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="row">
+  <!-- Left side: User profile card -->
+  <div class="col-md-4">
+    <div class="card shadow mb-4">
+      <div class="card-body text-center">
+        {% if user_profile.image %}
+          <img src="{{ user_profile.image.url }}" class="rounded-circle mb-3" width="120">
+        {% else %}
+          <img src="{% static 'img/undraw_profile.svg' %}" class="rounded-circle mb-3" width="120">
+        {% endif %}
+        <h4>{{ user_profile.get_full_name }}</h4>
+        <p class="text-muted">{{ user_profile.get_role_display }}</p>
+        <p><i class="fas fa-envelope"></i> {{ user_profile.email }}</p>
+        <p><i class="fas fa-phone"></i> {{ user_profile.phone }}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right side: Tabs for extra sections -->
+  <div class="col-md-8">
+    <div class="card shadow mb-4">
+      <div class="card-body">
+        <!-- Nav tabs -->
+        <ul class="nav nav-tabs" id="profileTabs" role="tablist">
+          <li class="nav-item">
+            <a class="nav-link active" id="info-tab" data-toggle="tab" href="#info" role="tab">Info</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" id="logs-tab" data-toggle="tab" href="#logs" role="tab">Logs</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" id="incident-tab" data-toggle="tab" href="#incident" role="tab">Incidents</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" id="abc-tab" data-toggle="tab" href="#abc" role="tab">ABC Monitoring</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" id="docs-tab" data-toggle="tab" href="#docs" role="tab">Documents</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" id="notif-tab" data-toggle="tab" href="#notif" role="tab">Notifications</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" id="attendance-tab" data-toggle="tab" href="#attendance" role="tab">Check-in/Out</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" id="mapping-tab" data-toggle="tab" href="#mapping" role="tab">Mapping</a>
+          </li>
+        </ul>
+
+        <!-- Tab content -->
+        <div class="tab-content mt-3">
+          <div class="tab-pane fade show active" id="info" role="tabpanel">
+            <h5>Personal Info</h5>
+            <p><b>Address:</b> {{ user_profile.address }}</p>
+            <p><b>Postcode:</b> {{ user_profile.postcode }}</p>
+            <p><b>Date Joined:</b> {{ user_profile.date_of_joining }}</p>
+
+            <h5>Next of Kin</h5>
+            <p>{{ user_profile.next_of_kin_first_name }} {{ user_profile.next_of_kin_last_name }}</p>
+            <p>{{ user_profile.next_of_kin_phone }}</p>
+            <p>{{ user_profile.next_of_kin_email }}</p>
+          </div>
+
+          <div class="tab-pane fade" id="logs" role="tabpanel">
+            {% include "profile/partials/logs.html" %}
+          </div>
+
+          <div class="tab-pane fade" id="incident" role="tabpanel">
+            {% include "profile/partials/incidents.html" %}
+          </div>
+
+          <div class="tab-pane fade" id="abc" role="tabpanel">
+            {% include "profile/partials/abc.html" %}
+          </div>
+
+          <div class="tab-pane fade" id="docs" role="tabpanel">
+            {% include "profile/partials/documents.html" %}
+          </div>
+
+          <div class="tab-pane fade" id="notif" role="tabpanel">
+            {% include "profile/partials/notifications.html" %}
+          </div>
+
+          <div class="tab-pane fade" id="attendance" role="tabpanel">
+            {% include "profile/partials/attendance.html" %}
+          </div>
+
+          <div class="tab-pane fade" id="mapping" role="tabpanel">
+            {% include "profile/partials/mapping.html" %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

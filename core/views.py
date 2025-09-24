@@ -11,6 +11,7 @@ import imgkit
 from PIL import Image
 from django.contrib.auth import authenticate, login, logout, get_user_model
 from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.files.base import ContentFile
 from django.db import transaction
 from django.db.models import Q
@@ -20,6 +21,7 @@ from django.utils.timezone import now
 from django.views.decorators.csrf import csrf_exempt
 import requests
 from django.views.decorators.http import require_POST, require_GET
+from django.views.generic import DetailView
 from weasyprint import HTML
 from weasyprint.text.fonts import FontConfiguration
 
@@ -1618,3 +1620,11 @@ def id_card_preview(request, user_id):
     }
 
     return render(request, "staff/id_card_preview.html", context)
+
+class ProfileView(LoginRequiredMixin, DetailView):
+    model = CustomUser
+    template_name = "profile/profile.html"
+    context_object_name = "user_profile"
+
+    def get_object(self, queryset=None):
+        return self.request.user
