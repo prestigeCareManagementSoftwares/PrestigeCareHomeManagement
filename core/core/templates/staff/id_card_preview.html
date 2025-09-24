@@ -32,7 +32,6 @@ function getInitials(first, last) {
 }
 
 // Render ID card previews
-// Render ID card previews
 function loadPreview() {
     const container = document.getElementById("previewContainer");
     container.innerHTML = `
@@ -57,29 +56,20 @@ function loadPreview() {
         </div>
     `;
 
-    // Generate barcode on back
+    // Generate QR code on back
     setTimeout(() => {
-        const barcodeElement = document.querySelector('.barcode');
-        JsBarcode(barcodeElement, data.qr_code_value, {
+        const barcodeElements = document.querySelector('.barcode');
+        JsBarcode(barcodeElements, data.qr_code_value, {
             format: "CODE128",
             displayValue: false,
             height: 70,
             width: 2,
             margin: 25,
             background: "transparent",
-            lineColor: "#000"
+            lineColor: "#000",
+            textAlign: "center",
+            fontSize: 20
         });
-
-        // ✅ Convert SVG barcode into an <img> so html2canvas captures it
-        const svgData = new XMLSerializer().serializeToString(barcodeElement);
-        const svgBlob = new Blob([svgData], { type: "image/svg+xml;charset=utf-8" });
-        const url = URL.createObjectURL(svgBlob);
-
-        const img = new Image();
-        img.onload = () => URL.revokeObjectURL(url); // cleanup
-        img.src = url;
-        img.className = "barcode-img";
-        barcodeElement.replaceWith(img);
     }, 200);
 }
 
