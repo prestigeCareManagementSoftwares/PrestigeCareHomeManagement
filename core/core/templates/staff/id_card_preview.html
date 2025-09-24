@@ -70,6 +70,15 @@ function loadPreview() {
             textAlign: "center",
             fontSize: 20
         });
+        const svgData = new XMLSerializer().serializeToString(barcodeElement);
+        const svgBlob = new Blob([svgData], { type: "image/svg+xml;charset=utf-8" });
+        const url = URL.createObjectURL(svgBlob);
+
+        const img = new Image();
+        img.onload = () => URL.revokeObjectURL(url); // cleanup
+        img.src = url;
+        img.className = "barcode-img"; // add class for CSS
+        barcodeElement.replaceWith(img);
     }, 200);
 }
 
@@ -95,7 +104,7 @@ async function downloadIDCards() {
         const url = URL.createObjectURL(content);
         const link = document.createElement('a');
         link.href = url;
-        link.download = `${initials}_${data.id}_id_cards.zip`;
+        link.download = `${initials}_id_cards.zip`;
         document.body.appendChild(link);
         link.click();
         setTimeout(() => {
