@@ -6,7 +6,7 @@ from django.urls import path, re_path
 from carehome_project import settings
 from . import views
 from .views import create_log_view, log_entry_form, save_log_entry, lock_log_entries, staff_latest_logs_view, \
-    staff_mapping_view, delete_mapping
+    staff_mapping_view, delete_mapping, ProfileView
 
 urlpatterns = ([
                    path('', views.login_view, name='login'),
