@@ -21,7 +21,10 @@
 <!-- Page Wrapper -->
 
 <div id="wrapper">
-    {% include 'core/sidebar.html' %}
+    {% block sidebar %}
+  {% include 'core/sidebar.html' %}
+{% endblock %}
+
 
     <!-- Content Wrapper -->
     <div id="content-wrapper" class="d-flex flex-column">
