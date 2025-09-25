@@ -1,20 +1,27 @@
 {% extends "core/sidebar.html" %}
-{% load static %}
-
-{% block sidebar %}
-  {% include 'core/sidebar_profile.html' %}
-{% endblock %}
 
 {% block content %}
-<div class="shadow-sm p-4 bg-white rounded">
-  <h5 class="mb-3">Personal Info</h5>
-  <p><b>Address:</b> {{ user_profile.address }}</p>
-  <p><b>Postcode:</b> {{ user_profile.postcode }}</p>
-  <p><b>Date Joined:</b> {{ user_profile.date_of_joining }}</p>
+<div class="row">
+  <!-- Profile Sidebar (left column) -->
+  <div class="col-md-3">
+    {% include "core/profile_sidebar.html" %}
+  </div>
 
-  <h5 class="mt-4">Next of Kin</h5>
-  <p>{{ user_profile.next_of_kin_first_name }} {{ user_profile.next_of_kin_last_name }}</p>
-  <p>{{ user_profile.next_of_kin_phone }}</p>
-  <p>{{ user_profile.next_of_kin_email }}</p>
+  <!-- Profile Content (right column) -->
+  <div class="col-md-9">
+    <div class="card shadow mb-4">
+      <div class="card-header py-3 d-flex justify-content-between align-items-center">
+        <h6 class="m-0 font-weight-bold text-primary">Profile Details</h6>
+        <a href="#" class="btn btn-sm btn-outline-light">
+          <i class="fas fa-edit"></i> Edit
+        </a>
+      </div>
+      <div class="card-body">
+        <p><strong>Name:</strong> John Doe</p>
+        <p><strong>Email:</strong> john@example.com</p>
+        <p><strong>Role:</strong> Admin</p>
+      </div>
+    </div>
+  </div>
 </div>
 {% endblock %}
