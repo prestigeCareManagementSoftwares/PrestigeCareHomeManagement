@@ -1,14 +1,12 @@
 {% extends "core/base.html" %}
 
+{% block sidebar %}
+  {% include "core/sidebar_profile.html" %}
+{% endblock %}
+
 {% block content %}
 <div class="row">
-  <!-- Profile Sidebar (left column) -->
-  <div class="col-md-3">
-    {% include "core/sidebar_profile.html" %}
-  </div>
-
-  <!-- Profile Content (right column) -->
-  <div class="col-md-9">
+  <div class="col-md-12">
     <div class="card shadow mb-4">
       <div class="card-header py-3 d-flex justify-content-between align-items-center">
         <h6 class="m-0 font-weight-bold text-primary">Profile Details</h6>
@@ -17,9 +15,9 @@
         </a>
       </div>
       <div class="card-body">
-        <p><strong>Name:</strong> John Doe</p>
-        <p><strong>Email:</strong> john@example.com</p>
-        <p><strong>Role:</strong> Admin</p>
+        <p><strong>Name:</strong> {{ request.user.get_full_name }}</p>
+        <p><strong>Email:</strong> {{ request.user.email }}</p>
+        <p><strong>Role:</strong> {{ request.user.groups.first.name|default:"User" }}</p>
       </div>
     </div>
   </div>
