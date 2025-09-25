@@ -1,64 +1,49 @@
+{% load static %}
+
+<!-- Profile Sidebar -->
 <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
 
-    <!-- Profile Header -->
-    <a class="sidebar-brand d-flex align-items-center justify-content-center" href="#">
-        <div class="sidebar-brand-icon">
-            <img src="{% static 'img/undraw_profile.svg' %}"
-                 class="rounded-circle" width="50" height="50">
-        </div>
-        <div class="sidebar-brand-text mx-3">My Profile</div>
-    </a>
+  <!-- Sidebar - Profile Title -->
+  <a class="sidebar-brand d-flex align-items-center justify-content-center" href="#">
+      <div class="sidebar-brand-icon">
+          <i class="fas fa-user-circle"></i>
+      </div>
+      <div class="sidebar-brand-text mx-3">Profile</div>
+  </a>
 
-    <hr class="sidebar-divider my-0">
+  <!-- Divider -->
+  <hr class="sidebar-divider">
 
-    <!-- Sidebar Items -->
-    <li class="nav-item">
-        <a class="nav-link" href="#">
-            <i class="fas fa-user"></i>
-            <span>Profile Info</span>
-        </a>
-    </li>
+  <!-- Profile Details -->
+  <li class="nav-item">
+      <a class="nav-link" href="#">
+          <i class="fas fa-id-card"></i>
+          <span>Profile Details</span>
+      </a>
+  </li>
 
-    <li class="nav-item">
-        <a class="nav-link" href="#">
-            <i class="fas fa-history"></i>
-            <span>Logs</span>
-        </a>
-    </li>
+  <!-- Documents -->
+  <li class="nav-item">
+      <a class="nav-link" href="#">
+          <i class="fas fa-file-alt"></i>
+          <span>Documents</span>
+      </a>
+  </li>
 
-    <li class="nav-item">
-        <a class="nav-link" href="#">
-            <i class="fas fa-file-alt"></i>
-            <span>Documents</span>
-        </a>
-    </li>
+  <!-- Notifications -->
+  <li class="nav-item">
+      <a class="nav-link" href="#">
+          <i class="fas fa-bell"></i>
+          <span>Notifications</span>
+      </a>
+  </li>
 
-    <li class="nav-item">
-        <a class="nav-link" href="#">
-            <i class="fas fa-bell"></i>
-            <span>Notifications</span>
-        </a>
-    </li>
-
-    <li class="nav-item">
-        <a class="nav-link" href="#">
-            <i class="fas fa-clock"></i>
-            <span>Check-in / Out</span>
-        </a>
-    </li>
-
-    <li class="nav-item">
-        <a class="nav-link" href="#">
-            <i class="fas fa-project-diagram"></i>
-            <span>Mapping</span>
-        </a>
-    </li>
-
-    <hr class="sidebar-divider">
-
-    <!-- Sidebar Toggler -->
-    <div class="text-center d-none d-md-inline">
-        <button class="rounded-circle border-0" id="sidebarToggle"></button>
-    </div>
+  <!-- Settings -->
+  <li class="nav-item">
+      <a class="nav-link" href="#">
+          <i class="fas fa-cog"></i>
+          <span>Settings</span>
+      </a>
+  </li>
 
 </ul>
