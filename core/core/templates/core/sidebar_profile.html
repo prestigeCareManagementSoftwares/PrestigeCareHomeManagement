@@ -2,13 +2,32 @@
 
 <!-- Profile Sidebar -->
 <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
-<!-- CARE SYSTEM Brand -->
-    <a class="sidebar-brand d-flex align-items-center justify-content-center" href="{% url 'dashboard' %}">
+{% if request.user.is_authenticated %}
+    {% if request.user.role == 'manager' or request.user.role == 'team_lead' or request.user.role == 'staff' %}
+    <a class="sidebar-brand d-flex align-items-center justify-content-center" href="{% url 'admin-dashboard' %}">
         <div class="sidebar-brand-icon">
             <i class="fas fa-home"></i>
         </div>
         <div class="sidebar-brand-text mx-3">CARE SYSTEM</div>
     </a>
+    {% else %}
+    <div class="sidebar-brand d-flex align-items-center justify-content-center">
+        <div class="sidebar-brand-icon">
+            <i class="fas fa-home"></i>
+        </div>
+        <div class="sidebar-brand-text mx-3">CARE SYSTEM</div>
+    </div>
+    {% endif %}
+    {% else %}
+    <div class="sidebar-brand d-flex align-items-center justify-content-center">
+        <div class="sidebar-brand-icon">
+            <i class="fas fa-home"></i>
+        </div>
+        <div class="sidebar-brand-text mx-3">CARE SYSTEM</div>
+    </div>
+    {% endif %}
+
+
 
   <!-- Divider -->
   <hr class="sidebar-divider">
