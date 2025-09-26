@@ -3,7 +3,7 @@ from datetime import time, datetime, timedelta
 from django.core.files.storage import default_storage
 from django.utils.timezone import now
 from django.core.files import File
-from .models import LatestLogEntry
+from .models import LatestLogEntry, MissedLog, Mapping
 import os
 from django.template.loader import render_to_string
 from django.conf import settings
@@ -102,3 +102,35 @@ def delete_image_file(image_field):
                 print(f"Deleted image: {image_field.name}")
         except Exception as e:
             print(f"Error deleting image {image_field.name}: {e}")
+
+def check_and_create_missed_logs():
+    today = timezone.localdate()
+    six_months_ago = today - timedelta(days=180)
+
+    # Get all mappings (staff-carehome-service_users)
+    mappings = Mapping.objects.prefetch_related("carehomes", "service_users")
+
+    for mapping in mappings:
+        for carehome in mapping.carehomes.all():
+            for service_user in mapping.service_users.all():
+                # Loop through each date range
+                date_cursor = six_months_ago
+                while date_cursor <= today:
+                    for shift, _ in MissedLog.SHIFT_CHOICES:
+                        # Check if a LatestLogEntry exists for this carehome, service_user, date, shift
+                        exists = LatestLogEntry.objects.filter(
+                            carehome=carehome,
+                            service_user=service_user,
+                            date=date_cursor,
+                            shift=shift
+                        ).exists()
+
+                        # If not exists → create MissedLog (only if not already created)
+                        if not exists:
+                            MissedLog.objects.get_or_create(
+                                carehome=carehome,
+                                service_user=service_user,
+                                date=date_cursor,
+                                shift=shift
+                            )
+                    date_cursor += timedelta(days=1)

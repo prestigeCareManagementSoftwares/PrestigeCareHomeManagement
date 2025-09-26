@@ -26,7 +26,8 @@ from weasyprint import HTML
 from weasyprint.text.fonts import FontConfiguration
 
 from carehome_project import settings
-from core.utils import get_or_create_latest_log, get_filtered_queryset, generate_shift_times, delete_image_file
+from core.utils import get_or_create_latest_log, get_filtered_queryset, generate_shift_times, delete_image_file, \
+    check_and_create_missed_logs
 from .models import CustomUser, LatestLogEntry, Mapping, MissedLog
 from .forms import ServiceUserForm, StaffCreationForm, CareHomeForm, MappingForm, StaffEditForm
 from io import BytesIO
@@ -1547,32 +1548,31 @@ def generate_time_slots(start_time, end_time):
 
     return time_slots
 
-
 @login_required
 def missed_shifts_view(request):
-    # Calculate date range (last 6 months)
+    # Step 1: Ensure missed logs are checked & created
+    check_and_create_missed_logs()
+
+    # Step 2: Fetch unresolved missed logs
     today = timezone.localdate()
     six_months_ago = today - timedelta(days=180)
 
-    # Debug: Print dates to verify
-    print(f"Date range: {six_months_ago} to {today}")
-
-    # Get all unresolved missed logs in this period
-    missed_logs = MissedLog.objects.filter(
-        date__gte=six_months_ago,
-        resolved_at__isnull=True
-    ).select_related('carehome', 'service_user').order_by('-date')
-
-    # Debug: Print count of found logs
-    print(f"Found {missed_logs.count()} missed logs")
+    missed_logs = (
+        MissedLog.objects.filter(
+            date__gte=six_months_ago,
+            resolved_at__isnull=True
+        )
+        .select_related('carehome', 'service_user')
+        .order_by('-date')
+    )
 
     context = {
         'missing_entries': missed_logs,
         'total_missed': missed_logs.count(),
         'date_range': f"{six_months_ago.strftime('%b %d, %Y')} to {today.strftime('%b %d, %Y')}"
     }
-
     return render(request, 'core/missed_logs.html', context)
+
 
 
 def get_accessible_carehomes(user):
