@@ -17,11 +17,12 @@ from django.db import transaction
 from django.db.models import Q
 from django.forms import model_to_dict
 from django.http import HttpResponseForbidden, FileResponse, Http404
+from django.urls import reverse_lazy
 from django.utils.timezone import now
 from django.views.decorators.csrf import csrf_exempt
 import requests
 from django.views.decorators.http import require_POST, require_GET
-from django.views.generic import DetailView
+from django.views.generic import DetailView, FormView
 from weasyprint import HTML
 from weasyprint.text.fonts import FontConfiguration
 
@@ -29,7 +30,8 @@ from carehome_project import settings
 from core.utils import get_or_create_latest_log, get_filtered_queryset, generate_shift_times, delete_image_file, \
     check_and_create_missed_logs
 from .models import CustomUser, LatestLogEntry, Mapping, MissedLog
-from .forms import ServiceUserForm, StaffCreationForm, CareHomeForm, MappingForm, StaffEditForm
+from .forms import ServiceUserForm, StaffCreationForm, CareHomeForm, MappingForm, StaffEditForm, \
+    ContactEmailPasswordResetForm
 from io import BytesIO
 from django.template.loader import render_to_string
 from django.http import HttpResponse
@@ -1628,3 +1630,17 @@ class ProfileView(LoginRequiredMixin, DetailView):
 
     def get_object(self, queryset=None):
         return self.request.user
+
+class ContactEmailPasswordResetView(FormView):
+    template_name = "core/password_reset_form.html"
+    success_url = reverse_lazy("password_reset_done")
+    form_class = ContactEmailPasswordResetForm
+
+    def form_valid(self, form):
+        form.send_reset_email(
+            self.request,
+            subject_template_name="core/password_reset_subject.txt",
+            email_template_name="core/password_reset_email.html"
+        )
+        messages.success(self.request, "If your details match, a reset link has been sent to your personal email.")
+        return super().form_valid(form)

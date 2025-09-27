@@ -363,6 +363,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     date_of_joining = models.DateField(null=True, blank=True)
     # Authentication fields
     email = models.EmailField(unique=True)
+    contact_email = models.EmailField(blank=True, null=True, unique=True)
     first_name = models.CharField(max_length=30, blank=True)
     last_name = models.CharField(max_length=150, blank=True)
 
@@ -475,7 +476,7 @@ class LogEntry(models.Model):
         return f"{self.date} - {self.service_user} - {self.time_slot}"
 
     class Meta:
-        ordering = ['date', 'time_slot']
+        # ordering = ['date', 'time_slot']
         verbose_name_plural = "Log Entries"
 
 

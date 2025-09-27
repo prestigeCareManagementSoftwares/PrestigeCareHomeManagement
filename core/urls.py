@@ -1,12 +1,13 @@
 # core/urls.py
 from django.conf.urls.static import static
+from django.contrib.auth.views import PasswordResetDoneView, PasswordResetConfirmView, PasswordResetCompleteView
 from django.http import HttpResponseForbidden
 from django.urls import path, re_path
 
 from carehome_project import settings
 from . import views
 from .views import create_log_view, log_entry_form, save_log_entry, lock_log_entries, staff_latest_logs_view, \
-    staff_mapping_view, delete_mapping, ProfileView
+    staff_mapping_view, delete_mapping, ProfileView, ContactEmailPasswordResetView
 
 urlpatterns = ([
                    path('', views.login_view, name='login'),
@@ -65,5 +66,11 @@ urlpatterns = ([
                    path('ajax/service-users/', views.get_service_users, name='ajax-service-users'),
                    path('staff/<int:user_id>/id-card/', views.id_card_preview, name='id-card-preview'),
                    path("profile/", ProfileView.as_view(), name="profile"),
+                   path("password_reset/", ContactEmailPasswordResetView.as_view(), name="password_reset"),
+                   path("password_reset/done/", PasswordResetDoneView.as_view(), name="password_reset_done"),
+                   path("reset/<uidb64>/<token>/", PasswordResetConfirmView.as_view(),
+                        name="password_reset_confirm"),
+                   path("reset/done/", PasswordResetCompleteView.as_view(), name="password_reset_complete"),
+
                ]
                + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT))

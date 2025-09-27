@@ -25,12 +25,14 @@
                         <div class="custom-file">
                             <input type="file" class="custom-file-input" id="image" name="image" accept="image/*">
                             <label class="custom-file-label" for="image">
-                                {% if form.instance.image %}Current: {{ form.instance.image.name }}{% else %}Choose file{% endif %}
+                                {% if form.instance.image %}Current: {{ form.instance.image.name }}{% else %}Choose
+                                file{% endif %}
                             </label>
                         </div>
                         {% if form.instance.image %}
                         <small class="form-text text-muted">
-                            Current: <a href="{{ form.instance.image.url }}" target="_blank">{{ form.instance.image.name }}</a>
+                            Current: <a href="{{ form.instance.image.url }}" target="_blank">{{ form.instance.image.name
+                            }}</a>
                         </small>
                         {% endif %}
                     </div>
@@ -63,49 +65,54 @@
                             <small id="phone-error" class="text-danger d-none">Invalid UK phone number</small>
                         </div>
                     </div>
-
+                    <div class="form-group col-md-6">
+                        <label>Contact Email</label>
+                        <input type="email" class="form-control" name="contact_email"
+                               value="{{ form.instance.contact_email|default_if_none:'' }}">
+                    </div>
                     <div class="form-group">
                         <label>Address *</label>
                         <textarea class="form-control" name="address" rows="3" required>{{ form.instance.address|default_if_none:'' }}</textarea>
                     </div>
 
                     <!-- Role & Date of Joining on the same row -->
-<div class="form-row">
-    <!-- Role -->
-    <div class="form-group col-md-6">
-        <label>Role *</label>
-        <div class="form-check">
-            <input class="form-check-input" type="radio" name="role" id="role_staff"
-                   value="staff" {% if form.instance.role == 'staff' %}checked{% endif %}>
-            <label class="form-check-label" for="role_staff">Staff Member</label>
-        </div>
-        <div class="form-check">
-            <input class="form-check-input" type="radio" name="role" id="role_team_lead"
-                   value="team_lead" {% if form.instance.role == 'team_lead' %}checked{% endif %}>
-            <label class="form-check-label" for="role_team_lead">Team Lead</label>
-        </div>
-    </div>
+                    <div class="form-row">
+                        <!-- Role -->
+                        <div class="form-group col-md-6">
+                            <label>Role *</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="role" id="role_staff"
+                                       value="staff" {% if form.instance.role== 'staff' %}checked{% endif %}>
+                                <label class="form-check-label" for="role_staff">Staff Member</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="role" id="role_team_lead"
+                                       value="team_lead" {% if form.instance.role== 'team_lead' %}checked{% endif %}>
+                                <label class="form-check-label" for="role_team_lead">Team Lead</label>
+                            </div>
+                        </div>
 
-    <!-- Date of Joining -->
-    <div class="form-group col-md-6">
-        <label>Date of Joining *</label>
-        <input type="date" class="form-control" name="date_of_joining"
-               value="{{ form.instance.date_of_joining|date:'Y-m-d' }}" required>
-    </div>
-</div>
+                        <!-- Date of Joining -->
+                        <div class="form-group col-md-6">
+                            <label>Date of Joining *</label>
+                            <input type="date" class="form-control" name="date_of_joining"
+                                   value="{{ form.instance.date_of_joining|date:'Y-m-d' }}" required>
+                        </div>
+                    </div>
 
                     <!-- Carehome -->
                     <div class="form-group" id="carehome-group"
                          style="display: {% if form.instance.role == 'team_lead' %}block{% else %}none{% endif %}">
                         <label>Carehome *</label>
-                        <select class="form-control" name="carehome" {% if form.instance.role == 'team_lead' %}required{% endif %}>
-                            <option value="">Select a carehome</option>
-                            {% for carehome in carehomes %}
-                            <option value="{{ carehome.id }}"
-                                    {% if form.instance.carehome_id == carehome.id %}selected{% endif %}>
-                                {{ carehome.name }}
-                            </option>
-                            {% endfor %}
+                        <select class="form-control" name="carehome" {% if form.instance.role== 'team_lead' %}required{%
+                        endif %}>
+                        <option value="">Select a carehome</option>
+                        {% for carehome in carehomes %}
+                        <option value="{{ carehome.id }}"
+                                {% if form.instance.carehome_id== carehome.id %}selected{% endif %}>
+                            {{ carehome.name }}
+                        </option>
+                        {% endfor %}
                         </select>
                     </div>
 
@@ -122,7 +129,8 @@
                             </div>
                         </div>
                         <small id="postcode-error" class="text-danger d-none">Invalid postcode format</small>
-                        <small id="postcode-success" class="text-success d-none"><i class="fas fa-check-circle"></i> Valid postcode</small>
+                        <small id="postcode-success" class="text-success d-none"><i class="fas fa-check-circle"></i>
+                            Valid postcode</small>
                     </div>
 
                     <!-- Next of Kin -->
@@ -162,11 +170,14 @@
                     <!-- Password -->
                     <div class="form-row">
                         <div class="form-group col-md-6">
-                            <label>Password {% if not edit_mode %}*{% else %}(leave blank to keep current){% endif %}</label>
+                            <label>Password {% if not edit_mode %}*{% else %}(leave blank to keep current){% endif
+                                %}</label>
                             <div class="input-group">
-                                <input type="password" class="form-control" name="password1" id="password1" {% if not edit_mode %}required{% endif %}>
+                                <input type="password" class="form-control" name="password1" id="password1" {% if not
+                                       edit_mode %}required{% endif %}>
                                 <div class="input-group-append">
-                                    <button class="btn btn-outline-secondary toggle-password" type="button" data-target="password1">
+                                    <button class="btn btn-outline-secondary toggle-password" type="button"
+                                            data-target="password1">
                                         <i class="fas fa-eye"></i>
                                     </button>
                                 </div>
@@ -175,9 +186,11 @@
                         <div class="form-group col-md-6">
                             <label>Password Confirmation {% if not edit_mode %}*{% endif %}</label>
                             <div class="input-group">
-                                <input type="password" class="form-control" name="password2" id="password2" {% if not edit_mode %}required{% endif %}>
+                                <input type="password" class="form-control" name="password2" id="password2" {% if not
+                                       edit_mode %}required{% endif %}>
                                 <div class="input-group-append">
-                                    <button class="btn btn-outline-secondary toggle-password" type="button" data-target="password2">
+                                    <button class="btn btn-outline-secondary toggle-password" type="button"
+                                            data-target="password2">
                                         <i class="fas fa-eye"></i>
                                     </button>
                                 </div>
@@ -189,7 +202,8 @@
                     {% if edit_mode %}
                     <div class="form-group">
                         <div class="form-check">
-                            <input class="form-check-input" type="checkbox" name="is_active" id="is_active" {% if form.instance.is_active %}checked{% endif %}>
+                            <input class="form-check-input" type="checkbox" name="is_active" id="is_active" {% if
+                                   form.instance.is_active %}checked{% endif %}>
                             <label class="form-check-label" for="is_active">Active (can login)</label>
                         </div>
                     </div>
@@ -213,7 +227,8 @@
                 <h6 class="m-0 font-weight-bold text-primary">Profile Preview</h6>
             </div>
             <div class="card-body text-center">
-                <div class="rounded-circle overflow-hidden mx-auto" style="width: 150px; height: 150px; border: 3px solid #eee;">
+                <div class="rounded-circle overflow-hidden mx-auto"
+                     style="width: 150px; height: 150px; border: 3px solid #eee;">
                     <img id="image-preview"
                          src="{% if form.instance.image %}{{ form.instance.image.url }}{% else %}{% static 'img/undraw_profile.svg' %}{% endif %}"
                          style="width: 100%; height: 100%; object-fit: cover;" alt="Profile preview">
@@ -236,10 +251,12 @@
                 </div>
 
                 <p class="text-muted" id="role-preview">
-                    {% if form.instance.role %}{{ form.instance.get_role_display }}{% else %}Role not selected{% endif %}
+                    {% if form.instance.role %}{{ form.instance.get_role_display }}{% else %}Role not selected{% endif
+                    %}
                 </p>
                 <p class="text-muted" id="carehome-preview">
-                    {% if form.instance.carehome %}{{ form.instance.carehome.name }}{% else %}No carehome assigned{% endif %}
+                    {% if form.instance.carehome %}{{ form.instance.carehome.name }}{% else %}No carehome assigned{%
+                    endif %}
                 </p>
                 <p class="text-muted" id="phone-preview">
                     {% if form.instance.phone %}{{ form.instance.phone }}{% else %}No phone{% endif %}
@@ -252,98 +269,98 @@
 
 {% block scripts %}
 <script>
-$(document).ready(function() {
+    $(document).ready(function() {
 
-    // Image preview
-    $('#image').change(function() {
-        const file = this.files[0];
-        if (file) {
-            $(this).next('.custom-file-label').text(file.name);
-            const reader = new FileReader();
-            reader.onload = e => $('#image-preview').attr('src', e.target.result);
-            reader.readAsDataURL(file);
+        // Image preview
+        $('#image').change(function() {
+            const file = this.files[0];
+            if (file) {
+                $(this).next('.custom-file-label').text(file.name);
+                const reader = new FileReader();
+                reader.onload = e => $('#image-preview').attr('src', e.target.result);
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Role toggle
+        $('input[name="role"]').change(function() {
+            const isTeamLead = $(this).val() === 'team_lead';
+            $('#carehome-group').toggle(isTeamLead);
+            $('#carehome-group select').prop('required', isTeamLead);
+            $('#role-preview').text($(this).next('label').text());
+        });
+
+        // Carehome preview
+        $('select[name="carehome"]').change(function() {
+            $('#carehome-preview').text($(this).find('option:selected').text() || 'No carehome assigned');
+        });
+
+        // Name & initials preview
+        function updateNameAndInitials() {
+            const firstName = $('#first_name').val().trim();
+            const lastName = $('#last_name').val().trim();
+            const initials = (firstName ? firstName[0].toUpperCase() : '') + (lastName ? lastName[0].toUpperCase() : '') || 'U';
+            $('#initials-text').text(initials);
         }
-    });
+        $('#first_name, #last_name').on('input', updateNameAndInitials);
+        updateNameAndInitials();
 
-    // Role toggle
-    $('input[name="role"]').change(function() {
-        const isTeamLead = $(this).val() === 'team_lead';
-        $('#carehome-group').toggle(isTeamLead);
-        $('#carehome-group select').prop('required', isTeamLead);
-        $('#role-preview').text($(this).next('label').text());
-    });
+        // Phone preview
+        $('#phone').on('input blur', function() {
+            $('#phone-preview').text($(this).val() || 'No phone');
+        });
 
-    // Carehome preview
-    $('select[name="carehome"]').change(function() {
-        $('#carehome-preview').text($(this).find('option:selected').text() || 'No carehome assigned');
-    });
+        // Toggle password visibility
+        $('.toggle-password').click(function() {
+            const target = $('#' + $(this).data('target'));
+            const icon = $(this).find('i');
+            if (target.attr('type') === 'password') {
+                target.attr('type', 'text'); icon.removeClass('fa-eye').addClass('fa-eye-slash');
+            } else {
+                target.attr('type', 'password'); icon.removeClass('fa-eye-slash').addClass('fa-eye');
+            }
+        });
 
-    // Name & initials preview
-    function updateNameAndInitials() {
-        const firstName = $('#first_name').val().trim();
-        const lastName = $('#last_name').val().trim();
-        const initials = (firstName ? firstName[0].toUpperCase() : '') + (lastName ? lastName[0].toUpperCase() : '') || 'U';
-        $('#initials-text').text(initials);
-    }
-    $('#first_name, #last_name').on('input', updateNameAndInitials);
-    updateNameAndInitials();
-
-    // Phone preview
-    $('#phone').on('input blur', function() {
-        $('#phone-preview').text($(this).val() || 'No phone');
-    });
-
-    // Toggle password visibility
-    $('.toggle-password').click(function() {
-        const target = $('#' + $(this).data('target'));
-        const icon = $(this).find('i');
-        if (target.attr('type') === 'password') {
-            target.attr('type', 'text'); icon.removeClass('fa-eye').addClass('fa-eye-slash');
-        } else {
-            target.attr('type', 'password'); icon.removeClass('fa-eye-slash').addClass('fa-eye');
+        // Postcode validation
+        function validatePostcode() {
+            const postcode = $('#id_postcode').val().trim().toUpperCase();
+            const regex = /^[A-Z]{1,2}[0-9][A-Z0-9]? ?[0-9][A-Z]{2}$/;
+            const isValid = regex.test(postcode);
+            $('#id_postcode').toggleClass('is-valid', isValid).toggleClass('is-invalid', !isValid);
+            $('#postcode-error').toggleClass('d-none', isValid);
+            $('#postcode-success').toggleClass('d-none', !isValid);
+            return isValid;
         }
-    });
+        $('#validate-btn').click(validatePostcode);
+        $('#id_postcode').blur(validatePostcode);
 
-    // Postcode validation
-    function validatePostcode() {
-        const postcode = $('#id_postcode').val().trim().toUpperCase();
-        const regex = /^[A-Z]{1,2}[0-9][A-Z0-9]? ?[0-9][A-Z]{2}$/;
-        const isValid = regex.test(postcode);
-        $('#id_postcode').toggleClass('is-valid', isValid).toggleClass('is-invalid', !isValid);
-        $('#postcode-error').toggleClass('d-none', isValid);
-        $('#postcode-success').toggleClass('d-none', !isValid);
-        return isValid;
-    }
-    $('#validate-btn').click(validatePostcode);
-    $('#id_postcode').blur(validatePostcode);
-
-    // UK phone validation
-    function validatePhone() {
-        const phone = $('#phone').val().trim();
-        const regex = /^(\+44\s?7\d{3}|\(?07\d{3}\)?)\s?\d{3}\s?\d{3}$/;
-        const isValid = regex.test(phone);
-        $('#phone').toggleClass('is-valid', isValid).toggleClass('is-invalid', !isValid);
-        $('#phone-error').toggleClass('d-none', isValid);
-        return isValid;
-    }
-    $('#phone').blur(validatePhone);
-
-    // Validate before form submit
-    $('form').submit(function(e) {
-        if (!validatePostcode() || !validatePhone()) {
-            e.preventDefault();
-            alert('Please correct postcode and phone number.');
+        // UK phone validation
+        function validatePhone() {
+            const phone = $('#phone').val().trim();
+            const regex = /^(\+44\s?7\d{3}|\(?07\d{3}\)?)\s?\d{3}\s?\d{3}$/;
+            const isValid = regex.test(phone);
+            $('#phone').toggleClass('is-valid', isValid).toggleClass('is-invalid', !isValid);
+            $('#phone-error').toggleClass('d-none', isValid);
+            return isValid;
         }
+        $('#phone').blur(validatePhone);
+
+        // Validate before form submit
+        $('form').submit(function(e) {
+            if (!validatePostcode() || !validatePhone()) {
+                e.preventDefault();
+                alert('Please correct postcode and phone number.');
+            }
+        });
     });
-});
 </script>
 
 <style>
-.initials-preview {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-}
+    .initials-preview {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+    }
 </style>
 {% endblock %}

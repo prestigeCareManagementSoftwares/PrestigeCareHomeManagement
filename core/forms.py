@@ -2,7 +2,13 @@ import datetime
 
 from django import forms
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
+from django.contrib.auth.tokens import default_token_generator
+from django.core.mail import send_mail
 from django.core.validators import RegexValidator
+from django.template.loader import render_to_string
+from django.utils.encoding import force_bytes
+from django.utils.http import urlsafe_base64_encode
+
 from .models import ServiceUser, CareHome, CustomUser, ABCForm, IncidentReport, LogEntry, Mapping
 # forms.py
 from django import forms
@@ -75,7 +81,7 @@ class StaffCreationForm(UserCreationForm):
     class Meta:
         model = CustomUser
         fields = (
-            'image', 'first_name', 'last_name', 'email', 'phone',
+            'image', 'first_name', 'last_name', 'email', 'contact_email','phone',
             'address', 'postcode', 'date_of_joining', 'role', 'carehome',
             'next_of_kin_first_name', 'next_of_kin_last_name',
             'next_of_kin_phone', 'next_of_kin_email',
@@ -85,6 +91,7 @@ class StaffCreationForm(UserCreationForm):
             'image': forms.FileInput(attrs={'class': 'form-control-file'}),
             'address': forms.Textarea(attrs={'rows': 3, 'class': 'form-control'}),
             'email': forms.EmailInput(attrs={'class': 'form-control'}),
+            'contact_email': forms.EmailInput(attrs={'class': 'form-control'}),
             'first_name': forms.TextInput(attrs={'class': 'form-control'}),
             'last_name': forms.TextInput(attrs={'class': 'form-control'}),
             'phone': forms.TextInput(attrs={'class': 'form-control'}),
@@ -376,7 +383,7 @@ class StaffEditForm(forms.ModelForm):
     class Meta:
         model = CustomUser
         fields = (
-            'image', 'first_name', 'last_name', 'email', 'phone',
+            'image', 'first_name', 'last_name', 'email', 'contact_email','phone',
             'address', 'postcode', 'date_of_joining', 'role', 'carehome',
             'next_of_kin_first_name', 'next_of_kin_last_name',
             'next_of_kin_phone', 'next_of_kin_email'
@@ -385,6 +392,7 @@ class StaffEditForm(forms.ModelForm):
             'image': forms.FileInput(attrs={'class': 'form-control-file'}),
             'address': forms.Textarea(attrs={'rows': 3, 'class': 'form-control'}),
             'email': forms.EmailInput(attrs={'class': 'form-control'}),
+            'contact_email': forms.EmailInput(attrs={'class': 'form-control'}),
             'first_name': forms.TextInput(attrs={'class': 'form-control'}),
             'last_name': forms.TextInput(attrs={'class': 'form-control'}),
             'phone': forms.TextInput(attrs={'class': 'form-control'}),
@@ -415,3 +423,39 @@ class StaffEditForm(forms.ModelForm):
             self.add_error('password2', "Passwords do not match.")
 
         return cleaned_data
+
+class ContactEmailPasswordResetForm(forms.Form):
+    email = forms.EmailField(label="Work Email", widget=forms.EmailInput(attrs={'class': 'form-control'}))
+    contact_email = forms.EmailField(label="Personal Email", widget=forms.EmailInput(attrs={'class': 'form-control'}))
+
+    def clean(self):
+        cleaned_data = super().clean()
+        email = cleaned_data.get("email")
+        contact_email = cleaned_data.get("contact_email")
+
+        try:
+            user = CustomUser.objects.get(email=email, contact_email=contact_email, is_active=True)
+        except CustomUser.DoesNotExist:
+            raise forms.ValidationError("No active user found with this work email + personal email combination.")
+
+        cleaned_data["user"] = user
+        return cleaned_data
+
+    def send_reset_email(self, request, subject_template_name, email_template_name):
+        user = self.cleaned_data["user"]
+        contact_email = user.contact_email
+
+        context = {
+            'email': contact_email,
+            'domain': request.get_host(),
+            'site_name': 'Care System',
+            'uid': urlsafe_base64_encode(force_bytes(user.pk)),
+            'user': user,
+            'token': default_token_generator.make_token(user),
+            'protocol': 'https' if request.is_secure() else 'http',
+        }
+
+        subject = render_to_string(subject_template_name, context).strip()
+        body = render_to_string(email_template_name, context)
+
+        send_mail(subject, body, None, [contact_email])
