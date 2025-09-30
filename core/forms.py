@@ -21,7 +21,7 @@ AM_TIMES = [
     for h in range(0, 12)
 ]
 
-
+User = get_user_model()
 def coerce_to_time(val):
     if isinstance(val, datetime.time):
         return val
