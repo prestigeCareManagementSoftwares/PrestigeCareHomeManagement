@@ -80,14 +80,19 @@
                         <div class="form-group col-md-6">
                             <label>Role *</label>
                             <div class="form-check">
-                                <input class="form-check-input" type="radio" name="role" id="role_staff"
-                                       value="staff" {% if form.instance.role == 'staff' %}checked{% endif %}>
-                                <label class="form-check-label" for="role_staff">Staff Member</label>
+                                <input class="form-check-input" type="radio" name="role" id="role_manager"
+                                       value="manager" {% if form.instance.role == 'manager' %}checked{% endif %}>
+                                <label class="form-check-label" for="role_manager">Manager</label>
                             </div>
                             <div class="form-check">
                                 <input class="form-check-input" type="radio" name="role" id="role_team_lead"
                                        value="team_lead" {% if form.instance.role == 'team_lead' %}checked{% endif %}>
                                 <label class="form-check-label" for="role_team_lead">Team Lead</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="role" id="role_staff"
+                                       value="staff" {% if form.instance.role == 'staff' or not form.instance.role %}checked{% endif %}>
+                                <label class="form-check-label" for="role_staff">Staff Member</label>
                             </div>
                         </div>
 
@@ -271,10 +276,22 @@ $(document).ready(function() {
 
     // Role toggle
     $('input[name="role"]').change(function() {
-        const isTeamLead = $(this).val() === 'team_lead';
+        const role = $(this).val();
+        const isTeamLead = role === 'team_lead';
+        const isManager = role === 'manager';
+
+        // Show carehome field only for team leads
         $('#carehome-group').toggle(isTeamLead);
         $('#carehome-group select').prop('required', isTeamLead);
+
+        // Update role preview
         $('#role-preview').text($(this).next('label').text());
+
+        // For managers, ensure carehome is not required and hide the field
+        if (isManager) {
+            $('#carehome-group').hide();
+            $('#carehome-group select').prop('required', false);
+        }
     });
 
     // Carehome preview
@@ -302,9 +319,11 @@ $(document).ready(function() {
         const target = $('#' + $(this).data('target'));
         const icon = $(this).find('i');
         if (target.attr('type') === 'password') {
-            target.attr('type', 'text'); icon.removeClass('fa-eye').addClass('fa-eye-slash');
+            target.attr('type', 'text');
+            icon.removeClass('fa-eye').addClass('fa-eye-slash');
         } else {
-            target.attr('type', 'password'); icon.removeClass('fa-eye-slash').addClass('fa-eye');
+            target.attr('type', 'password');
+            icon.removeClass('fa-eye-slash').addClass('fa-eye');
         }
     });
 
