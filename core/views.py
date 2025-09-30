@@ -300,19 +300,19 @@ def parse_abc_instance(instance):
 
 User = get_user_model()
 
-
 def login_view(request):
     print("Login view accessed")
     if request.method == 'POST':
         print("POST data:", request.POST)
-        email = request.POST.get('username')  # Now we only use email
+        email = request.POST.get('username')  # email field used as username
         password = request.POST.get('password')
+        remember_me = request.POST.get('remember_me')  # checkbox
         print(f"Attempting auth for {email}")
 
         user = authenticate(request, email=email, password=password)
         print("User object:", user)
 
-        if user is not None:
+        if user is not None and user.is_active:
             login(request, user)
             print("Login successful, redirecting...")
 
@@ -320,12 +320,20 @@ def login_view(request):
             user.last_active = timezone.now()
             user.save()
 
+            # ✅ Remember Me logic
+            if remember_me:
+                request.session.set_expiry(60 * 60 * 24 * 30)  # 30 days
+            else:
+                request.session.set_expiry(0)  # expires on browser close
+
+            # Redirect based on role
             if user.is_superuser:
                 return redirect('admin-dashboard')
             elif user.role == CustomUser.STAFF:
                 return redirect('admin-dashboard')
             else:
                 return redirect('staff-dashboard')
+
         else:
             print("Authentication failed")
             return render(request, 'core/login.html', {
