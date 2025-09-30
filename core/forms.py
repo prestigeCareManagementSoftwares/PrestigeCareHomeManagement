@@ -423,10 +423,9 @@ class StaffEditForm(forms.ModelForm):
             self.add_error('password2', "Passwords do not match.")
 
         return cleaned_data
-
 class ContactEmailPasswordResetForm(forms.Form):
-    email = forms.EmailField(label="Work Email", widget=forms.EmailInput(attrs={'class': 'form-control'}))
-    contact_email = forms.EmailField(label="Personal Email", widget=forms.EmailInput(attrs={'class': 'form-control'}))
+    email = forms.EmailField(label="Work Email")
+    contact_email = forms.EmailField(label="Personal Email")
 
     def clean(self):
         cleaned_data = super().clean()
@@ -434,28 +433,43 @@ class ContactEmailPasswordResetForm(forms.Form):
         contact_email = cleaned_data.get("contact_email")
 
         try:
-            user = CustomUser.objects.get(email=email, contact_email=contact_email, is_active=True)
-        except CustomUser.DoesNotExist:
-            raise forms.ValidationError("No active user found with this work email + personal email combination.")
+            self.user = User.objects.get(email=email, contact_email=contact_email)
+        except User.DoesNotExist:
+            raise forms.ValidationError(
+                "No user found with that work/personal email pair."
+            )
 
-        cleaned_data["user"] = user
         return cleaned_data
 
     def send_reset_email(self, request, subject_template_name, email_template_name):
-        user = self.cleaned_data["user"]
-        contact_email = user.contact_email
+        user = self.user
+        uid = urlsafe_base64_encode(force_bytes(user.pk))
+        token = default_token_generator.make_token(user)
 
-        context = {
-            'email': contact_email,
-            'domain': request.get_host(),
-            'site_name': 'Care System',
-            'uid': urlsafe_base64_encode(force_bytes(user.pk)),
-            'user': user,
-            'token': default_token_generator.make_token(user),
-            'protocol': 'https' if request.is_secure() else 'http',
-        }
+        reset_link = request.build_absolute_uri(
+            reverse("password_reset_confirm", kwargs={"uidb64": uid, "token": token})
+        )
 
-        subject = render_to_string(subject_template_name, context).strip()
-        body = render_to_string(email_template_name, context)
+        # Subject
+        subject = render_to_string(subject_template_name).strip()
 
-        send_mail(subject, body, None, [contact_email])
+        # Plain-text version
+        text_content = render_to_string("core/password_reset_email.txt", {
+            "user": user,
+            "reset_link": reset_link,
+        })
+
+        # HTML version
+        html_content = render_to_string("core/password_reset_email.html", {
+            "user": user,
+            "reset_link": reset_link,
+        })
+
+        email = EmailMultiAlternatives(
+            subject,
+            text_content,
+            settings.DEFAULT_FROM_EMAIL,
+            [user.contact_email],  # ✅ personal email
+        )
+        email.attach_alternative(html_content, "text/html")
+        email.send()
