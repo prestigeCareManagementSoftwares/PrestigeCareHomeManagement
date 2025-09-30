@@ -1,16 +1,13 @@
 import datetime
 
-from django import forms
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from django.contrib.auth.tokens import default_token_generator
-from django.core.mail import send_mail
-from django.core.validators import RegexValidator
+from django.core.mail import send_mail, EmailMultiAlternatives
 from django.template.loader import render_to_string
+from django.urls import reverse
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
-
 from .models import ServiceUser, CareHome, CustomUser, ABCForm, IncidentReport, LogEntry, Mapping
-# forms.py
 from django import forms
 from .models import CareHome
 import datetime
@@ -423,7 +420,7 @@ class StaffEditForm(forms.ModelForm):
 
         return cleaned_data
 
-
+from django.contrib.auth import get_user_model
 User = get_user_model()
 class ContactEmailPasswordResetForm(forms.Form):
     email = forms.EmailField(label="Work Email")
