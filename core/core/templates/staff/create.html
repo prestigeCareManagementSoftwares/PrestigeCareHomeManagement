@@ -104,7 +104,7 @@
                     <div class="form-group" id="carehome-group"
                          style="display: {% if form.instance.role == 'team_lead' %}block{% else %}none{% endif %}">
                         <label>Carehome *</label>
-                        <select class="form-control" name="carehome" {% if form.instance.role== 'team_lead' %}required{%
+                        <select class="form-control" name="carehome" {% if form.instance.role == 'team_lead' %}required{%
                         endif %}>
                         <option value="">Select a carehome</option>
                         {% for carehome in carehomes %}
