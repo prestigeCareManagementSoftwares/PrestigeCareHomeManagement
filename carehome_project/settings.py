@@ -146,3 +146,12 @@ MEDIA_ROOT = '/opt/render/project/src/media'
 
 # DEFAULT PK
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# EMAIL (Brevo / Sendinblue SMTP)
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = "smtp-relay.brevo.com"
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = os.environ.get("BREVO_EMAIL")  # e.g. your Brevo account email
+EMAIL_HOST_PASSWORD = os.environ.get("BREVO_SMTP_KEY")  # Brevo SMTP key
+DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", "no-reply@prestigesupportedliving.com")
