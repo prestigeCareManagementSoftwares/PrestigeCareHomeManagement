@@ -1640,7 +1640,7 @@ class ProfileView(LoginRequiredMixin, DetailView):
         return self.request.user
 
 class ContactEmailPasswordResetView(FormView):
-    template_name = "core/password_reset_form.html"
+    template_name = "core/password_reset_email.html"
     success_url = reverse_lazy("password_reset_done")
     form_class = ContactEmailPasswordResetForm
 
