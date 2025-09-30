@@ -21,7 +21,6 @@ AM_TIMES = [
     for h in range(0, 12)
 ]
 
-User = get_user_model()
 def coerce_to_time(val):
     if isinstance(val, datetime.time):
         return val
@@ -423,6 +422,9 @@ class StaffEditForm(forms.ModelForm):
             self.add_error('password2', "Passwords do not match.")
 
         return cleaned_data
+
+
+User = get_user_model()
 class ContactEmailPasswordResetForm(forms.Form):
     email = forms.EmailField(label="Work Email")
     contact_email = forms.EmailField(label="Personal Email")
