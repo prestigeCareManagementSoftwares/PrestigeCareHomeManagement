@@ -1043,7 +1043,7 @@ def lock_log_entries(request, latest_log_id):
         messages.error(request, f"Error locking log: {str(e)}")
         return redirect('staff-dashboard')
 
-def generate_log_entries(latest_log, carehome, service_user, shift_name):
+def generate_log_entries(latest_log, carehome, service_user, shift_name, user):
     """
     Generates a 12-hour sequence of hourly log entries for a given shift.
     Handles shifts that cross midnight by normalizing dates.
@@ -1059,7 +1059,6 @@ def generate_log_entries(latest_log, carehome, service_user, shift_name):
     for i in range(12):
         slot_time = shift_start_datetime + timedelta(hours=i)
 
-        # ✅ For night shift: keep same date, only time varies
         if "Night" in shift_name:
             slot_time = datetime.combine(latest_log.date, slot_time.time())
 
@@ -1067,11 +1066,13 @@ def generate_log_entries(latest_log, carehome, service_user, shift_name):
             latest_log=latest_log,
             service_user=service_user,
             time_slot=slot_time,
+            user=user,  # ✅ include user here
             defaults={'carehome': carehome}
         )
         entries.append(entry)
 
     return entries
+
 
 def create_log_view(request):
     carehomes = CareHome.objects.all()
@@ -1152,7 +1153,7 @@ def create_log_view(request):
             )
 
             # Generate log entries
-            generate_log_entries(latest_log, carehome, service_user, shift_label)
+            generate_log_entries(latest_log, carehome, service_user, shift_label, request.user)
 
             # Store in session
             request.session['log_info'] = {
