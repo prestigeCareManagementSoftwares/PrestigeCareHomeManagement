@@ -1661,4 +1661,4 @@ def is_manager_or_teamlead(user):
 @user_passes_test(is_manager_or_teamlead)
 def carehome_shift_matrix(request):
     # Example context
-    return render(request, 'carehome_shift_matrix.html', {})
+    return render(request, 'core/carehome_shift_matrix.html', {})
