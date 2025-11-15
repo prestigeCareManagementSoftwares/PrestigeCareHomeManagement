@@ -1653,3 +1653,12 @@ class ContactEmailPasswordResetView(FormView):
         )
         messages.success(self.request, "If your details match, a reset link has been sent to your personal email.")
         return super().form_valid(form)
+
+def is_manager_or_teamlead(user):
+    return user.is_authenticated and user.role in ["manager", "team_lead"]
+
+@login_required
+@user_passes_test(is_manager_or_teamlead)
+def carehome_shift_matrix(request):
+    # Example context
+    return render(request, 'carehome_shift_matrix.html', {})

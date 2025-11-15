@@ -70,6 +70,7 @@ urlpatterns = ([
                    path("password_reset/done/", PasswordResetDoneView.as_view(), name="password_reset_done"),
                    path("reset/<uidb64>/<token>/", PasswordResetConfirmView.as_view(), name="password_reset_confirm"),
                    path("reset/done/", PasswordResetCompleteView.as_view(), name="password_reset_complete"),
+                   path('carehome-shift-matrix/', views.carehome_shift_matrix, name='carehome-shift-matrix'),
 
                ]
                + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT))
