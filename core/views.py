@@ -1686,3 +1686,12 @@ def reject_rota(request, rota_id):
         title="Rota Rejected",
         message="Manager rejected your rota. Please make the required changes."
     )
+
+
+def api_rota_submit(request, rota_id):
+    rota = Rota.objects.get(pk=rota_id)
+    rota.submit_for_approval(request.user)
+    # notify managers:
+    for m in rota.carehome.managers.all():
+        send_notification(m, "Rota Submitted", f"{request.user.get_full_name()} submitted rota for {rota.carehome.name}", notif_type='rota_submit', payload={'rota_id': rota.id})
+    return JsonResponse({"ok": True})

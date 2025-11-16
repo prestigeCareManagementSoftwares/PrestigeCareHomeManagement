@@ -138,3 +138,30 @@ class MissedLogAdmin(admin.ModelAdmin):
     def get_queryset(self, request):
         six_months_ago = timezone.now() - timedelta(days=180)
         return super().get_queryset(request).filter(date__gte=six_months_ago)
+
+
+@admin.register(Rota)
+class RotaAdmin(admin.ModelAdmin):
+    list_display = ('carehome', 'period_start', 'status', 'version', 'created_by', 'published_at')
+    list_filter = ('status', 'carehome')
+    search_fields = ('carehome__name',)
+
+@admin.register(Shift)
+class ShiftAdmin(admin.ModelAdmin):
+    list_display = ('rota', 'date', 'shift_type', 'staff', 'service_user')
+    list_filter = ('shift_type', 'rota__carehome')
+    search_fields = ('staff__first_name', 'service_user__first_name')
+
+@admin.register(RotaApproval)
+class RotaApprovalAdmin(admin.ModelAdmin):
+    list_display = ('rota', 'action', 'by_user', 'timestamp')
+    readonly_fields = ('timestamp',)
+
+@admin.register(ShiftChangeLog)
+class ShiftChangeLogAdmin(admin.ModelAdmin):
+    list_display = ('shift', 'action', 'changed_by', 'timestamp')
+
+@admin.register(Notification)
+class NotificationAdmin(admin.ModelAdmin):
+    list_display = ('user', 'title', 'notif_type', 'is_read', 'created_at')
+    list_filter = ('notif_type', 'is_read')

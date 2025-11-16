@@ -674,13 +674,243 @@ class MissedLog(models.Model):
         verbose_name_plural = "Missed Shifts"
 
 
+# ===== Notification model (in case you don't already have one) =====
 class Notification(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="notifications")
+    NOTIF_TYPES = [
+        ('rota_submit', 'Rota Submitted'),
+        ('rota_publish', 'Rota Published'),
+        ('rota_reject', 'Rota Rejected'),
+        ('rota_update', 'Rota Updated'),
+        ('generic', 'Generic'),
+    ]
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')
+    notif_type = models.CharField(max_length=32, choices=NOTIF_TYPES, default='generic')
     title = models.CharField(max_length=255)
-    message = models.TextField()
+    message = models.TextField(blank=True)
+    payload = models.JSONField(default=dict, blank=True)  # event metadata (shift ids, rota id etc.)
     is_read = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
-    payload = models.JSONField(default=dict)
 
     class Meta:
-        ordering = ['-created_at']
+        ordering = ('-created_at',)
+
+    def __str__(self):
+        return f"{self.title} -> {self.user}"
+
+# ===== Rota model =====
+class Rota(models.Model):
+    STATUS_DRAFT = 'draft'                 # created by TL, editable by TL
+    STATUS_PENDING = 'pending_approval'    # TL submitted -> manager must approve
+    STATUS_RETURNED = 'returned'           # manager returned for changes to TL
+    STATUS_MANAGER_DRAFT = 'manager_draft' # manager editing before publish
+    STATUS_PUBLISHED = 'published'         # final
+
+    STATUS_CHOICES = [
+        (STATUS_DRAFT, 'Draft'),
+        (STATUS_PENDING, 'Pending Approval'),
+        (STATUS_RETURNED, 'Returned'),
+        (STATUS_MANAGER_DRAFT, 'Manager Draft'),
+        (STATUS_PUBLISHED, 'Published'),
+    ]
+
+    carehome = models.ForeignKey('CareHome', on_delete=models.CASCADE, related_name='rotas')
+    # period can be a month identifier; using first_day_of_period as canonical date for month/week
+    period_start = models.DateField(help_text="Start date of rota period (commonly first day of month/week)")
+    status = models.CharField(max_length=32, choices=STATUS_CHOICES, default=STATUS_DRAFT)
+    version = models.PositiveIntegerField(default=1)
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='created_rotas')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='updated_rotas')
+    updated_at = models.DateTimeField(auto_now=True)
+
+    # optional published_by / published_at for auditing
+    published_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='published_rotas')
+    published_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        unique_together = ('carehome', 'period_start', 'version')
+        ordering = ('-period_start', '-version')
+
+    def __str__(self):
+        return f"Rota: {self.carehome.name} {self.period_start} v{self.version} ({self.get_status_display()})"
+
+    # ----- Convenience methods for lifecycle -----
+    def submit_for_approval(self, submitter):
+        """
+        Called by team lead (submitter) to submit the rota to managers.
+        Caller must ensure permission checks.
+        """
+        if self.status not in [self.STATUS_DRAFT, self.STATUS_RETURNED]:
+            raise ValueError("Only Draft or Returned rotas may be submitted for approval.")
+        self.status = self.STATUS_PENDING
+        self.updated_by = submitter
+        self.updated_at = timezone.now()
+        self.save(update_fields=['status', 'updated_by', 'updated_at'])
+
+        # create an approval record
+        RotaApproval.objects.create(
+            rota=self,
+            action='submitted',
+            by_user=submitter,
+            message=f"Submitted for approval by {submitter.get_full_name()}",
+        )
+
+        # Notify managers - place to call send_notification
+        # from .notifications import send_notification
+        # for manager in self.get_managers(): send_notification(manager, ...)
+
+    def publish(self, publisher, notify='everyone'):
+        """
+        Called by manager to publish this rota.
+        notify values: 'everyone', 'staff', 'service_users', 'none'
+        """
+        if self.status not in [self.STATUS_PENDING, self.STATUS_MANAGER_DRAFT]:
+            # Manager may also publish from pending or manager draft
+            raise ValueError("Rota must be pending approval or manager draft to be published.")
+
+        with transaction.atomic():
+            self.status = self.STATUS_PUBLISHED
+            self.published_by = publisher
+            self.published_at = timezone.now()
+            self.updated_by = publisher
+            self.updated_at = timezone.now()
+            self.save(update_fields=['status','published_by','published_at','updated_by','updated_at'])
+
+            RotaApproval.objects.create(
+                rota=self,
+                action='published',
+                by_user=publisher,
+                message=f"Published by {publisher.get_full_name()} (notify={notify})",
+            )
+
+            # Determine recipients (helper functions below)
+            recipients = set()
+            if notify in ('everyone', 'staff'):
+                # all staff assigned to shifts in this rota
+                staff_ids = self.shifts.values_list('staff_id', flat=True).distinct()
+                recipients.update(self._users_from_ids(staff_ids))
+            if notify in ('everyone', 'service_users'):
+                su_ids = self.shifts.values_list('service_user_id', flat=True).distinct()
+                recipients.update(self._service_users_from_ids(su_ids))
+
+            # call send_notification for each recipient (example)
+            # from .notifications import send_notification
+            # for u in recipients:
+            #     send_notification(u, "Rota Published", f"Rota for {self.carehome.name} published for {self.period_start}", payload={'rota_id': self.id})
+            return recipients
+
+    def reject(self, manager_user, message=''):
+        """
+        Manager rejects rota and returns it to team lead.
+        """
+        if self.status != self.STATUS_PENDING:
+            raise ValueError("Only pending rotas can be rejected.")
+        self.status = self.STATUS_RETURNED
+        self.updated_by = manager_user
+        self.updated_at = timezone.now()
+        self.save(update_fields=['status', 'updated_by', 'updated_at'])
+
+        RotaApproval.objects.create(
+            rota=self,
+            action='rejected',
+            by_user=manager_user,
+            message=message or f"Rejected by {manager_user.get_full_name()}",
+        )
+
+        # Notify creator (team lead)
+        # from .notifications import send_notification
+        # send_notification(self.created_by, "Rota Rejected", message or "Please revise the rota", payload={'rota_id': self.id})
+
+    # ----- helper utilities -----
+    def _users_from_ids(self, ids_iter):
+        """Return list of user objects given staff ids. """
+        UserModel = settings.AUTH_USER_MODEL
+        from django.contrib.auth import get_user_model
+        return get_user_model().objects.filter(id__in=[i for i in ids_iter if i])
+
+    def _service_users_from_ids(self, ids_iter):
+        from .models import ServiceUser as SU  # avoid circular import
+        return SU.objects.filter(id__in=[i for i in ids_iter if i])
+
+# ===== Shift model =====
+class Shift(models.Model):
+    SHIFT_MORNING = 'morning'
+    SHIFT_NIGHT = 'night'
+    SHIFT_CHOICES = [
+        (SHIFT_MORNING, 'Morning'),
+        (SHIFT_NIGHT, 'Night'),
+    ]
+
+    rota = models.ForeignKey(Rota, on_delete=models.CASCADE, related_name='shifts')
+    date = models.DateField()
+    shift_type = models.CharField(max_length=16, choices=SHIFT_CHOICES)
+    staff = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='assigned_shifts')
+    service_user = models.ForeignKey('ServiceUser', on_delete=models.SET_NULL, null=True, blank=True, related_name='shifts')
+    notes = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    # audit who created/edited the shift
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='created_shifts')
+    updated_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='updated_shifts')
+
+    class Meta:
+        unique_together = ('rota', 'date', 'shift_type', 'service_user')
+        ordering = ('date', 'shift_type')
+
+    def __str__(self):
+        return f"{self.rota.carehome.name} {self.date} {self.get_shift_type_display()}"
+
+    def save(self, *args, **kwargs):
+        is_update = bool(self.pk)
+        super().save(*args, **kwargs)
+        # create a change log entry (simple)
+        ShiftChangeLog.objects.create(
+            shift=self,
+            action='updated' if is_update else 'created',
+            changed_by=self.updated_by or self.created_by,
+            snapshot={
+                'staff_id': self.staff_id,
+                'service_user_id': self.service_user_id,
+                'notes': self.notes,
+            }
+        )
+
+# ===== ShiftChangeLog =====
+class ShiftChangeLog(models.Model):
+    ACTION_CHOICES = [
+        ('created', 'Created'),
+        ('updated', 'Updated'),
+        ('deleted', 'Deleted'),
+    ]
+    shift = models.ForeignKey(Shift, on_delete=models.CASCADE, related_name='change_logs')
+    action = models.CharField(max_length=16, choices=ACTION_CHOICES)
+    changed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
+    snapshot = models.JSONField(default=dict, blank=True)  # small snapshot of important fields
+
+    class Meta:
+        ordering = ('-timestamp',)
+
+# ===== RotaApproval history (audit) =====
+class RotaApproval(models.Model):
+    ACTION_CHOICES = [
+        ('submitted', 'Submitted'),
+        ('published', 'Published'),
+        ('rejected', 'Rejected'),
+        ('manager_draft', 'Manager Draft'),
+        ('returned', 'Returned'),
+    ]
+    rota = models.ForeignKey(Rota, on_delete=models.CASCADE, related_name='approvals')
+    action = models.CharField(max_length=32, choices=ACTION_CHOICES)
+    by_user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    message = models.TextField(blank=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ('-timestamp',)
+
+    def __str__(self):
+        return f"{self.rota} - {self.action} by {self.by_user}"
+
+
