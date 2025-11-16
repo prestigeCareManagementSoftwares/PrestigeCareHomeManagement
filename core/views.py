@@ -1662,3 +1662,27 @@ def is_manager_or_teamlead(user):
 def carehome_shift_matrix(request):
     # Example context
     return render(request, 'core/carehome_shift_matrix.html', {})
+
+def approve_rota(request, rota_id):
+    rota = Rota.objects.get(id=rota_id)
+    rota.status = "Published"
+    rota.save()
+
+    # notify all staff assigned
+    for staff in rota.assigned_staff.all():
+        send_notification(
+            user=staff,
+            title="Rota Published",
+            message="A new rota has been published. Please review your schedule."
+        )
+
+def reject_rota(request, rota_id):
+    rota = Rota.objects.get(id=rota_id)
+    rota.status = "Returned"
+    rota.save()
+
+    send_notification(
+        user=rota.created_by,
+        title="Rota Rejected",
+        message="Manager rejected your rota. Please make the required changes."
+    )

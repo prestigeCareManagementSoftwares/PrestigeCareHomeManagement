@@ -10,35 +10,76 @@
     <!-- Topbar Navbar -->
     <ul class="navbar-nav ml-auto">
 
-        <!-- Nav Item - User Information -->
-        <li class="nav-item dropdown no-arrow">
-            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button"
-                data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                <span class="mr-2 d-none d-lg-inline text-gray-600 small">
-                    {{ request.user.get_full_name|default:request.user.email }}
-                </span>
-                {% if request.user.profile_picture %}
-                <img class="img-profile rounded-circle" src="{{ request.user.profile_picture.url }}">
-                {% else %}
-                <img class="img-profile rounded-circle" src="{% static 'img/undraw_profile.svg' %}">
-                {% endif %}
-            </a>
-            <!-- Dropdown - User Information -->
-            <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in"
-                aria-labelledby="userDropdown">
-                <a class="dropdown-item"  href="{% url 'profile' %}">
-                    <i class="fas fa-user fa-sm fa-fw mr-2 text-gray-400"></i>
-                    Profile
-                </a>
-                <div class="dropdown-divider"></div>
-                <a class="dropdown-item" href="#" data-toggle="modal" data-target="#logoutModal">
-                    <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i>
-                    Logout
-                </a>
-            </div>
-        </li>
+    <!-- Notification Bell -->
+    <li class="nav-item dropdown no-arrow mx-1">
+        <a class="nav-link dropdown-toggle" href="#" id="alertsDropdown" role="button"
+            data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            <i class="fas fa-bell fa-fw"></i>
 
-    </ul>
+            {% if notif_count > 0 %}
+            <span class="badge badge-danger badge-counter">{{ notif_count }}</span>
+            {% endif %}
+        </a>
+
+        <!-- Dropdown - Alerts -->
+        <div class="dropdown-list dropdown-menu dropdown-menu-right shadow animated--grow-in"
+            aria-labelledby="alertsDropdown">
+            <h6 class="dropdown-header">Notifications</h6>
+
+            {% if notif_list %}
+                {% for n in notif_list %}
+                <a class="dropdown-item d-flex align-items-center" href="#">
+                    <div class="mr-3">
+                        <div class="icon-circle bg-primary">
+                            <i class="fas fa-info text-white"></i>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="small text-gray-500">{{ n.created_at|date:"M d, Y H:i" }}</div>
+                        <span class="font-weight-bold">{{ n.title }}</span>
+                        <div class="text-truncate">{{ n.message }}</div>
+                    </div>
+                </a>
+                {% endfor %}
+            {% else %}
+                <a class="dropdown-item text-center small text-gray-500" href="#">No new notifications</a>
+            {% endif %}
+        </div>
+    </li>
+
+    <!-- Divider -->
+    <div class="topbar-divider d-none d-sm-block"></div>
+
+    <!-- Nav Item - User Information -->
+    <li class="nav-item dropdown no-arrow">
+        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button"
+            data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            <span class="mr-2 d-none d-lg-inline text-gray-600 small">
+                {{ request.user.get_full_name|default:request.user.email }}
+            </span>
+            {% if request.user.profile_picture %}
+            <img class="img-profile rounded-circle" src="{{ request.user.profile_picture.url }}">
+            {% else %}
+            <img class="img-profile rounded-circle" src="{% static 'img/undraw_profile.svg' %}">
+            {% endif %}
+        </a>
+        <!-- Dropdown - User Information -->
+        <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in"
+            aria-labelledby="userDropdown">
+            <a class="dropdown-item" href="{% url 'profile' %}">
+                <i class="fas fa-user fa-sm fa-fw mr-2 text-gray-400"></i>
+                Profile
+            </a>
+            <div class="dropdown-divider"></div>
+            <a class="dropdown-item" href="#" data-toggle="modal" data-target="#logoutModal">
+                <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i>
+                Logout
+            </a>
+        </div>
+    </li>
+
+</ul>
+
 
 </nav>
 <!-- End of Topbar -->

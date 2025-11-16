@@ -1,12 +1,448 @@
 {% extends "core/base.html" %}
+{% load static %}
 {% block content %}
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.css" rel="stylesheet"/>
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet"/>
+
+<style>
+/* Elegant, moderate styling for matrix cells */
+.fc .fc-daygrid-day-frame {
+    padding: 0.5rem;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: none;
+}
+.date-weather {
+    position: absolute;
+    top: 6px;
+    right: 8px;
+    font-size: 0.85rem;
+    opacity: 0.85;
+}
+.shift-row {
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+    padding:4px 0;
+    border-radius:6px;
+}
+.shift-pill {
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding:2px 6px;
+    border-radius:999px;
+    background: #f3f6ff;
+    font-size:0.85rem;
+    min-width: 70px;
+}
+.shift-actions { display:flex; gap:6px; align-items:center; }
+.carehome-card { border:1px solid #e6e9ef; padding:6px; border-radius:8px; margin-bottom:6px; background:#fbfcff; }
+.carehome-title { font-weight:600; font-size:0.95rem; margin-bottom:6px; }
+.badge-pending { background:#f59e0b; color:white; padding:2px 6px; border-radius:6px; font-size:0.75rem; }
+.modal-avatar { width:28px; height:28px; border-radius:50%; object-fit:cover; margin-right:8px; }
+</style>
 
 <div class="container-fluid">
-    <h2 class="mb-4">Carehome Shift Matrix</h2>
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <h3 class="mb-0">Carehome Shift Matrix</h3>
 
-    <!-- Page content goes here -->
-    <p>Shift Matrix is working correctly.</p>
+    <!-- Carehome selector -->
+    <div class="form-inline">
+      <label class="mr-2">Carehome</label>
+      <select id="carehomeSelector" class="form-control mr-3">
+        <option value="all">All Carehomes</option>
+      </select>
 
+      <!-- action buttons based on role; server will decide visibility -->
+      {% if request.user.is_authenticated and request.user.role == 'team_lead' %}
+      <button id="saveDraftBtn" class="btn btn-outline-secondary mr-2">Save Draft</button>
+      <button id="submitForApprovalBtn" class="btn btn-primary">Submit for Approval</button>
+      {% elif request.user.is_authenticated and request.user.role == 'manager' %}
+      <button id="publishBtn" class="btn btn-success mr-2">Publish</button>
+      <button id="rejectBtn" class="btn btn-danger">Reject</button>
+      {% endif %}
+    </div>
+  </div>
+
+  <div id="calendar"></div>
 </div>
 
+<!-- Add / Edit Shift Modal -->
+<div class="modal fade" id="shiftModal" tabindex="-1" role="dialog" aria-labelledby="shiftModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+    <div class="modal-content">
+      <form id="shiftForm">
+        {% csrf_token %}
+        <div class="modal-header">
+          <h5 class="modal-title" id="shiftModalLabel">Add / Edit Shift</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span>&times;</span></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="shiftId" name="shift_id" />
+          <div class="form-row">
+            <div class="form-group col-md-6">
+              <label>Carehome</label>
+              <select id="modalCarehome" name="carehome" class="form-control" required></select>
+            </div>
+            <div class="form-group col-md-3">
+              <label>Date</label>
+              <input type="text" id="modalDate" name="date" class="form-control" readonly />
+            </div>
+            <div class="form-group col-md-3">
+              <label>Shift</label>
+              <select id="modalShift" name="shift" class="form-control">
+                <option value="morning">Morning</option>
+                <option value="night">Night</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row align-items-center">
+            <div class="form-group col-md-6">
+              <label>Staff</label>
+              <select id="staffSelect" name="staff" class="form-control" style="width:100%"></select>
+            </div>
+            <div class="form-group col-md-6">
+              <label>Service User</label>
+              <select id="serviceUserSelect" name="service_user" class="form-control" style="width:100%"></select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Notes (optional)</label>
+            <textarea id="modalNotes" name="notes" class="form-control" rows="3" placeholder="Notes for this shift"></textarea>
+          </div>
+
+          <div class="form-group">
+            <small class="text-muted">Selected staff & service user will be shown with avatar in dropdown for clarity.</small>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" id="deleteShiftBtn" class="btn btn-outline-danger mr-auto" style="display:none;">Delete Shift</button>
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+          <button type="submit" id="saveShiftBtn" class="btn btn-primary">Save Shift</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- FullCalendar & Select2 & helpers -->
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/locales-all.min.js"></script>
+<script src="{% static 'vendor/jquery/jquery.min.js' %}"></script>
+<script src="{% static 'vendor/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+<script>
+/*
+Frontend logic:
+- loads carehomes into selector
+- loads calendar events via /api/rota/events/?carehome=...
+- allows adding/editing shifts via modal -> POST/PUT to /api/rota/shifts/
+- handles Save Draft & Submit for Approval & Manager Publish/Reject buttons via endpoints
+- This file expects REST endpoints (spec below).
+*/
+
+const API = {
+  carehomes: '{% url "api-carehomes-list" %}',            // GET
+  events: '{% url "api-rota-events" %}',                 // GET params: carehome
+  staff: '{% url "api-staff-list" %}',                   // GET params: carehome
+  service_users: '{% url "api-serviceusers-list" %}',    // GET params: carehome
+  shifts: '{% url "api-shifts-list" %}',                 // POST create, PUT /api/shifts/<id>/
+  save_draft: '{% url "api-rota-save-draft" %}',         // POST
+  submit_for_approval: '{% url "api-rota-submit" %}',    // POST
+  publish: '{% url "api-rota-publish" %}',               // POST
+  reject: '{% url "api-rota-reject" %}',                 // POST
+};
+
+// --- CSRF helper for AJAX
+function getCookie(name) {
+  let cookieValue = null;
+  if (document.cookie && document.cookie !== '') {
+    const cookies = document.cookie.split(';');
+    for (let i = 0; i < cookies.length; i++) {
+      const cookie = cookies[i].trim();
+      if (cookie.substring(0, name.length + 1) === (name + '=')) {
+        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+        break;
+      }
+    }
+  }
+  return cookieValue;
+}
+const csrftoken = getCookie('csrftoken');
+
+// --- DOM ready
+$(function() {
+  // init selects
+  $('#staffSelect').select2({ placeholder: 'Select staff', templateResult: formatUserOption, templateSelection: formatUserSelection, escapeMarkup: m=>m });
+  $('#serviceUserSelect').select2({ placeholder: 'Select service user', templateResult: formatUserOption, templateSelection: formatUserSelection, escapeMarkup: m=>m });
+
+  // load carehomes
+  loadCarehomes().then(() => {
+    initCalendar();
+  });
+
+  // carehome change
+  $('#carehomeSelector').on('change', function() {
+    let val = $(this).val();
+    calendar.refetchEvents();
+  });
+
+  // modal carehome field (auto-populated)
+  $('#modalCarehome').on('change', function() {
+    const carehomeId = $(this).val();
+    loadStaffForCarehome(carehomeId);
+    loadServiceUsersForCarehome(carehomeId);
+  });
+
+  // save shift submit
+  $('#shiftForm').on('submit', function(e) {
+    e.preventDefault();
+    saveShift();
+  });
+
+  $('#deleteShiftBtn').on('click', function() {
+    const id = $('#shiftId').val();
+    if (!id) return;
+    if (!confirm('Delete this shift?')) return;
+    $.ajax({
+      url: `${API.shifts}${id}/`,
+      type: 'DELETE',
+      headers: {'X-CSRFToken': csrftoken},
+      success() { $('#shiftModal').modal('hide'); calendar.refetchEvents(); },
+      error(err) { alert('Delete failed'); console.error(err); }
+    });
+  });
+
+  // action buttons
+  $('#saveDraftBtn').on('click', function(){ saveDraft(); });
+  $('#submitForApprovalBtn').on('click', function(){ submitForApproval(); });
+  $('#publishBtn').on('click', function(){ managerPublish(); });
+  $('#rejectBtn').on('click', function(){ managerReject(); });
+});
+
+// --- Formatting select2 entries with image + name
+function formatUserOption(user) {
+  if (!user.id) return user.text || user.name;
+  const img = user.avatar ? `<img src="${user.avatar}" class="modal-avatar">` : '<div class="modal-avatar" style="background:#ddd"></div>';
+  return `<div style="display:flex;align-items:center;">${img}<div><div style="font-weight:600">${user.name}</div><div style="font-size:0.8rem;color:#666">${user.meta||''}</div></div></div>`;
+}
+function formatUserSelection(user) {
+  return user.name || user.text;
+}
+
+// --- load carehomes
+async function loadCarehomes() {
+  try {
+    const res = await $.get(API.carehomes);
+    $('#carehomeSelector').empty().append('<option value="all">All Carehomes</option>');
+    $('#modalCarehome').empty();
+    res.forEach(ch => {
+      $('#carehomeSelector').append(`<option value="${ch.id}">${ch.name}</option>`);
+      $('#modalCarehome').append(`<option value="${ch.id}">${ch.name}</option>`);
+    });
+  } catch (err) {
+    console.error('Failed to load carehomes', err);
+  }
+}
+
+// --- load staff for carehome
+async function loadStaffForCarehome(carehomeId) {
+  if(!carehomeId) return;
+  try {
+    const res = await $.get(API.staff, { carehome: carehomeId });
+    $('#staffSelect').empty();
+    res.forEach(s => {
+      const option = new Option(s.name, s.id, false, false);
+      $(option).data('avatar', s.avatar);
+      $('#staffSelect').append(option);
+      // Add data for select2 rendering
+      $('#staffSelect').find(`option[value='${s.id}']`).data({name: s.name, avatar: s.avatar, meta: s.role_display});
+    });
+    $('#staffSelect').trigger('change');
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+// --- load service users
+async function loadServiceUsersForCarehome(carehomeId) {
+  if(!carehomeId) return;
+  try {
+    const res = await $.get(API.service_users, { carehome: carehomeId });
+    $('#serviceUserSelect').empty();
+    res.forEach(su => {
+      const option = new Option(su.name, su.id, false, false);
+      $('#serviceUserSelect').append(option);
+      $('#serviceUserSelect').find(`option[value='${su.id}']`).data({name: su.name, avatar: su.avatar, meta: su.initials});
+    });
+    $('#serviceUserSelect').trigger('change');
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+// --- FullCalendar init
+let calendar;
+function initCalendar() {
+  const calendarEl = document.getElementById('calendar');
+  calendar = new FullCalendar.Calendar(calendarEl, {
+    initialView: 'dayGridMonth',
+    height: 700,
+    headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,dayGridWeek' },
+    dateClick: function(info) {
+      // open modal for date (default morning)
+      openAddShiftModal(info.dateStr, 'morning', $('#carehomeSelector').val());
+    },
+    eventClick: function(info) {
+      // event stores shift_id and other meta
+      openEditShiftModal(info.event.extendedProps);
+    },
+    events: function(fetchInfo, successCallback, failureCallback) {
+      const carehome = $('#carehomeSelector').val();
+      $.get(API.events, { start: fetchInfo.startStr, end: fetchInfo.endStr, carehome: carehome })
+        .done(data => successCallback(data))
+        .fail(err => { console.error(err); failureCallback(err); });
+    },
+    dayCellContent: function(arg) {
+      // default FullCalendar date content; we will use event rendering below
+      return arg.dayNumberText;
+    },
+    eventDidMount: function(info) {
+      // keep default rendering
+    },
+    eventDisplay: 'block',
+    editable: false,
+  });
+  calendar.render();
+}
+
+// --- Open modal for new shift
+function openAddShiftModal(dateStr, shiftType, carehomeId) {
+  $('#shiftModalLabel').text('Add Shift');
+  $('#shiftId').val('');
+  $('#modalDate').val(dateStr);
+  $('#modalShift').val(shiftType);
+  if (carehomeId && carehomeId !== 'all') {
+    $('#modalCarehome').val(carehomeId).trigger('change');
+  } else {
+    // if all selected and user is TL, preselect their carehome via server context (optional)
+    $('#modalCarehome').val($('#carehomeSelector').val()).trigger('change');
+  }
+  // load staff and service users for selected carehome
+  loadStaffForCarehome($('#modalCarehome').val());
+  loadServiceUsersForCarehome($('#modalCarehome').val());
+  $('#deleteShiftBtn').hide();
+  $('#shiftModal').modal('show');
+}
+
+// --- Open modal with existing shift info
+function openEditShiftModal(props) {
+  $('#shiftModalLabel').text('Edit Shift');
+  $('#shiftId').val(props.shift_id);
+  $('#modalDate').val(props.date);
+  $('#modalShift').val(props.shift);
+  $('#modalCarehome').val(props.carehome_id).trigger('change');
+  // after staff loaded, set value (delay small)
+  setTimeout(()=> {
+    $('#staffSelect').val(props.staff_id).trigger('change');
+    $('#serviceUserSelect').val(props.service_user_id).trigger('change');
+    $('#modalNotes').val(props.notes || '');
+  }, 300);
+  $('#deleteShiftBtn').show();
+  $('#shiftModal').modal('show');
+}
+
+// --- Save shift (create or update)
+function saveShift() {
+  const payload = {
+    carehome: $('#modalCarehome').val(),
+    date: $('#modalDate').val(),
+    shift: $('#modalShift').val(),
+    staff: $('#staffSelect').val(),
+    service_user: $('#serviceUserSelect').val(),
+    notes: $('#modalNotes').val()
+  };
+  const id = $('#shiftId').val();
+  const method = id ? 'PUT' : 'POST';
+  const url = id ? `${API.shifts}${id}/` : API.shifts;
+  $.ajax({
+    url: url,
+    type: method,
+    contentType: 'application/json',
+    data: JSON.stringify(payload),
+    headers: {'X-CSRFToken': csrftoken},
+    success: function(res) {
+      $('#shiftModal').modal('hide');
+      calendar.refetchEvents();
+    },
+    error: function(err) {
+      console.error(err);
+      alert('Failed to save shift.');
+    }
+  });
+}
+
+// --- Save Draft (Team Lead)
+// saves whole calendar state or current month as draft (backend decides)
+function saveDraft() {
+  $.ajax({
+    url: API.save_draft,
+    type: 'POST',
+    contentType: 'application/json',
+    data: JSON.stringify({ carehome: $('#carehomeSelector').val(), period: $('#calendar').data('current-period') || null }),
+    headers: {'X-CSRFToken': csrftoken},
+    success: function() { alert('Draft saved'); },
+    error: function() { alert('Failed to save draft'); }
+  });
+}
+
+// --- Submit for approval (Team Lead)
+function submitForApproval() {
+  if (!confirm('Submit this rota for manager approval? You will not be able to edit after submission.')) return;
+  $.ajax({
+    url: API.submit_for_approval,
+    type: 'POST',
+    contentType: 'application/json',
+    data: JSON.stringify({ carehome: $('#carehomeSelector').val(), period: $('#calendar').data('current-period') || null }),
+    headers: {'X-CSRFToken': csrftoken},
+    success: function() { alert('Rota submitted for approval'); calendar.refetchEvents(); },
+    error: function() { alert('Failed to submit for approval'); }
+  });
+}
+
+// --- Manager publish
+function managerPublish() {
+  const notify = prompt('Notify (everyone / staff / service_users / none):', 'everyone');
+  $.ajax({
+    url: API.publish,
+    type: 'POST',
+    contentType: 'application/json',
+    data: JSON.stringify({ carehome: $('#carehomeSelector').val(), notify: notify }),
+    headers: {'X-CSRFToken': csrftoken},
+    success: function() { alert('Published'); calendar.refetchEvents(); },
+    error: function() { alert('Failed to publish'); }
+  });
+}
+
+// --- Manager reject
+function managerReject() {
+  const message = prompt('Optional message for team lead (why rejected):', '');
+  if (message === null) return;
+  $.ajax({
+    url: API.reject,
+    type: 'POST',
+    contentType: 'application/json',
+    data: JSON.stringify({ carehome: $('#carehomeSelector').val(), message: message }),
+    headers: {'X-CSRFToken': csrftoken},
+    success: function() { alert('Rota returned to team lead'); calendar.refetchEvents(); },
+    error: function() { alert('Failed to reject'); }
+  });
+}
+</script>
 {% endblock %}
