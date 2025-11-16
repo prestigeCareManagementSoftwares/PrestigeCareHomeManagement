@@ -674,6 +674,8 @@ class MissedLog(models.Model):
         verbose_name_plural = "Missed Shifts"
 
 
+User = settings.AUTH_USER_MODEL
+
 # ===== Notification model (in case you don't already have one) =====
 class Notification(models.Model):
     NOTIF_TYPES = [
