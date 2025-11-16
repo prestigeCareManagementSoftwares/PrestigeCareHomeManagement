@@ -6,7 +6,7 @@ from django.core.exceptions import FieldError
 from django.utils import timezone
 
 from .models import CustomUser, CareHome, ServiceUser, LogEntry, Mapping, IncidentReport, ABCForm, LatestLogEntry, \
-    MissedLog
+    MissedLog ,Rota, Shift, RotaApproval, ShiftChangeLog, Notification
 
 
 @admin.register(CustomUser)
