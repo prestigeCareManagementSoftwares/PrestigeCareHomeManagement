@@ -1695,3 +1695,217 @@ def api_rota_submit(request, rota_id):
     for m in rota.carehome.managers.all():
         send_notification(m, "Rota Submitted", f"{request.user.get_full_name()} submitted rota for {rota.carehome.name}", notif_type='rota_submit', payload={'rota_id': rota.id})
     return JsonResponse({"ok": True})
+
+@csrf_exempt
+@login_required
+def api_rota_reject(request):
+    try:
+        data = json.loads(request.body.decode())
+    except:
+        return api_error("Invalid JSON")
+
+    rota_id = data.get("rota_id")
+    comment = data.get("comment", "")
+
+    if not rota_id:
+        return api_error("rota_id required")
+
+    try:
+        rota = Rota.objects.get(id=rota_id)
+    except Rota.DoesNotExist:
+        return api_error("Rota not found")
+
+    rota.status = "Rejected"
+    rota.manager_message = comment
+    rota.save()
+
+    return api_ok({"status": rota.status})
+
+@csrf_exempt
+@login_required
+def api_rota_publish(request):
+
+    try:
+        data = json.loads(request.body.decode())
+    except:
+        return api_error("Invalid JSON")
+
+    rota_id = data.get("rota_id")
+    if not rota_id:
+        return api_error("rota_id required")
+
+    try:
+        rota = Rota.objects.get(id=rota_id)
+    except Rota.DoesNotExist:
+        return api_error("Rota not found")
+
+    rota.status = "Published"
+    rota.approved_by = request.user
+    rota.save()
+
+    return api_ok({"status": rota.status})
+
+@csrf_exempt
+@login_required
+def api_rota_submit(request):
+    from .models import Rota
+    import json
+
+    try:
+        data = json.loads(request.body.decode())
+    except:
+        return api_error("Invalid JSON")
+
+    rota_id = data.get("rota_id")
+    if not rota_id:
+        return api_error("rota_id required")
+
+    try:
+        rota = Rota.objects.get(id=rota_id)
+    except Rota.DoesNotExist:
+        return api_error("Rota not found")
+
+    rota.status = "Submitted"
+    rota.save()
+
+    return api_ok({"status": rota.status})
+
+@csrf_exempt
+@login_required
+def api_rota_save_draft(request):
+    from .models import Rota
+    import json
+
+    try:
+        data = json.loads(request.body.decode())
+    except:
+        return api_error("Invalid JSON")
+
+    carehome_id = data.get("carehome_id")
+    week_start = data.get("week_start")
+
+    if not carehome_id or not week_start:
+        return api_error("carehome_id and week_start required")
+
+    rota, created = Rota.objects.get_or_create(
+        carehome_id=carehome_id,
+        week_start=week_start,
+        defaults={"created_by": request.user}
+    )
+
+    rota.status = "Draft"
+    rota.save()
+
+    return api_ok({"rota_id": rota.id, "status": rota.status})
+
+@csrf_exempt
+@login_required
+def api_shifts_list(request):
+
+    if request.method not in ["POST", "PUT"]:
+        return api_error("Method not allowed", status=405)
+
+    try:
+        data = json.loads(request.body.decode())
+    except:
+        return api_error("Invalid JSON format")
+
+    # Validate required fields
+    required = ["rota_id", "date", "shift_type"]
+    if not all(k in data for k in required):
+        return api_error("Missing required fields")
+
+    rota_id = data.get("rota_id")
+
+    try:
+        rota = Rota.objects.get(id=rota_id)
+    except Rota.DoesNotExist:
+        return api_error("Rota not found")
+
+    # If PUT → update existing shift
+    shift_id = data.get("id")
+    if request.method == "PUT" and shift_id:
+        try:
+            shift = Shift.objects.get(id=shift_id)
+        except Shift.DoesNotExist:
+            return api_error("Shift not found")
+    else:
+        shift = Shift(rota=rota)
+
+    # Assign fields
+    shift.date = data.get("date")
+    shift.shift_type = data.get("shift_type")
+    shift.staff_id = data.get("staff_id")
+    shift.service_user_id = data.get("service_user_id")
+    shift.notes = data.get("notes", "")
+
+    shift.save()
+
+    return api_ok({"shift_id": shift.id})
+
+@login_required
+def api_rota_events(request):
+    carehome_id = request.GET.get("carehome")
+
+    if not carehome_id:
+        return api_error("carehome parameter is required")
+
+    rotas = Rota.objects.filter(carehome_id=carehome_id).order_by("-week_start")
+
+    results = []
+
+    for rota in rotas:
+        shifts = Shift.objects.filter(rota=rota).values(
+            "id", "date", "shift_type", "staff_id", "service_user_id", "notes"
+        )
+
+        results.append({
+            "rota_id": rota.id,
+            "week_start": rota.week_start,
+            "status": rota.status,
+            "shifts": list(shifts)
+        })
+
+    return api_ok(results)
+
+@login_required
+def api_serviceusers_list(request):
+    from .models import ServiceUser
+
+    carehome_id = request.GET.get("carehome")
+
+    if not carehome_id:
+        return api_error("carehome parameter is required")
+
+    users = ServiceUser.objects.filter(
+        carehome_id=carehome_id
+    ).values("id", "first_name", "last_name", "image")
+
+    return api_ok(list(users))
+
+@login_required
+def api_staff_list(request):
+    from .models import CustomUser, CareHome
+
+    carehome_id = request.GET.get("carehome")
+
+    if not carehome_id:
+        return api_error("carehome parameter is required")
+
+    staff = CustomUser.objects.filter(
+        carehome_id=carehome_id,
+        role='staff'
+    ).values("id", "first_name", "last_name", "profile_picture")
+
+    return api_ok(list(staff))
+
+@login_required
+def api_carehomes_list(request):
+    from .models import CareHome
+
+    carehomes = CareHome.objects.all().values(
+        "id", "name", "postcode"
+    )
+
+    return api_ok(list(carehomes))
+
