@@ -47,6 +47,12 @@ from .forms import LogEntryForm
 from django.http import JsonResponse
 from datetime import time
 
+def api_error(message, status=400):
+    return JsonResponse({"success": False, "error": message}, status=status)
+
+def api_ok(data=None):
+    return JsonResponse({"success": True, "data": data or {}}, status=200)
+
 def render_pdf_view(template_src, context_dict):
     html = render_to_string(template_src, context_dict)
     result = BytesIO()
