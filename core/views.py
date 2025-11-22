@@ -1875,35 +1875,48 @@ def api_rota_events(request):
     return api_ok(results)
 
 @login_required
-def api_serviceusers_list(request):
-    from .models import ServiceUser
-
-    carehome_id = request.GET.get("carehome")
-
-    if not carehome_id:
-        return api_error("carehome parameter is required")
-
-    users = ServiceUser.objects.filter(
-        carehome_id=carehome_id
-    ).values("id", "first_name", "last_name", "image")
-
-    return api_ok(list(users))
+def api_staff_list(request):
+    carehome_id = request.GET.get('carehome')
+    try:
+        staff_qs = CustomUser.objects.filter(carehome_id=carehome_id, role='staff')
+        data = list(staff_qs.values(
+            "id",
+            "first_name",
+            "last_name",
+            "image",      # ← use 'image' instead of 'profile_picture'
+            "role",       # optional, can use for meta
+        ))
+        # add computed fields for frontend if needed
+        for s in data:
+            s['name'] = f"{s['first_name']} {s['last_name']}"
+            s['avatar'] = s['image']  # frontend expects 'avatar'
+            s['role_display'] = s['role'].capitalize()  # optional
+        return api_ok(data)
+    except Exception as e:
+        import traceback
+        print(traceback.format_exc())
+        return api_error(str(e))
 
 @login_required
-def api_staff_list(request):
-    from .models import CustomUser, CareHome
-
-    carehome_id = request.GET.get("carehome")
-
-    if not carehome_id:
-        return api_error("carehome parameter is required")
-
-    staff = CustomUser.objects.filter(
-        carehome_id=carehome_id,
-        role='staff'
-    ).values("id", "first_name", "last_name", "profile_picture")
-
-    return api_ok(list(staff))
+def api_service_users_list(request):
+    carehome_id = request.GET.get('carehome')
+    try:
+        su_qs = ServiceUser.objects.filter(carehome_id=carehome_id)
+        data = list(su_qs.values(
+            "id",
+            "first_name",
+            "last_name",
+            "image",
+        ))
+        for su in data:
+            su['name'] = f"{su['first_name']} {su['last_name']}"
+            su['avatar'] = su['image']
+            su['initials'] = f"{su['first_name'][0]}{su['last_name'][0]}" if su['first_name'] and su['last_name'] else ''
+        return api_ok(data)
+    except Exception as e:
+        import traceback
+        print(traceback.format_exc())
+        return api_error(str(e))
 
 @login_required
 def api_carehomes_list(request):
