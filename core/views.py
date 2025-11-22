@@ -1898,7 +1898,7 @@ def api_staff_list(request):
         return api_error(str(e))
 
 @login_required
-def api_service_users_list(request):
+def api_service_list(request):
     carehome_id = request.GET.get('carehome')
     try:
         su_qs = ServiceUser.objects.filter(carehome_id=carehome_id)
