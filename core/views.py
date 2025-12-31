@@ -1636,7 +1636,7 @@ def id_card_preview(request, user_id):
         "qr_code_value": qr_code_value,
     }
 
-    return render(request, "staff/id_card_preview.html", context)
+    return render(request, "staff/new_id_card_preview.html", context)
 
 class ProfileView(LoginRequiredMixin, DetailView):
     model = CustomUser

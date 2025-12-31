@@ -1,0 +1,269 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container py-4">
+  <h2 class="mb-4">ID Card Preview: {{ first_name }} {{ last_name }}</h2>
+
+  <div id="previewContainer"></div>
+
+  <button type="button" class="btn btn-primary mt-4" id="downloadBtn">
+    Download ID Cards
+  </button>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<!-- QR code (canvas-based, works with html2canvas) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+
+<script>
+// Django context data
+const data = {
+  first_name: "{{ first_name }}",
+  last_name: "{{ last_name }}",
+  role: "{{ role|default:'Support Worker' }}",
+  photo: "{{ photo }}",
+  qr_code_value: "{{ qr_code_value }}",
+  id: "{{ request.user.id }}",
+};
+
+// Random card number: PLC + 6 digits (generated client-side)
+function generateCardNumber() {
+  const n = Math.floor(100000 + Math.random() * 900000);
+  return `PLC${n}`;
+}
+
+function getInitials(first, last) {
+  const f = (first || "").trim();
+  const l = (last || "").trim();
+  const fi = f ? f[0].toUpperCase() : "X";
+  const li = l ? l[0].toUpperCase() : "X";
+  return `${fi}${li}`;
+}
+
+function safeText(t, fallback="") {
+  const v = (t ?? "").toString().trim();
+  return v.length ? v : fallback;
+}
+
+// Render ID card previews
+function loadPreview() {
+  const cardNo = generateCardNumber();
+  const fullName = `${safeText(data.first_name, "Employee")} ${safeText(data.last_name, "")}`.trim();
+  const roleText = safeText(data.role, "Support Worker");
+
+  const container = document.getElementById("previewContainer");
+  container.innerHTML = `
+    <!-- Front side -->
+    <div class="id-card mb-3" id="frontCard">
+      <img src="{% static 'core/images/front-template.png' %}" class="template" alt="Front Template"/>
+
+      <div class="front-overlay">
+        <!-- Photo in the circle -->
+        <div class="photo-slot">
+          ${
+            safeText(data.photo).length
+              ? `<img src="${data.photo}" alt="Profile"/>`
+              : `<div class="initials">${getInitials(data.first_name, data.last_name)}</div>`
+          }
+        </div>
+
+        <!-- Text block -->
+        <div class="text-block">
+          <div class="emp-name">${fullName}</div>
+          <div class="emp-role">${roleText}</div>
+          <div class="emp-cardno">Card no. <span>${cardNo}</span></div>
+        </div>
+
+        <!-- QR on front -->
+        <div class="qr-wrap">
+          <div id="qrBox"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Back side (static design only) -->
+    <div class="id-card" id="backCard">
+      <img src="{% static 'core/images/back-template.png' %}" class="template" alt="Back Template"/>
+    </div>
+  `;
+
+  // Build QR as canvas so html2canvas captures it
+  const qrBox = document.getElementById("qrBox");
+  qrBox.innerHTML = "";
+  new QRCode(qrBox, {
+    text: safeText(data.qr_code_value, cardNo),
+    width: 85,
+    height: 85,
+    correctLevel: QRCode.CorrectLevel.H
+  });
+}
+
+// Download front & back ID cards as ZIP
+async function downloadIDCards() {
+  try {
+    const initials = getInitials(data.first_name, data.last_name);
+    const cards = document.querySelectorAll('.id-card');
+    if (!cards.length) return;
+
+    const zip = new JSZip();
+    const folder = zip.folder("Employee_ID_Cards");
+
+    for (let i = 0; i < cards.length; i++) {
+      const canvas = await html2canvas(cards[i], {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: null
+      });
+
+      const imageData = canvas.toDataURL('image/png').split(',')[1];
+      const side = i === 0 ? 'front' : 'back';
+      const filename = `${initials}_${side}_id_card.png`;
+      folder.file(filename, imageData, { base64: true });
+    }
+
+    const content = await zip.generateAsync({ type: 'blob' });
+    const url = URL.createObjectURL(content);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${initials}_id_cards.zip`;
+    document.body.appendChild(link);
+    link.click();
+
+    setTimeout(() => {
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }, 100);
+  } catch (error) {
+    console.error("Download failed:", error);
+    alert("Download failed. Please try again.");
+  }
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+  loadPreview();
+  document.getElementById("downloadBtn").addEventListener("click", downloadIDCards);
+});
+</script>
+
+<style>
+/* Card base */
+.id-card{
+  width: 500px;
+  height: 300px;
+  background: #fff;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  border-radius: 12px;
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 30px;
+}
+
+.id-card .template{
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 1;
+}
+
+/* FRONT overlay positions */
+.front-overlay{
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+}
+
+/* Photo sits on the left circular placeholder */
+.photo-slot{
+  position: absolute;
+  left: 78px;
+  top: 82px;
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+}
+
+.photo-slot img{
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* If no photo */
+.initials{
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 44px;
+  font-weight: 800;
+  background: rgba(142, 68, 173, 0.10);
+  color: #5b1f6a;
+}
+
+/* Text area (right side) */
+.text-block{
+  position: absolute;
+  left: 260px;
+  top: 95px;
+  right: 120px;
+  font-family: Georgia, "Times New Roman", serif;
+  color: #1f1f1f;
+}
+
+.emp-name{
+  font-size: 30px;
+  line-height: 1.15;
+  font-weight: 500;
+  margin-bottom: 10px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.emp-role{
+  font-size: 18px;
+  letter-spacing: 6px; /* spaced like your sample */
+  text-transform: uppercase;
+  opacity: 0.9;
+  margin-bottom: 16px;
+  white-space: nowrap;
+}
+
+.emp-cardno{
+  font-size: 20px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.emp-cardno span{
+  font-weight: 800;
+}
+
+/* QR placement (bottom-right area) */
+.qr-wrap{
+  position: absolute;
+  right: 60px;
+  bottom: 60px;
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+}
+
+#qrBox canvas{
+  width: 55px !important;
+  height: 55px !important;
+  border-radius: 6px;
+}
+</style>
+{% endblock %}
