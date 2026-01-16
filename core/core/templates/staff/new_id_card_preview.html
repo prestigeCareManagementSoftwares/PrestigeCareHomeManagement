@@ -14,7 +14,6 @@
 {% endblock %}
 
 {% block scripts %}
-<!-- QR code (canvas-based, works with html2canvas) -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
@@ -30,7 +29,7 @@ const data = {
   id: "{{ request.user.id }}",
 };
 
-// Random card number: PLC + 6 digits (generated client-side)
+// NOTE (recommended): persist this in DB instead of random each time
 function generateCardNumber() {
   const n = Math.floor(100000 + Math.random() * 900000);
   return `PLC${n}`;
@@ -49,7 +48,6 @@ function safeText(t, fallback="") {
   return v.length ? v : fallback;
 }
 
-// Render ID card previews
 function loadPreview() {
   const cardNo = generateCardNumber();
   const fullName = `${safeText(data.first_name, "Employee")} ${safeText(data.last_name, "")}`.trim();
@@ -57,44 +55,100 @@ function loadPreview() {
 
   const container = document.getElementById("previewContainer");
   container.innerHTML = `
-    <!-- Front side -->
+    <!-- FRONT -->
     <div class="id-card mb-3" id="frontCard">
-      <img src="{% static 'core/images/front-template.png' %}" class="template" alt="Front Template"/>
+      <svg class="card-bg" viewBox="0 0 500 300" preserveAspectRatio="none" aria-hidden="true">
+        <!-- TOP purple -->
+        <polygon points="0,0 500,0 500,52 250,40 0,52" fill="#6b1f6b"></polygon>
 
-      <div class="front-overlay">
-        <!-- Photo in the circle -->
+        <!-- TOP double white stripe -->
+        <polyline points="0,52 250,40 500,52" fill="none" stroke="#fff" stroke-width="6"></polyline>
+        <polyline points="0,64 250,52 500,64" fill="none" stroke="#fff" stroke-width="6"></polyline>
+
+        <!-- dark separator -->
+        <polyline points="0,58 250,46 500,58" fill="none" stroke="#4d2752" stroke-width="6" opacity="0.85"></polyline>
+
+        <!-- BOTTOM purple -->
+        <polygon points="0,300 500,300 500,248 250,260 0,248" fill="#6b1f6b"></polygon>
+
+        <!-- BOTTOM double white stripe -->
+        <polyline points="0,248 250,260 500,248" fill="none" stroke="#fff" stroke-width="6"></polyline>
+        <polyline points="0,236 250,248 500,236" fill="none" stroke="#fff" stroke-width="6"></polyline>
+
+        <!-- dark separator -->
+        <polyline points="0,242 250,254 500,242" fill="none" stroke="#4d2752" stroke-width="6" opacity="0.85"></polyline>
+      </svg>
+
+      <div class="card-content">
         <div class="photo-slot">
-          ${
-            safeText(data.photo).length
-              ? `<img src="${data.photo}" alt="Profile"/>`
-              : `<div class="initials">${getInitials(data.first_name, data.last_name)}</div>`
-          }
+          <img id="empPhoto" alt="Profile"/>
+          <div class="initials" id="empInitials" hidden></div>
         </div>
 
-        <!-- Text block -->
         <div class="text-block">
-          <div class="emp-name">${fullName}</div>
-          <div class="emp-role">${roleText}</div>
-          <div class="emp-cardno">Card no. <span>${cardNo}</span></div>
-        </div>
-
-        <!-- QR on front -->
-        <div class="qr-wrap">
-          <div id="qrBox"></div>
+          <div class="emp-name" id="empName">${fullName}</div>
+          <div class="emp-role" id="empRole">${roleText}</div>
+          <div class="emp-cardno">Card no. <span id="empCardNo">${cardNo}</span></div>
         </div>
       </div>
     </div>
 
-    <!-- Back side (static design only) -->
+    <!-- BACK -->
     <div class="id-card" id="backCard">
-      <img src="{% static 'core/images/back-template.png' %}" class="template" alt="Back Template"/>
+      <svg class="card-bg" viewBox="0 0 500 300" preserveAspectRatio="none" aria-hidden="true">
+        <polygon points="0,0 500,0 500,52 250,40 0,52" fill="#6b1f6b"></polygon>
+        <polygon points="0,300 500,300 500,248 250,260 0,248" fill="#6b1f6b"></polygon>
+      </svg>
+
+      <div class="card-content back-layout">
+        <div class="logo-wrap">
+          <!-- Put your company logo file here -->
+          <img src="{% static 'core/images/company-logo.jpeg' %}" alt="Logo"/>
+        </div>
+
+        <div class="qr-back">
+          <div id="qrBoxBack"></div>
+        </div>
+
+        <div class="footer">
+          <div class="footer-row">
+            <span class="dot">🌐</span>
+            <span>www.prestigesupportedliving.com</span>
+            <span class="spacer"></span>
+            <span class="dot">✉</span>
+            <span>info@prestigesupportedliving.com</span>
+          </div>
+
+          <div class="footer-row small">
+            <span class="dot">📍</span>
+            <span>
+              Office Address: Office 407B, 4th floor, Jhumat House, 160 London Road, Barking, London, IG11 8BB,
+              02082141283, 02082141284
+            </span>
+          </div>
+        </div>
+      </div>
     </div>
   `;
 
-  // Build QR as canvas so html2canvas captures it
-  const qrBox = document.getElementById("qrBox");
-  qrBox.innerHTML = "";
-  new QRCode(qrBox, {
+  // Photo or initials
+  const img = document.getElementById("empPhoto");
+  const initialsBox = document.getElementById("empInitials");
+
+  if (safeText(data.photo).length) {
+    img.src = data.photo;
+    img.style.display = "block";
+    initialsBox.hidden = true;
+  } else {
+    img.style.display = "none";
+    initialsBox.textContent = getInitials(data.first_name, data.last_name);
+    initialsBox.hidden = false;
+  }
+
+  // QR on BACK (canvas so html2canvas captures)
+  const qrBack = document.getElementById("qrBoxBack");
+  qrBack.innerHTML = "";
+  new QRCode(qrBack, {
     text: safeText(data.qr_code_value, cardNo),
     width: 85,
     height: 85,
@@ -102,11 +156,11 @@ function loadPreview() {
   });
 }
 
-// Download front & back ID cards as ZIP
+// Download front & back cards as ZIP
 async function downloadIDCards() {
   try {
     const initials = getInitials(data.first_name, data.last_name);
-    const cards = document.querySelectorAll('.id-card');
+    const cards = document.querySelectorAll(".id-card");
     if (!cards.length) return;
 
     const zip = new JSZip();
@@ -116,18 +170,19 @@ async function downloadIDCards() {
       const canvas = await html2canvas(cards[i], {
         scale: 2,
         useCORS: true,
-        backgroundColor: null
+        backgroundColor: "#ffffff"
       });
 
-      const imageData = canvas.toDataURL('image/png').split(',')[1];
-      const side = i === 0 ? 'front' : 'back';
+      const imageData = canvas.toDataURL("image/png").split(",")[1];
+      const side = i === 0 ? "front" : "back";
       const filename = `${initials}_${side}_id_card.png`;
       folder.file(filename, imageData, { base64: true });
     }
 
-    const content = await zip.generateAsync({ type: 'blob' });
+    const content = await zip.generateAsync({ type: "blob" });
     const url = URL.createObjectURL(content);
-    const link = document.createElement('a');
+
+    const link = document.createElement("a");
     link.href = url;
     link.download = `${initials}_id_cards.zip`;
     document.body.appendChild(link);
@@ -136,57 +191,55 @@ async function downloadIDCards() {
     setTimeout(() => {
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
-    }, 100);
+    }, 150);
   } catch (error) {
     console.error("Download failed:", error);
     alert("Download failed. Please try again.");
   }
 }
 
-document.addEventListener("DOMContentLoaded", function() {
+document.addEventListener("DOMContentLoaded", () => {
   loadPreview();
   document.getElementById("downloadBtn").addEventListener("click", downloadIDCards);
 });
 </script>
 
 <style>
-/* Card base */
+/* Base card */
 .id-card{
   width: 500px;
   height: 300px;
   background: #fff;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
   border-radius: 12px;
   position: relative;
   overflow: hidden;
-  margin-bottom: 30px;
+  box-shadow: 0 4px 12px rgba(0,0,0,.2);
 }
 
-.id-card .template{
+.card-bg{
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
-  object-fit: cover;
   z-index: 1;
 }
 
-/* FRONT overlay positions */
-.front-overlay{
-  position: relative;
+.card-content{
+  position: absolute;
+  inset: 0;
   z-index: 2;
-  width: 100%;
-  height: 100%;
 }
 
-/* Photo sits on the left circular placeholder */
+/* Photo circle */
 .photo-slot{
   position: absolute;
-  left: 78px;
-  top: 82px;
-  width: 150px;
-  height: 150px;
+  left: 70px;
+  top: 78px;
+  width: 160px;
+  height: 160px;
   border-radius: 50%;
+  border: 8px solid #6b1f6b;
+  background: #fff;
   overflow: hidden;
   display: grid;
   place-items: center;
@@ -196,29 +249,28 @@ document.addEventListener("DOMContentLoaded", function() {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  display: block;
 }
 
-/* If no photo */
 .initials{
   width: 100%;
   height: 100%;
-  border-radius: 50%;
   display: grid;
   place-items: center;
   font-size: 44px;
   font-weight: 800;
-  background: rgba(142, 68, 173, 0.10);
-  color: #5b1f6a;
+  color: #6b1f6b;
+  background: rgba(107,31,107,0.08);
 }
 
-/* Text area (right side) */
+/* Text */
 .text-block{
   position: absolute;
-  left: 260px;
-  top: 95px;
-  right: 120px;
+  left: 265px;
+  top: 92px;
+  right: 30px;
   font-family: Georgia, "Times New Roman", serif;
-  color: #1f1f1f;
+  color: #4d2752;
 }
 
 .emp-name{
@@ -232,38 +284,78 @@ document.addEventListener("DOMContentLoaded", function() {
 }
 
 .emp-role{
-  font-size: 18px;
-  letter-spacing: 6px; /* spaced like your sample */
+  font-size: 16px;
+  letter-spacing: 7px;
   text-transform: uppercase;
-  opacity: 0.9;
-  margin-bottom: 16px;
+  margin-bottom: 18px;
   white-space: nowrap;
 }
 
 .emp-cardno{
   font-size: 20px;
   font-weight: 700;
-  white-space: nowrap;
 }
 .emp-cardno span{
   font-weight: 800;
 }
 
-/* QR placement (bottom-right area) */
-.qr-wrap{
+/* BACK layout */
+.back-layout .logo-wrap{
   position: absolute;
-  right: 60px;
-  bottom: 60px;
-  width: 30px;
-  height: 30px;
+  left: 0;
+  right: 0;
+  top: 55px;
   display: grid;
   place-items: center;
 }
 
-#qrBox canvas{
-  width: 55px !important;
-  height: 55px !important;
-  border-radius: 6px;
+.back-layout .logo-wrap img{
+  width: 240px;
+  height: auto;
 }
+
+.qr-back{
+  position: absolute;
+  right: 55px;
+  top: 70px;
+  width: 85px;
+  height: 85px;
+  display: grid;
+  place-items: center;
+}
+
+#qrBoxBack canvas{
+  width: 85px !important;
+  height: 85px !important;
+}
+
+/* Footer */
+.footer{
+  position: absolute;
+  left: 45px;
+  right: 45px;
+  bottom: 45px;
+  color: #6b1f6b;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 14px;
+}
+
+.footer-row{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  line-height: 1.3;
+}
+
+.footer-row.small{
+  margin-top: 10px;
+  font-size: 13px;
+  text-align: center;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.spacer{ flex: 1; }
+.dot{ font-size: 16px; }
 </style>
 {% endblock %}
