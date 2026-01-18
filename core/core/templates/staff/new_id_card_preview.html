@@ -1,3 +1,18 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container py-4">
+  <h2 class="mb-4">ID Card Preview: {{ first_name }} {{ last_name }}</h2>
+
+  <div id="previewContainer"></div>
+
+  <button type="button" class="btn btn-primary mt-4" id="downloadBtn">
+    Download ID Cards
+  </button>
+</div>
+{% endblock %}
+
 {% block scripts %}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
@@ -13,98 +28,355 @@ const data = {
 };
 
 function generateCardNumber() {
-  return `PLC${Math.floor(100000 + Math.random() * 900000)}`;
+  const n = Math.floor(100000 + Math.random() * 900000);
+  return `PLC${n}`;
 }
 
-function getInitials(f, l) {
-  return `${(f||"X")[0]}${(l||"X")[0]}`.toUpperCase();
+function safeText(t, fallback="") {
+  const v = (t ?? "").toString().trim();
+  return v.length ? v : fallback;
 }
 
-function safeText(t, fb="") {
-  const v = (t ?? "").trim();
-  return v || fb;
+function getInitials(first, last) {
+  const f = (first || "").trim();
+  const l = (last || "").trim();
+  const fi = f ? f[0].toUpperCase() : "X";
+  const li = l ? l[0].toUpperCase() : "X";
+  return `${fi}${li}`;
+}
+
+/** Reusable SVG: purple bands + double white lines (front/back same) */
+function svgBands() {
+  return `
+  <svg class="card-bg" viewBox="0 0 500 300" preserveAspectRatio="none" aria-hidden="true">
+    <!-- TOP purple -->
+    <polygon points="0,0 500,0 500,52 250,40 0,52" fill="#6b1f6b"></polygon>
+
+    <!-- TOP double white stripe -->
+    <polyline points="0,52 250,40 500,52" fill="none" stroke="#fff" stroke-width="6"></polyline>
+    <polyline points="0,64 250,52 500,64" fill="none" stroke="#fff" stroke-width="6"></polyline>
+
+    <!-- dark separator -->
+    <polyline points="0,58 250,46 500,58" fill="none" stroke="#4d2752" stroke-width="6" opacity="0.85"></polyline>
+
+    <!-- BOTTOM purple -->
+    <polygon points="0,300 500,300 500,248 250,260 0,248" fill="#6b1f6b"></polygon>
+
+    <!-- BOTTOM double white stripe -->
+    <polyline points="0,248 250,260 500,248" fill="none" stroke="#fff" stroke-width="6"></polyline>
+    <polyline points="0,236 250,248 500,236" fill="none" stroke="#fff" stroke-width="6"></polyline>
+
+    <!-- dark separator -->
+    <polyline points="0,242 250,254 500,242" fill="none" stroke="#4d2752" stroke-width="6" opacity="0.85"></polyline>
+  </svg>`;
 }
 
 function loadPreview() {
   const cardNo = generateCardNumber();
-  const fullName = `${safeText(data.first_name,"Employee")} ${safeText(data.last_name,"")}`.trim();
+  const fullName = `${safeText(data.first_name, "Employee")} ${safeText(data.last_name, "")}`.trim();
+  const roleText = safeText(data.role, "Support Worker");
 
-  document.getElementById("previewContainer").innerHTML = `
-  <!-- FRONT -->
-  <div class="id-card mb-3" id="frontCard">
-    ${svgBands()}
-    <div class="card-content">
-      <div class="photo-slot">
-        <div class="photo-inner">
-          <img id="empPhoto"/>
-          <div class="initials" id="empInitials" hidden></div>
+  const container = document.getElementById("previewContainer");
+  container.innerHTML = `
+    <!-- FRONT -->
+    <div class="id-card mb-3" id="frontCard">
+      ${svgBands()}
+
+      <div class="card-content">
+        <!-- Photo: purple ring -> white ring -> image -->
+        <div class="photo-outer">
+          <div class="photo-white">
+            <div class="photo-inner">
+              <img id="empPhoto" alt="Profile"/>
+              <div class="initials" id="empInitials" hidden></div>
+            </div>
+          </div>
         </div>
-      </div>
 
-      <div class="text-block">
-        <div class="emp-name">${fullName}</div>
-        <div class="emp-role">${safeText(data.role)}</div>
-        <div class="emp-cardno">Card no. <span>${cardNo}</span></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- BACK -->
-  <div class="id-card" id="backCard">
-    ${svgBands()}
-    <div class="card-content back-layout">
-      <div class="logo-wrap">
-        <img src="{% static 'core/images/company-logo.jpeg' %}">
-      </div>
-
-      <div class="qr-back"><div id="qrBoxBack"></div></div>
-
-      <div class="footer">
-        <div class="footer-row">
-          🌐 www.prestigesupportedliving.com
-          <span class="spacer"></span>
-          ✉ info@prestigesupportedliving.com
-        </div>
-        <div class="footer-row small">
-          📍 Office 407B, 4th floor, Jhumat House, 160 London Road, Barking, London, IG11 8BB,
-          02082141283, 02082141284
+        <div class="text-block">
+          <div class="emp-name" id="empName">${fullName}</div>
+          <div class="emp-role" id="empRole">${roleText}</div>
+          <div class="emp-cardno">Card no. <span id="empCardNo">${cardNo}</span></div>
         </div>
       </div>
     </div>
-  </div>
+
+    <!-- BACK -->
+    <div class="id-card" id="backCard">
+      ${svgBands()}
+
+      <div class="card-content back-layout">
+        <div class="logo-wrap">
+          <img src="{% static 'core/images/company-logo.png' %}" alt="Logo"/>
+        </div>
+
+        <div class="qr-back">
+          <div id="qrBoxBack"></div>
+        </div>
+
+        <div class="footer">
+          <div class="footer-row">
+            <span class="dot">🌐</span>
+            <span class="footer-text">www.prestigesupportedliving.com</span>
+            <span class="spacer"></span>
+            <span class="dot">✉</span>
+            <span class="footer-text">info@prestigesupportedliving.com</span>
+          </div>
+
+          <div class="footer-row small">
+            <span class="dot">📍</span>
+            <span class="footer-text">
+              Office Address: Office 407B, 4th floor, Jhumat House, 160 London Road, Barking, London, IG11 8BB,
+              02082141283, 02082141284
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
   `;
 
+  // Photo or initials fallback
   const img = document.getElementById("empPhoto");
-  const initials = document.getElementById("empInitials");
+  const initialsBox = document.getElementById("empInitials");
 
-  if (data.photo) {
+  if (safeText(data.photo).length) {
     img.src = data.photo;
     img.style.display = "block";
+    initialsBox.hidden = true;
   } else {
     img.style.display = "none";
-    initials.textContent = getInitials(data.first_name, data.last_name);
-    initials.hidden = false;
+    initialsBox.textContent = getInitials(data.first_name, data.last_name);
+    initialsBox.hidden = false;
   }
 
-  new QRCode(document.getElementById("qrBoxBack"), {
-    text: data.qr_code_value || cardNo,
+  // QR on BACK
+  const qrBack = document.getElementById("qrBoxBack");
+  qrBack.innerHTML = "";
+  new QRCode(qrBack, {
+    text: safeText(data.qr_code_value, cardNo),
     width: 80,
-    height: 80
+    height: 80,
+    correctLevel: QRCode.CorrectLevel.H
   });
 }
 
-function svgBands() {
-  return `
-  <svg class="card-bg" viewBox="0 0 500 300" preserveAspectRatio="none">
-    <polygon points="0,0 500,0 500,52 250,40 0,52" fill="#6b1f6b"/>
-    <polyline points="0,52 250,40 500,52" stroke="#fff" stroke-width="6" fill="none"/>
-    <polyline points="0,64 250,52 500,64" stroke="#fff" stroke-width="6" fill="none"/>
-    <polygon points="0,300 500,300 500,248 250,260 0,248" fill="#6b1f6b"/>
-    <polyline points="0,248 250,260 500,248" stroke="#fff" stroke-width="6" fill="none"/>
-    <polyline points="0,236 250,248 500,236" stroke="#fff" stroke-width="6" fill="none"/>
-  </svg>`;
+// Download front & back cards as ZIP
+async function downloadIDCards() {
+  try {
+    const initials = getInitials(data.first_name, data.last_name);
+    const cards = document.querySelectorAll(".id-card");
+    if (!cards.length) return;
+
+    const zip = new JSZip();
+    const folder = zip.folder("Employee_ID_Cards");
+
+    for (let i = 0; i < cards.length; i++) {
+      const canvas = await html2canvas(cards[i], {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: "#ffffff"
+      });
+
+      const imageData = canvas.toDataURL("image/png").split(",")[1];
+      const side = i === 0 ? "front" : "back";
+      folder.file(`${initials}_${side}_id_card.png`, imageData, { base64: true });
+    }
+
+    const content = await zip.generateAsync({ type: "blob" });
+    const url = URL.createObjectURL(content);
+
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${initials}_id_cards.zip`;
+    document.body.appendChild(link);
+    link.click();
+
+    setTimeout(() => {
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }, 150);
+  } catch (error) {
+    console.error("Download failed:", error);
+    alert("Download failed. Please try again.");
+  }
 }
 
-document.addEventListener("DOMContentLoaded", loadPreview);
+document.addEventListener("DOMContentLoaded", () => {
+  loadPreview();
+  document.getElementById("downloadBtn").addEventListener("click", downloadIDCards);
+});
 </script>
+
+<style>
+/* Card base */
+.id-card{
+  width: 500px;
+  height: 300px;
+  background: #fff;
+  border-radius: 12px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0,0,0,.18);
+}
+
+/* SVG background */
+.card-bg{
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+.card-content{
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+}
+
+/* PHOTO: purple ring -> white ring -> image */
+.photo-outer{
+  position: absolute;
+  left: 70px;
+  top: 78px;
+  width: 160px;
+  height: 160px;
+  border-radius: 50%;
+  border: 8px solid #6b1f6b; /* purple ring */
+  display: grid;
+  place-items: center;
+  background: transparent;
+}
+
+.photo-white{
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  padding: 8px;            /* THIS is the white gap thickness */
+  background: #ffffff;     /* white circle gap */
+  box-sizing: border-box;
+  display: grid;
+  place-items: center;
+}
+
+.photo-inner{
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  overflow: hidden;
+  background: #fff;
+  display: grid;
+  place-items: center;
+}
+
+.photo-inner img{
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.initials{
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  font-size: 40px;
+  font-weight: 800;
+  color: #6b1f6b;
+  background: rgba(107,31,107,.08);
+}
+
+/* FRONT text (reduced sizes) */
+.text-block{
+  position: absolute;
+  left: 270px;
+  top: 98px;
+  right: 34px;
+  font-family: Georgia, "Times New Roman", serif;
+  color: #4d2752;
+}
+
+.emp-name{
+  font-size: 26px;
+  line-height: 1.15;
+  font-weight: 500;
+  margin-bottom: 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.emp-role{
+  font-size: 14px;
+  letter-spacing: 7px;
+  text-transform: uppercase;
+  margin-bottom: 14px;
+  white-space: nowrap;
+  opacity: .95;
+}
+
+.emp-cardno{
+  font-size: 17px;
+  font-weight: 700;
+}
+.emp-cardno span{ font-weight: 800; }
+
+/* BACK layout */
+.back-layout .logo-wrap{
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 58px;
+  display: grid;
+  place-items: center;
+}
+
+.back-layout .logo-wrap img{
+  width: 230px;
+  height: auto;
+}
+
+.qr-back{
+  position: absolute;
+  right: 55px;
+  top: 72px;
+  width: 80px;
+  height: 80px;
+  display: grid;
+  place-items: center;
+}
+
+#qrBoxBack canvas{
+  width: 80px !important;
+  height: 80px !important;
+}
+
+.footer{
+  position: absolute;
+  left: 45px;
+  right: 45px;
+  bottom: 44px;
+  color: #6b1f6b;
+  font-family: Georgia, "Times New Roman", serif;
+}
+
+.footer-row{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  line-height: 1.25;
+}
+
+.footer-row.small{
+  margin-top: 8px;
+  justify-content: center;
+  flex-wrap: wrap;
+  text-align: center;
+}
+
+.footer-text{ font-size: 12px; }
+.dot{ font-size: 14px; }
+.spacer{ flex: 1; }
+</style>
 {% endblock %}
