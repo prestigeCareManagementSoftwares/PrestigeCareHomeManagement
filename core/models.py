@@ -6,7 +6,10 @@ from django.dispatch import receiver
 from django.template.loader import render_to_string
 from django.utils import timezone
 from datetime import timedelta
-
+import qrcode
+from io import BytesIO
+from django.core.files.base import ContentFile
+from django.utils.crypto import get_random_string
 from django.contrib.auth.base_user import AbstractBaseUser
 from django.db import models, transaction
 from django.contrib.auth.models import AbstractUser, Group, Permission, PermissionsMixin
@@ -376,6 +379,9 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     is_staff = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
 
+    qr_code_value = models.CharField(max_length=255, blank=True, null=True, unique=True)
+    qr_code_image = models.ImageField(upload_to="staff_qr/", blank=True, null=True)
+
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['first_name', 'last_name']
 
@@ -424,6 +430,54 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         if instance.image:
             if os.path.isfile(instance.image.path):
                 os.remove(instance.image.path)
+
+    def ensure_qr_value(self):
+        """
+        Create a stable unique QR value if missing.
+        You can customize the string (employee id, URL, etc).
+        """
+        if not self.qr_code_value:
+            # Example: use random token (or use self.pk after save)
+            self.qr_code_value = f"PSL-{get_random_string(10).upper()}"
+
+    def build_qr_png(self):
+        """
+        Generates a PNG for qr_code_value.
+        """
+        qr = qrcode.QRCode(
+            version=2,
+            error_correction=qrcode.constants.ERROR_CORRECT_H,
+            box_size=10,
+            border=2
+        )
+        qr.add_data(self.qr_code_value)
+        qr.make(fit=True)
+        img = qr.make_image(fill_color="black", back_color="white")
+
+        buffer = BytesIO()
+        img.save(buffer, format="PNG")
+        return buffer.getvalue()
+
+    def save(self, *args, **kwargs):
+        creating = self.pk is None
+
+        # First save so we have pk (useful if you want qr value based on pk)
+        super().save(*args, **kwargs)
+
+        # Ensure QR exists (for both new users and old ones that don't have it)
+        changed = False
+        if not self.qr_code_value:
+            self.qr_code_value = f"PSL-{self.pk:06d}"  # stable + readable
+            changed = True
+
+        if not self.qr_code_image:
+            png_bytes = self.build_qr_png()
+            filename = f"user_{self.pk}_qr.png"
+            self.qr_code_image.save(filename, ContentFile(png_bytes), save=False)
+            changed = True
+
+        if changed:
+            super().save(update_fields=["qr_code_value", "qr_code_image"])
 
     class Meta:
         verbose_name = 'User'

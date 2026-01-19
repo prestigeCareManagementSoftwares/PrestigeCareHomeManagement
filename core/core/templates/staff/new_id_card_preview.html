@@ -24,7 +24,7 @@ const data = {
   last_name: "{{ last_name }}",
   role: "{{ role|default:'Support Worker' }}",
   photo: "{{ photo }}",
-  qr_code_value: "{{ qr_code_value }}",
+  qr_code_value: "{{ user.qr_code_value }}",
 };
 
 function generateCardNumber() {
