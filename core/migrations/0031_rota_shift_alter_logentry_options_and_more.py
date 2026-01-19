@@ -47,9 +47,9 @@ class Migration(migrations.Migration):
             name='logentry',
             options={'verbose_name_plural': 'Log Entries'},
         ),
-        migrations.RemoveField(
-            model_name='customuser',
-            name='date_joined',
+        migrations.RunSQL(
+            sql="ALTER TABLE core_customuser DROP COLUMN IF EXISTS date_joined;",
+            reverse_sql=migrations.RunSQL.noop,
         ),
         migrations.AddField(
             model_name='customuser',
