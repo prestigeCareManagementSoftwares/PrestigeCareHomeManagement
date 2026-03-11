@@ -3,7 +3,7 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("core", "0031_alter_logentry_options_remove_customuser_date_joined_and_more"),
+        ("core", "0031_rota_shift_alter_logentry_options_and_more"),
     ]
 
     operations = [
